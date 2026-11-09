@@ -1618,4 +1618,36 @@ if(version){
 })();
 </script>
 
+<!-- GIGLINK STEP 14C DASHBOARD DISPLAY FIX -->
+<script>
+(function(){
+  function fixDashboard(){
+    const dashboard=document.getElementById('gl14c');
+    const outside=document.getElementById('external');
+
+    if(!dashboard){
+      console.warn('Step 14C dashboard not created.');
+      return;
+    }
+
+    if(outside && dashboard.parentElement!==outside){
+      outside.appendChild(dashboard);
+    }
+
+    dashboard.style.display='block';
+    dashboard.style.visibility='visible';
+    dashboard.style.opacity='1';
+
+    console.log('GigLink business dashboard ready.');
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',fixDashboard);
+  }else{
+    fixDashboard();
+  }
+})();
+</script>
+<!-- END DASHBOARD DISPLAY FIX -->
+
 </body></html>
