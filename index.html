@@ -864,4 +864,353 @@ if(version){
 })();
 </script>
 
+<!-- GIGLINK STEP 14B — BUSINESS PAID LISTINGS DEMO -->
+<style>
+#gl14b {
+  margin:18px 0;
+  border:2px solid #bcd3f5;
+  background:linear-gradient(145deg,#fff,#f2f7ff);
+}
+#gl14b .gl14b-plans {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(155px,1fr));
+  gap:10px;
+  margin:12px 0;
+}
+#gl14b .gl14b-plan {
+  padding:14px;
+  background:#fff;
+  border:1px solid #cbdcf3;
+  border-radius:12px;
+}
+#gl14b .gl14b-plan strong {
+  font-size:22px;
+  color:#1352a3;
+  display:block;
+}
+#gl14b .gl14b-note {
+  padding:12px;
+  background:#fff4d9;
+  border-radius:10px;
+  color:#624610;
+  font-size:13px;
+}
+#gl14b .gl14b-entry {
+  padding:12px;
+  border:1px solid #d8e4f2;
+  border-radius:10px;
+  margin:10px 0;
+  background:#fff;
+  overflow-wrap:anywhere;
+}
+#gl14b .gl14b-entry p {margin:5px 0}
+#gl14b label {
+  display:block;
+  margin-top:10px;
+  font-weight:700;
+}
+#gl14b input,
+#gl14b select,
+#gl14b textarea {
+  width:100%;
+  box-sizing:border-box;
+}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+const host=document.getElementById('external');
+if(!host || document.getElementById('gl14b')) return;
+
+const KEY='giglink_step14b_business_requests_demo_v1';
+
+const plans={
+  standard:{
+    label:'Standard · 30 days',
+    price:9.99
+  },
+  featured:{
+    label:'Featured · 7 days',
+    price:19.99
+  },
+  subscription:{
+    label:'Business · up to 20 active listings/month',
+    price:49.99
+  }
+};
+
+const escapeHTML=v=>String(v??'').replace(
+  /[&<>"']/g,
+  c=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[c])
+);
+
+function load(){
+  try{
+    const data=JSON.parse(localStorage.getItem(KEY)||'[]');
+    return Array.isArray(data)?data:[];
+  }catch{
+    return [];
+  }
+}
+
+function validLink(value){
+  try{
+    const url=new URL(value);
+    return url.protocol==='https:'?url.href:null;
+  }catch{
+    return null;
+  }
+}
+
+const card=document.createElement('div');
+card.className='card';
+card.id='gl14b';
+
+card.innerHTML=`
+<h2>🏢 Advertise Your Business Gig</h2>
+
+<p>
+Businesses can prepare a paid job advertisement here.
+Workers will apply using your original job URL
+once a listing is approved and published.
+</p>
+
+<div class="gl14b-plans">
+  <div class="gl14b-plan">
+    <b>Standard</b>
+    <strong>$9.99</strong>
+    <small>30-day listing</small>
+  </div>
+
+  <div class="gl14b-plan">
+    <b>Featured</b>
+    <strong>$19.99</strong>
+    <small>7-day featured placement</small>
+  </div>
+
+  <div class="gl14b-plan">
+    <b>Business</b>
+    <strong>$49.99/mo</strong>
+    <small>Up to 20 active listings; future subscription</small>
+  </div>
+</div>
+
+<p class="gl14b-note">
+<b>Demo only:</b> No checkout, payments, subscriptions,
+or automatic public posting. Submissions are saved
+only in this browser. Real publishing requires
+a database and verified payment.
+</p>
+
+<form id="gl14b-form">
+
+<label for="gl14b-company">Business name</label>
+<input id="gl14b-company" maxlength="100"
+required autocomplete="organization">
+
+<label for="gl14b-email">Business contact email</label>
+<input id="gl14b-email" type="email" maxlength="150"
+required autocomplete="email">
+
+<label for="gl14b-plan">Advertising plan</label>
+<select id="gl14b-plan">
+  <option value="standard">
+    Standard — $9.99 / 30 days
+  </option>
+  <option value="featured">
+    Featured — $19.99 / 7 days
+  </option>
+  <option value="subscription">
+    Business — $49.99 / month (planned)
+  </option>
+</select>
+
+<label for="gl14b-title">Job title</label>
+<input id="gl14b-title" maxlength="140" required>
+
+<label for="gl14b-category">Category</label>
+<select id="gl14b-category"></select>
+
+<label for="gl14b-location">City / location</label>
+<input id="gl14b-location" maxlength="140" required>
+
+<label for="gl14b-pay">Job pay (optional)</label>
+<input id="gl14b-pay" maxlength="70"
+placeholder="$25/hour">
+
+<label for="gl14b-url">Original public job URL</label>
+<input id="gl14b-url" type="url" required
+placeholder="https://example.com/jobs/123">
+
+<label for="gl14b-description">Job description</label>
+<textarea id="gl14b-description"
+maxlength="1000" required></textarea>
+
+<p id="gl14b-summary">
+<b>Proposed listing price:</b> $9.99 (not charged)
+</p>
+
+<button type="submit">
+SAVE BUSINESS LISTING REQUEST — NO PAYMENT
+</button>
+</form>
+
+<h3>Saved business listing requests</h3>
+<p class="muted">
+Visible only on this browser.
+These are not live advertisements.
+</p>
+
+<div id="gl14b-list" aria-live="polite"></div>
+`;
+
+const anchor=host.querySelector('.card');
+if(anchor){
+  anchor.insertAdjacentElement('afterend',card);
+}else{
+  host.appendChild(card);
+}
+
+const el=id=>document.getElementById(id);
+
+const cats=typeof categories!=='undefined'
+  ?categories
+  :['Cleaning','Moving','Handyman','Delivery','Other Services'];
+
+for(const c of cats){
+  el('gl14b-category').add(new Option(c,c));
+}
+
+el('gl14b-plan').addEventListener('change',()=>{
+  const plan=el('gl14b-plan').value;
+  const p=plans[plan];
+
+  el('gl14b-summary').textContent=
+    'Proposed listing price: $'+p.price.toFixed(2)+
+    (plan==='subscription'?' per month':'')+
+    ' (not charged)';
+});
+
+function render(){
+  const data=load();
+
+  el('gl14b-list').innerHTML=data.length
+    ?data.map(r=>`
+      <div class="gl14b-entry">
+        <b>${escapeHTML(r.title)}</b>
+
+        <p>
+          ${escapeHTML(r.company)} ·
+          ${escapeHTML(r.location)} ·
+          ${escapeHTML(r.category)}
+        </p>
+
+        <p>
+          Plan: ${escapeHTML(r.planLabel)}
+          — $${r.price.toFixed(2)} proposed
+        </p>
+
+        <p>
+          <b>Status: Draft request — unpaid, unpublished</b>
+        </p>
+
+        <p>
+          <a href="${escapeHTML(r.url)}"
+             target="_blank"
+             rel="noopener noreferrer">
+             Original job link
+          </a>
+        </p>
+
+        <button type="button"
+          data-gl14b-remove="${escapeHTML(r.id)}">
+          DELETE DRAFT
+        </button>
+      </div>
+    `).join('')
+    :'<p>No business listing requests saved yet.</p>';
+}
+
+el('gl14b-form').addEventListener('submit',e=>{
+  e.preventDefault();
+
+  const plan=el('gl14b-plan').value;
+  const url=validLink(el('gl14b-url').value.trim());
+
+  if(!url){
+    alert('Please enter a valid HTTPS job link.');
+    return;
+  }
+
+  const r={
+    id:Date.now().toString(36)+
+       Math.random().toString(36).slice(2,9),
+    company:el('gl14b-company').value.trim(),
+    email:el('gl14b-email').value.trim(),
+    plan,
+    planLabel:plans[plan].label,
+    price:plans[plan].price,
+    title:el('gl14b-title').value.trim(),
+    category:el('gl14b-category').value,
+    location:el('gl14b-location').value.trim(),
+    pay:el('gl14b-pay').value.trim(),
+    url,
+    description:el('gl14b-description').value.trim(),
+    createdAt:Date.now(),
+    status:'draft_unpaid'
+  };
+
+  if(!r.company||!r.email||!r.title||
+     !r.location||!r.description){
+    alert('Please complete all required fields.');
+    return;
+  }
+
+  try{
+    const next=[r,...load()];
+    localStorage.setItem(KEY,JSON.stringify(next));
+
+    e.target.reset();
+    el('gl14b-plan').dispatchEvent(new Event('change'));
+    render();
+
+    alert(
+      'Business listing draft saved on this device. '+
+      'No payment was taken and the job is not published.'
+    );
+  }catch{
+    alert('Could not save draft. Browser storage may be full.');
+  }
+});
+
+el('gl14b-list').addEventListener('click',e=>{
+  const b=e.target.closest('[data-gl14b-remove]');
+  if(!b)return;
+
+  if(!confirm('Delete this local draft?'))return;
+
+  try{
+    const next=load().filter(
+      r=>r.id!==b.dataset.gl14bRemove
+    );
+    localStorage.setItem(KEY,JSON.stringify(next));
+    render();
+  }catch{
+    alert('Could not delete draft.');
+  }
+});
+
+render();
+})();
+</script>
+<!-- END GIGLINK STEP 14B -->
+
 </body></html>
