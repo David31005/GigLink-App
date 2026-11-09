@@ -1,0 +1,543 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101b32">
+<title>GigLink — Post It. Claim It. Get It Done.</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ background:#f3f6fb;
+ color:#152238;
+ font-family:Arial,sans-serif;
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+/* STARTUP SCREEN */
+#startup{
+ min-height:100dvh;
+ background:linear-gradient(145deg,#091327,#163b70);
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ padding:25px;
+ text-align:center;
+ color:white;
+}
+.logo{
+ width:110px;
+ height:110px;
+ border-radius:28px;
+ background:#228bff;
+ display:grid;
+ place-items:center;
+ font-size:65px;
+ margin-bottom:22px;
+ box-shadow:0 0 35px #228bff55;
+}
+#startup h1{
+ font-size:54px;
+ margin:0;
+ letter-spacing:-2px;
+}
+#startup p{
+ color:#c7dcfa;
+ font-size:18px;
+}
+.btn{
+ background:#1685ff;
+ color:white;
+ border:0;
+ padding:14px 20px;
+ border-radius:11px;
+ font-weight:bold;
+ margin:5px;
+}
+.btn:disabled{opacity:.45}
+.secondary{background:#233653}
+.danger{background:#ba3445}
+#startup .btn{
+ width:85%;
+ max-width:320px;
+ font-size:19px;
+ margin-top:30px;
+}
+
+/* MAIN APP */
+header{
+ background:#101b32;
+ color:white;
+ padding:20px;
+ text-align:center;
+}
+header h1{margin:0;font-size:30px}
+header p{color:#b9d2f2;margin:8px}
+nav{
+ display:flex;
+ justify-content:center;
+ flex-wrap:wrap;
+ gap:7px;
+ background:#172b4c;
+ padding:12px;
+}
+nav button{
+ background:#294b77;
+ color:white;
+ border:0;
+ padding:11px;
+ border-radius:8px;
+}
+main{
+ max-width:850px;
+ margin:auto;
+ padding:16px;
+ padding-bottom:60px;
+}
+.card{
+ background:white;
+ padding:20px;
+ margin:15px 0;
+ border-radius:15px;
+ box-shadow:0 3px 14px #10233a16;
+}
+h2{color:#142d51}
+h3{margin-bottom:8px}
+label{
+ display:block;
+ margin:15px 0 6px;
+ font-weight:bold;
+}
+input,select,textarea{
+ width:100%;
+ padding:13px;
+ border:1px solid #c1cede;
+ border-radius:9px;
+ background:white;
+ color:#152238;
+}
+textarea{min-height:95px}
+.job{border-left:5px solid #1685ff}
+.price{
+ font-size:25px;
+ color:#117b3c;
+ font-weight:bold;
+}
+.tag{
+ display:inline-block;
+ padding:6px 10px;
+ background:#e5f0ff;
+ color:#175baf;
+ border-radius:20px;
+ font-size:12px;
+ margin:5px 0;
+}
+.muted{color:#68798f}
+.stat{
+ background:#eaf2ff;
+ padding:15px;
+ border-radius:12px;
+ margin:10px 0;
+}
+#notice{
+ text-align:center;
+ padding:10px;
+ color:#176b37;
+ font-weight:bold;
+}
+footer{
+ background:#101b32;
+ color:#c7d5e8;
+ text-align:center;
+ padding:25px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- STARTUP -->
+<div id="startup">
+ <div class="logo">🔗</div>
+ <h1>GigLink</h1>
+ <p>Post It. Claim It. Get It Done.</p>
+ <p>Your All-in-One Job Marketplace</p>
+ <button class="btn" onclick="enterApp()">
+ GET STARTED
+ </button>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
+<header>
+ <h1>🔗 GigLink</h1>
+ <p>Post It. Claim It. Get It Done.</p>
+</header>
+
+<nav>
+ <button onclick="show('home')">Home</button>
+ <button onclick="show('post')">Post a Gig</button>
+ <button onclick="show('browse')">Find Gigs</button>
+ <button onclick="show('mine')">My Gigs</button>
+ <button onclick="show('admin')">Admin Demo</button>
+</nav>
+
+<div id="notice" role="status"></div>
+
+<main>
+
+<!-- HOME -->
+<section id="home">
+ <div class="card">
+  <h2>Welcome to GigLink</h2>
+  <p>
+   Need a job done? Post it on GigLink.
+   Looking for work? Find and claim gigs
+   in your area.
+  </p>
+  <button class="btn" onclick="show('post')">
+   POST A GIG
+  </button>
+  <button class="btn secondary" onclick="show('browse')">
+   FIND GIGS
+  </button>
+ </div>
+
+ <div class="card">
+  <h2>Popular Categories</h2>
+  <p>🏠 Residential Cleaning</p>
+  <p>🏢 Commercial Cleaning</p>
+  <p>🌿 Lawn Care</p>
+  <p>🚚 Moving</p>
+  <p>🔧 Handyman</p>
+  <p>🎨 Painting</p>
+  <p>🪑 Furniture Assembly</p>
+  <p>📦 Delivery</p>
+  <p>🗑️ Junk Removal</p>
+  <p>🐕 Pet Care</p>
+  <p>💼 Other Services</p>
+ </div>
+</section>
+
+<!-- POST GIG -->
+<section id="post" class="hidden">
+ <div class="card">
+  <h2>Post a New Gig</h2>
+  <p class="muted">
+   Tell workers what you need done.
+  </p>
+
+  <form id="gigForm">
+
+   <label>Your Name</label>
+   <input id="poster" required maxlength="80">
+
+   <label>Job Title</label>
+   <input id="title" required
+    placeholder="Example: Clean my house">
+
+   <label>Job Category</label>
+   <select id="category">
+    <option>Residential Cleaning</option>
+    <option>Commercial Cleaning</option>
+    <option>Lawn Care</option>
+    <option>Moving</option>
+    <option>Handyman</option>
+    <option>Painting</option>
+    <option>Furniture Assembly</option>
+    <option>Delivery</option>
+    <option>Junk Removal</option>
+    <option>Pet Care</option>
+    <option>Other Services</option>
+   </select>
+
+   <label>City and State</label>
+   <input id="location" required
+    placeholder="Example: Warner Robins, GA">
+
+   <label>Job Date</label>
+   <input id="date" type="date" required>
+
+   <label>Job Budget ($)</label>
+   <input id="budget" type="number"
+    min="1" step=".01" required>
+
+   <label>Job Description</label>
+   <textarea id="description" required
+    placeholder="Describe the work needed"></textarea>
+
+   <button class="btn" type="submit">
+    POST GIG
+   </button>
+  </form>
+ </div>
+</section>
+
+<!-- BROWSE -->
+<section id="browse" class="hidden">
+ <h2>Available Gigs</h2>
+
+ <div class="card">
+  <label>Filter by Category</label>
+  <select id="filter" onchange="render()">
+   <option value="All">All Categories</option>
+   <option>Residential Cleaning</option>
+   <option>Commercial Cleaning</option>
+   <option>Lawn Care</option>
+   <option>Moving</option>
+   <option>Handyman</option>
+   <option>Painting</option>
+   <option>Furniture Assembly</option>
+   <option>Delivery</option>
+   <option>Junk Removal</option>
+   <option>Pet Care</option>
+   <option>Other Services</option>
+  </select>
+ </div>
+
+ <div id="availableJobs"></div>
+</section>
+
+<!-- MY GIGS -->
+<section id="mine" class="hidden">
+ <h2>My Gigs</h2>
+ <p class="muted">
+  Jobs posted and claimed in this browser.
+ </p>
+ <div id="myJobs"></div>
+</section>
+
+<!-- ADMIN -->
+<section id="admin" class="hidden">
+ <div class="card">
+  <h2>GigLink Admin Demo</h2>
+  <p class="muted">
+   This demo dashboard is not protected
+   by an admin login.
+  </p>
+
+  <div class="stat" id="totalJobs"></div>
+  <div class="stat" id="openJobs"></div>
+  <div class="stat" id="claimedJobs"></div>
+  <div class="stat" id="completedJobs"></div>
+ </div>
+
+ <div id="adminJobs"></div>
+</section>
+
+</main>
+
+<footer>
+ <p>GigLink</p>
+ <p>Post It. Claim It. Get It Done.</p>
+ <small>Marketplace Prototype</small>
+</footer>
+</div>
+
+<script>
+const KEY="giglink_jobs_v1";
+
+function load(){
+ try{
+  return JSON.parse(localStorage.getItem(KEY))||[];
+ }catch(e){
+  return [];
+ }
+}
+
+let jobs=load();
+
+function save(){
+ localStorage.setItem(KEY,JSON.stringify(jobs));
+}
+
+function newId(){
+ return Date.now().toString(36)+
+ Math.random().toString(36).slice(2);
+}
+
+function safe(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  '"':"&quot;",
+  "'":"&#39;"
+ })[c]);
+}
+
+function notice(message){
+ document.getElementById("notice").textContent=message;
+}
+
+function enterApp(){
+ document.getElementById("startup")
+  .classList.add("hidden");
+ document.getElementById("app")
+  .classList.remove("hidden");
+ show("home");
+}
+
+function show(page){
+ ["home","post","browse","mine","admin"].forEach(p=>{
+  document.getElementById(p)
+   .classList.toggle("hidden",p!==page);
+ });
+ notice("");
+ render();
+ window.scrollTo(0,0);
+}
+
+document.getElementById("gigForm")
+.addEventListener("submit",function(e){
+ e.preventDefault();
+
+ const poster=document.getElementById("poster").value.trim();
+ const title=document.getElementById("title").value.trim();
+ const category=document.getElementById("category").value;
+ const location=document.getElementById("location").value.trim();
+ const date=document.getElementById("date").value;
+ const budget=Number(document.getElementById("budget").value);
+ const description=document.getElementById("description").value.trim();
+
+ if(!poster||!title||!location||!date||
+    !description||!Number.isFinite(budget)||budget<=0){
+  notice("Please complete all fields correctly.");
+  return;
+ }
+
+ jobs.push({
+  id:newId(),
+  poster,title,category,location,
+  date,budget,description,
+  status:"available",
+  claimedBy:""
+ });
+
+ save();
+ this.reset();
+ show("browse");
+ notice("Your gig was posted successfully!");
+});
+
+function claimJob(id){
+ const job=jobs.find(j=>j.id===id);
+ if(!job||job.status!=="available"){
+  notice("This gig is no longer available.");
+  return;
+ }
+
+ const worker=prompt("Enter your name to claim this gig:");
+ if(!worker||!worker.trim())return;
+
+ job.claimedBy=worker.trim();
+ job.status="claimed";
+ save();
+ render();
+ notice("Gig claimed successfully!");
+}
+
+function completeJob(id){
+ const job=jobs.find(j=>j.id===id);
+ if(!job||job.status!=="claimed")return;
+
+ job.status="completed";
+ save();
+ render();
+ notice("Gig marked completed.");
+}
+
+function deleteJob(id){
+ if(!confirm("Delete this gig?"))return;
+ jobs=jobs.filter(j=>j.id!==id);
+ save();
+ render();
+ notice("Gig deleted.");
+}
+
+function jobCard(job,mode){
+ let actions="";
+
+ if(mode==="browse"){
+  actions=`<button class="btn"
+   onclick="claimJob('${job.id}')">
+   CLAIM GIG</button>`;
+ }
+
+ if(mode==="admin"){
+  if(job.status==="claimed"){
+   actions+=`<button class="btn"
+    onclick="completeJob('${job.id}')">
+    MARK COMPLETED</button>`;
+  }
+  actions+=`<button class="btn danger"
+   onclick="deleteJob('${job.id}')">
+   DELETE</button>`;
+ }
+
+ return `
+ <div class="card job">
+  <span class="tag">${safe(job.category)}</span>
+  <h3>${safe(job.title)}</h3>
+  <p>📍 ${safe(job.location)}</p>
+  <p>📅 ${safe(job.date)}</p>
+  <p>Posted by: ${safe(job.poster)}</p>
+  <p>${safe(job.description)}</p>
+  <p class="price">$${job.budget.toFixed(2)}</p>
+  <p>Status: ${safe(job.status)}</p>
+  ${job.claimedBy?
+   `<p>Claimed by: ${safe(job.claimedBy)}</p>`:""}
+  ${actions}
+ </div>`;
+}
+
+function render(){
+ const filter=document.getElementById("filter").value;
+
+ const available=jobs.filter(j=>
+  j.status==="available"&&
+  (filter==="All"||j.category===filter)
+ );
+
+ document.getElementById("availableJobs").innerHTML=
+  available.length?
+  available.map(j=>jobCard(j,"browse")).join(""):
+  '<div class="card">No available gigs yet.</div>';
+
+ document.getElementById("myJobs").innerHTML=
+  jobs.length?
+  jobs.map(j=>jobCard(j,"mine")).join(""):
+  '<div class="card">No gigs yet.</div>';
+
+ document.getElementById("adminJobs").innerHTML=
+  jobs.length?
+  jobs.map(j=>jobCard(j,"admin")).join(""):
+  '<div class="card">No jobs posted.</div>';
+
+ document.getElementById("totalJobs").textContent=
+  "Total Gigs: "+jobs.length;
+
+ document.getElementById("openJobs").textContent=
+  "Available: "+jobs.filter(j=>
+   j.status==="available").length;
+
+ document.getElementById("claimedJobs").textContent=
+  "Claimed: "+jobs.filter(j=>
+   j.status==="claimed").length;
+
+ document.getElementById("completedJobs").textContent=
+  "Completed: "+jobs.filter(j=>
+   j.status==="completed").length;
+}
+
+render();
+</script>
+</body>
+</html>
