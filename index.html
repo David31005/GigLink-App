@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GigLink — Marketplace</title>
+<title>GigLink — Step 11B</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font:16px Arial,sans-serif;background:#f1f5fb;color:#192e48}
@@ -55,10 +55,9 @@ main{max-width:920px;margin:auto;padding:14px;min-height:60vh}
 .small{font-size:13px}
 .stars{color:#a86b00;font-size:20px}
 .chat{height:200px;overflow:auto;background:#f4f8ff;border-radius:10px;padding:10px}
-.pill{display:inline-block;background:#dceaff;border-radius:20px;padding:5px 10px;margin:3px;font-size:12px}
 #notice{color:#08774a;font-weight:bold}
 @media print{
-header,nav,footer,button,.no-print{display:none!important}
+header,nav,footer,button{display:none!important}
 main{max-width:100%}
 .card{box-shadow:none;border:1px solid #ddd}
 }
@@ -110,6 +109,7 @@ main{max-width:100%}
 <p id="accountInfo"></p>
 <button onclick="logout()">Sign Out</button>
 </header>
+
 <nav>
 <button onclick="show('dashboard')">Dashboard</button>
 <button id="postNav" onclick="show('post')">Post Gig</button>
@@ -174,7 +174,7 @@ main{max-width:100%}
 
 <section id="schedule" class="hidden">
 <h2>Job Schedule</h2>
-<p>Download a calendar event to add a reminder on your phone.</p>
+<p>Tap Add to Calendar to open Google Calendar with the job details.</p>
 <div id="scheduleList"></div>
 </section>
 
@@ -248,8 +248,8 @@ main{max-width:100%}
 <footer>
 <strong>GigLink™</strong>
 <p>Post It. Claim It. Get It Done.</p>
-© 2026 Diamond Shine Service LLC.<br>
-All Rights Reserved.
+© 2026 Diamond Shine Service LLC.
+<p>All Rights Reserved.</p>
 <p>Owned and Operated by Diamond Shine Service LLC</p>
 </footer>
 </section>
@@ -286,8 +286,8 @@ const categories=[
 
 const $=id=>document.getElementById(id);
 const read=(key,fallback)=>{
- try{return JSON.parse(localStorage.getItem(key))??fallback}
- catch{return fallback}
+try{return JSON.parse(localStorage.getItem(key))??fallback}
+catch{return fallback}
 };
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({
@@ -317,534 +317,544 @@ const saveUsers=()=>localStorage.setItem(USER_KEY,JSON.stringify(users));
 const notice=t=>$('notice').textContent=t;
 const cents=n=>Math.max(0,Math.round((Number(n)||0)*100));
 const split=n=>{
- const gross=cents(n),fee=Math.round(gross*.15);
- return {gross,fee,worker:gross-fee}
+const gross=cents(n),fee=Math.round(gross*.15);
+return {gross,fee,worker:gross-fee}
 };
 const money=n=>'$'+(n/100).toFixed(2);
 const fmt=t=>t?new Date(t).toLocaleString():'Not recorded';
 const duration=ms=>{
- let s=Math.floor(Math.max(0,ms)/1000);
- return [Math.floor(s/3600),Math.floor(s%3600/60),s%60]
- .map(n=>String(n).padStart(2,'0')).join(':')
+let s=Math.floor(Math.max(0,ms)/1000);
+return [Math.floor(s/3600),Math.floor(s%3600/60),s%60]
+.map(n=>String(n).padStart(2,'0')).join(':')
 };
 const workTime=j=>(Number(j.workMs)||0)+
 (j.clockInAt?Math.max(0,Date.now()-j.clockInAt):0);
 const countPhotos=(j,type)=>(photos[j.id]?.[type]||[]).length;
 const stat=(label,value)=>'<div class="stat"><strong>'+value+'</strong>'+label+'</div>';
 const bill=n=>{
- const p=split(n);
- return '<div class="money">'+
- '<div>Job Price <b>'+money(p.gross)+'</b></div>'+
- '<div>GigLink Fee (15%) <b>'+money(p.fee)+'</b></div>'+
- '<div>Worker Earnings (85%) <b>'+money(p.worker)+'</b></div></div>'
+const p=split(n);
+return '<div class="money">'+
+'<div>Job Price <b>'+money(p.gross)+'</b></div>'+
+'<div>GigLink Fee (15%) <b>'+money(p.fee)+'</b></div>'+
+'<div>Worker Earnings (85%) <b>'+money(p.worker)+'</b></div></div>'
 };
 
 function goStartup(){
- $('startup').classList.remove('hidden');
- $('authScreen').classList.add('hidden');
- $('app').classList.add('hidden')
+$('startup').classList.remove('hidden');
+$('authScreen').classList.add('hidden');
+$('app').classList.add('hidden')
 }
 function openAuth(mode){
- $('startup').classList.add('hidden');
- $('authScreen').classList.remove('hidden');
- $('app').classList.add('hidden');
- $('signupPanel').classList.toggle('hidden',mode!=='signup');
- $('loginPanel').classList.toggle('hidden',mode!=='login');
- $('savedAccounts').innerHTML='';
- users.forEach(u=>$('savedAccounts').add(
- new Option(u.name+' ('+u.role+')',u.id)))
+$('startup').classList.add('hidden');
+$('authScreen').classList.remove('hidden');
+$('app').classList.add('hidden');
+$('signupPanel').classList.toggle('hidden',mode!=='signup');
+$('loginPanel').classList.toggle('hidden',mode!=='login');
+$('savedAccounts').innerHTML='';
+users.forEach(u=>$('savedAccounts').add(
+new Option(u.name+' ('+u.role+')',u.id)))
 }
 $('signupForm').onsubmit=e=>{
- e.preventDefault();
- const name=$('accountName').value.trim();
- const email=$('accountEmail').value.trim().toLowerCase();
- const city=$('accountCity').value.trim();
- const role=$('accountRole').value;
- if(!name||!email||!city)return;
- if(users.some(u=>u.email===email))return alert('Email already used.');
- const u={id:uid(),name,email,city,role,
- service:role==='worker'?$('accountService').value:'',
- documentPreference:''};
- users.push(u);saveUsers();loginAs(u.id)
+e.preventDefault();
+const name=$('accountName').value.trim();
+const email=$('accountEmail').value.trim().toLowerCase();
+const city=$('accountCity').value.trim();
+const role=$('accountRole').value;
+if(!name||!email||!city)return;
+if(users.some(u=>u.email===email))return alert('Email already used.');
+const u={id:uid(),name,email,city,role,
+service:role==='worker'?$('accountService').value:'',
+documentPreference:''};
+users.push(u);saveUsers();loginAs(u.id)
 };
 function signIn(){
- const id=$('savedAccounts').value;
- if(!users.some(u=>u.id===id))return alert('Create an account first.');
- loginAs(id)
+const id=$('savedAccounts').value;
+if(!users.some(u=>u.id===id))return alert('Create an account first.');
+loginAs(id)
 }
 function loginAs(id){
- session=id;
- localStorage.setItem(SESSION_KEY,JSON.stringify(id));
- $('startup').classList.add('hidden');
- $('authScreen').classList.add('hidden');
- $('app').classList.remove('hidden');
- updateAccount();show('dashboard')
+session=id;
+localStorage.setItem(SESSION_KEY,JSON.stringify(id));
+$('startup').classList.add('hidden');
+$('authScreen').classList.add('hidden');
+$('app').classList.remove('hidden');
+updateAccount();show('dashboard')
 }
 function logout(){
- session=null;localStorage.removeItem(SESSION_KEY);goStartup()
+session=null;localStorage.removeItem(SESSION_KEY);goStartup()
 }
 function updateAccount(){
- const u=me();if(!u)return;
- $('accountInfo').textContent=u.name+' • '+u.role;
- $('welcome').textContent='Welcome, '+u.name+'!';
- $('postNav').classList.toggle('hidden',u.role!=='customer');
- $('verifyNav').classList.toggle('hidden',u.role!=='worker');
- $('dashboardAction').textContent=u.role==='customer'?'POST A GIG':'FIND GIGS';
- $('dashboardAction').onclick=()=>show(u.role==='customer'?'post':'browse');
- $('documentType').value=u.documentPreference||'';
- $('profileBio').value=u.bio||'';
- $('profileArea').value=u.area||u.city||'';
- $('profileYears').value=u.years||0;
- $('profileService').value=u.service||categories[0]
+const u=me();if(!u)return;
+$('accountInfo').textContent=u.name+' • '+u.role;
+$('welcome').textContent='Welcome, '+u.name+'!';
+$('postNav').classList.toggle('hidden',u.role!=='customer');
+$('verifyNav').classList.toggle('hidden',u.role!=='worker');
+$('dashboardAction').textContent=u.role==='customer'?'POST A GIG':'FIND GIGS';
+$('dashboardAction').onclick=()=>show(u.role==='customer'?'post':'browse');
+$('documentType').value=u.documentPreference||'';
+$('profileBio').value=u.bio||'';
+$('profileArea').value=u.area||u.city||'';
+$('profileYears').value=u.years||0;
+$('profileService').value=u.service||categories[0]
 }
 function show(page){
- const u=me();if(!u)return;
- if(page==='post'&&u.role!=='customer')page='dashboard';
- if(page==='verification'&&u.role!=='worker')page='dashboard';
- ['dashboard','post','browse','mine','messages','schedule',
- 'workers','earnings','verification','profile','assistant','platform']
- .forEach(id=>$(id).classList.toggle('hidden',id!==page));
- if(page==='post')$('jobLocation').value=u.city;
- notice('');render();window.scrollTo(0,0)
+const u=me();if(!u)return;
+if(page==='post'&&u.role!=='customer')page='dashboard';
+if(page==='verification'&&u.role!=='worker')page='dashboard';
+['dashboard','post','browse','mine','messages','schedule',
+'workers','earnings','verification','profile','assistant','platform']
+.forEach(id=>$(id).classList.toggle('hidden',id!==page));
+if(page==='post')$('jobLocation').value=u.city;
+notice('');render();window.scrollTo(0,0)
 }
 function saveVerification(){
- const u=me();if(!u||u.role!=='worker')return;
- if(!$('documentType').value)return alert('Select ID type.');
- u.documentPreference=$('documentType').value;
- saveUsers();notice('Preference saved. Identity is NOT verified.')
+const u=me();if(!u||u.role!=='worker')return;
+if(!$('documentType').value)return alert('Select ID type.');
+u.documentPreference=$('documentType').value;
+saveUsers();notice('Preference saved. Identity is NOT verified.')
 }
 function previewFee(){
- const n=Number($('jobBudget').value);
- $('feePreview').innerHTML=n>0?bill(n):''
+const n=Number($('jobBudget').value);
+$('feePreview').innerHTML=n>0?bill(n):''
 }
 $('postForm').onsubmit=e=>{
- e.preventDefault();
- const u=me();if(!u||u.role!=='customer')return;
- const budget=Number($('jobBudget').value);
- if(!Number.isFinite(budget)||budget<=0)return;
- jobs.push({
- id:uid(),ownerId:u.id,poster:u.name,
- title:$('jobTitle').value.trim(),
- category:$('jobCategory').value,
- location:$('jobLocation').value.trim(),
- date:$('jobDate').value,time:$('jobTime').value,
- budget,description:$('jobDescription').value.trim(),
- status:'available',workerId:null,claimedBy:'',
- clockInAt:null,startedAt:null,workMs:0,workSessions:[]
- });
- saveJobs();e.target.reset();show('mine');notice('Gig posted!')
+e.preventDefault();
+const u=me();if(!u||u.role!=='customer')return;
+const budget=Number($('jobBudget').value);
+if(!Number.isFinite(budget)||budget<=0)return;
+jobs.push({
+id:uid(),ownerId:u.id,poster:u.name,
+title:$('jobTitle').value.trim(),
+category:$('jobCategory').value,
+location:$('jobLocation').value.trim(),
+date:$('jobDate').value,time:$('jobTime').value,
+budget,description:$('jobDescription').value.trim(),
+status:'available',workerId:null,claimedBy:'',
+clockInAt:null,startedAt:null,workMs:0,workSessions:[]
+});
+saveJobs();e.target.reset();show('mine');notice('Gig posted!')
 };
 function claimJob(id){
- const u=me(),j=findJob(id);
- if(!u||u.role!=='worker'||!j||j.status!=='available')return;
- if(!confirm('Claim this gig?'))return;
- j.workerId=u.id;j.claimedBy=u.name;j.status='claimed';
- j.clockInAt=null;j.startedAt=null;j.workMs=0;j.workSessions=[];
- saveJobs();show('mine');notice('Gig claimed. Upload BEFORE photos.')
+const u=me(),j=findJob(id);
+if(!u||u.role!=='worker'||!j||j.status!=='available')return;
+if(!confirm('Claim this gig?'))return;
+j.workerId=u.id;j.claimedBy=u.name;j.status='claimed';
+j.clockInAt=null;j.startedAt=null;j.workMs=0;j.workSessions=[];
+saveJobs();show('mine');notice('Gig claimed. Upload BEFORE photos.')
 }
 function clockIn(id){
- const u=me(),j=findJob(id);
- if(!u||!j||j.workerId!==u.id||j.status!=='claimed')return;
- if(j.clockInAt)return alert('Already clocked in.');
- if(!countPhotos(j,'before'))return alert('Upload a BEFORE photo first.');
- j.clockInAt=Date.now();
- if(!j.startedAt)j.startedAt=j.clockInAt;
- saveJobs();render();notice('CLOCKED IN')
+const u=me(),j=findJob(id);
+if(!u||!j||j.workerId!==u.id||j.status!=='claimed')return;
+if(j.clockInAt)return alert('Already clocked in.');
+if(!countPhotos(j,'before'))return alert('Upload a BEFORE photo first.');
+j.clockInAt=Date.now();
+if(!j.startedAt)j.startedAt=j.clockInAt;
+saveJobs();render();notice('CLOCKED IN')
 }
 function clockOut(id){
- const u=me(),j=findJob(id);
- if(!u||!j||j.workerId!==u.id||j.status!=='claimed'||!j.clockInAt)return;
- const out=Date.now(),start=j.clockInAt;
- j.workMs=(Number(j.workMs)||0)+Math.max(0,out-start);
- j.workSessions=j.workSessions||[];
- j.workSessions.push({in:start,out});
- j.clockInAt=null;saveJobs();render();notice('CLOCKED OUT')
+const u=me(),j=findJob(id);
+if(!u||!j||j.workerId!==u.id||j.status!=='claimed'||!j.clockInAt)return;
+const out=Date.now(),start=j.clockInAt;
+j.workMs=(Number(j.workMs)||0)+Math.max(0,out-start);
+j.workSessions=j.workSessions||[];
+j.workSessions.push({in:start,out});
+j.clockInAt=null;saveJobs();render();notice('CLOCKED OUT')
 }
 function compressPhoto(file,max=700,quality=.5){
- return new Promise((resolve,reject)=>{
- const reader=new FileReader();
- reader.onerror=reject;
- reader.onload=()=>{
- const img=new Image();
- img.onerror=reject;
- img.onload=()=>{
- const scale=Math.min(1,max/Math.max(img.width,img.height));
- const canvas=document.createElement('canvas');
- canvas.width=Math.max(1,Math.round(img.width*scale));
- canvas.height=Math.max(1,Math.round(img.height*scale));
- canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
- resolve(canvas.toDataURL('image/jpeg',quality))
- };
- img.src=reader.result
- };
- reader.readAsDataURL(file)
- })
+return new Promise((resolve,reject)=>{
+const reader=new FileReader();
+reader.onerror=reject;
+reader.onload=()=>{
+const img=new Image();
+img.onerror=reject;
+img.onload=()=>{
+const scale=Math.min(1,max/Math.max(img.width,img.height));
+const canvas=document.createElement('canvas');
+canvas.width=Math.max(1,Math.round(img.width*scale));
+canvas.height=Math.max(1,Math.round(img.height*scale));
+canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+resolve(canvas.toDataURL('image/jpeg',quality))
+};
+img.src=reader.result
+};
+reader.readAsDataURL(file)
+})
 }
 async function addPhoto(id,type,input){
- const u=me(),j=findJob(id);
- if(!u||!j||j.workerId!==u.id||j.status!=='claimed')return;
- if(type==='before'&&j.startedAt)return alert('Before photos must be added before starting.');
- if(type==='after'&&(!j.startedAt||j.clockInAt))return alert('Clock out first.');
- const file=input.files?.[0];if(!file)return;
- if(!file.type.startsWith('image/')||file.size>12*1024*1024)
- return alert('Choose a photo under 12 MB.');
- try{
- const image=await compressPhoto(file);
- const group=photos[id]||{before:[],after:[]};
- group[type]=group[type]||[];
- if(group[type].length>=3)return alert('Maximum 3 photos.');
- const updated={...photos,[id]:{...group,[type]:[...group[type],image]}};
- localStorage.setItem(PHOTO_KEY,JSON.stringify(updated));
- photos=updated;show('mine');notice('Photo saved.')
- }catch{alert('Unable to save photo. Storage may be full.')}
- finally{input.value=''}
+const u=me(),j=findJob(id);
+if(!u||!j||j.workerId!==u.id||j.status!=='claimed')return;
+if(type==='before'&&j.startedAt)return alert('Before photos must be added before starting.');
+if(type==='after'&&(!j.startedAt||j.clockInAt))return alert('Clock out first.');
+const file=input.files?.[0];if(!file)return;
+if(!file.type.startsWith('image/')||file.size>12*1024*1024)
+return alert('Choose a photo under 12 MB.');
+try{
+const image=await compressPhoto(file);
+const group=photos[id]||{before:[],after:[]};
+group[type]=group[type]||[];
+if(group[type].length>=3)return alert('Maximum 3 photos.');
+const updated={...photos,[id]:{...group,[type]:[...group[type],image]}};
+localStorage.setItem(PHOTO_KEY,JSON.stringify(updated));
+photos=updated;show('mine');notice('Photo saved.')
+}catch{alert('Unable to save photo. Storage may be full.')}
+finally{input.value=''}
 }
 function photoGallery(j,type){
- const list=photos[j.id]?.[type]||[];
- return '<p><b>'+type.toUpperCase()+' Photos ('+list.length+'/3)</b></p>'+
- '<div class="photos">'+list.map(src=>'<img src="'+src+'" alt="Work photo">').join('')+'</div>'
+const list=photos[j.id]?.[type]||[];
+return '<p><b>'+type.toUpperCase()+' Photos ('+list.length+'/3)</b></p>'+
+'<div class="photos">'+list.map(src=>'<img src="'+src+'" alt="Work photo">').join('')+'</div>'
 }
 function submitWork(id){
- const u=me(),j=findJob(id);
- if(!u||!j||j.workerId!==u.id||j.status!=='claimed')return;
- if(j.clockInAt)return alert('Clock out first.');
- if(!j.startedAt||!countPhotos(j,'before')||!countPhotos(j,'after'))
- return alert('Complete clock-in/out and both photo stages first.');
- if(!confirm('Submit for customer signature?'))return;
- j.status='submitted';j.submittedAt=Date.now();
- saveJobs();show('mine');notice('Waiting for customer approval.')
+const u=me(),j=findJob(id);
+if(!u||!j||j.workerId!==u.id||j.status!=='claimed')return;
+if(j.clockInAt)return alert('Clock out first.');
+if(!j.startedAt||!countPhotos(j,'before')||!countPhotos(j,'after'))
+return alert('Complete clock-in/out and both photo stages first.');
+if(!confirm('Submit for customer signature?'))return;
+j.status='submitted';j.submittedAt=Date.now();
+saveJobs();show('mine');notice('Waiting for customer approval.')
 }
+
+/* FIX: CUSTOMER SIGNATURE */
 function openSignature(id){
- const u=me(),j=findJob(id);
- if(!u||!j||u.role!=='customer'||j.ownerId!==u.id||j.status!=='submitted')return;
- if(!j.startedAt||j.clockInAt||!countPhotos(j,'before')||!countPhotos(j,'after'))
- return alert('Incomplete job documentation.');
- signingId=id;drawn=false;pointer=null;
- $('signerName').value=u.name;
- $('signatureJob').textContent=j.title;
- $('signatureModal').classList.remove('hidden');
- requestAnimationFrame(setupSignature)
+const u=me(),j=findJob(id);
+if(!u||!j||u.role!=='customer'||j.ownerId!==u.id||j.status!=='submitted')return;
+signingId=id;drawn=false;pointer=null;
+$('signerName').value=u.name;
+$('signatureJob').textContent=j.title;
+$('signatureModal').classList.remove('hidden');
+requestAnimationFrame(setupSignature)
 }
 function setupSignature(){
- const c=$('signatureCanvas'),r=c.getBoundingClientRect(),d=devicePixelRatio||1;
- c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);
- const ctx=c.getContext('2d');ctx.scale(d,d);
- ctx.strokeStyle='#142c50';ctx.lineWidth=2.5;
- ctx.lineCap='round';ctx.lineJoin='round'
+const c=$('signatureCanvas'),r=c.getBoundingClientRect(),d=devicePixelRatio||1;
+c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);
+const ctx=c.getContext('2d');ctx.scale(d,d);
+ctx.strokeStyle='#142c50';ctx.lineWidth=2.5;
+ctx.lineCap='round';ctx.lineJoin='round'
 }
 function clearSignature(){
- drawn=false;
- const c=$('signatureCanvas');
- c.getContext('2d').clearRect(0,0,c.width,c.height)
+drawn=false;
+const c=$('signatureCanvas');
+c.getContext('2d').clearRect(0,0,c.width,c.height)
 }
 function closeSignature(){
- signingId=null;pointer=null;
- $('signatureModal').classList.add('hidden')
+signingId=null;pointer=null;
+$('signatureModal').classList.add('hidden')
 }
 function sigPoint(e){
- const r=$('signatureCanvas').getBoundingClientRect();
- return {x:e.clientX-r.left,y:e.clientY-r.top}
+const r=$('signatureCanvas').getBoundingClientRect();
+return {x:e.clientX-r.left,y:e.clientY-r.top}
 }
 $('signatureCanvas').addEventListener('pointerdown',e=>{
- if(pointer!==null)return;
- pointer=e.pointerId;
- const c=$('signatureCanvas'),ctx=c.getContext('2d'),p=sigPoint(e);
- c.setPointerCapture(e.pointerId);
- ctx.beginPath();ctx.moveTo(p.x,p.y);
- ctx.lineTo(p.x+.1,p.y+.1);ctx.stroke();drawn=true
+if(pointer!==null)return;
+pointer=e.pointerId;
+const c=$('signatureCanvas'),ctx=c.getContext('2d'),p=sigPoint(e);
+c.setPointerCapture(e.pointerId);
+ctx.beginPath();ctx.moveTo(p.x,p.y);
+ctx.lineTo(p.x+.1,p.y+.1);ctx.stroke();drawn=true
 });
 $('signatureCanvas').addEventListener('pointermove',e=>{
- if(pointer!==e.pointerId)return;
- const p=sigPoint(e),ctx=$('signatureCanvas').getContext('2d');
- ctx.lineTo(p.x,p.y);ctx.stroke()
+if(pointer!==e.pointerId)return;
+const p=sigPoint(e),ctx=$('signatureCanvas').getContext('2d');
+ctx.lineTo(p.x,p.y);ctx.stroke()
 });
 ['pointerup','pointercancel'].forEach(t=>
- $('signatureCanvas').addEventListener(t,e=>{
- if(pointer===e.pointerId)pointer=null
- }));
+$('signatureCanvas').addEventListener(t,e=>{
+if(pointer===e.pointerId)pointer=null
+}));
 function finishSignature(){
- const u=me(),j=findJob(signingId);
- if(!u||!j||u.role!=='customer'||j.ownerId!==u.id||j.status!=='submitted')return;
- if($('signerName').value.trim().toLowerCase()!==u.name.toLowerCase())
- return alert('Enter the customer account name.');
- if(!drawn)return alert('Draw your signature.');
- if(!confirm('Sign and approve the job?'))return;
- const signedAt=Date.now();
- const record={name:u.name,signedAt,image:$('signatureCanvas').toDataURL('image/png')};
- try{
- const updated={...signatures,[j.id]:record};
- localStorage.setItem(SIGN_KEY,JSON.stringify(updated));signatures=updated
- }catch{return alert('Unable to save signature.')}
- j.status='completed';j.completedAt=signedAt;j.customerSignedAt=signedAt;
- saveJobs();closeSignature();show('mine');notice('Job signed and completed!')
+const u=me(),j=findJob(signingId);
+if(!u||!j||u.role!=='customer'||j.ownerId!==u.id||j.status!=='submitted')return;
+if($('signerName').value.trim().toLowerCase()!==u.name.toLowerCase())
+return alert('Enter the customer account name.');
+if(!drawn)return alert('Draw your signature.');
+if(!confirm('Sign and approve the job?'))return;
+const signedAt=Date.now();
+const record={name:u.name,signedAt,image:$('signatureCanvas').toDataURL('image/png')};
+try{
+const updated={...signatures,[j.id]:record};
+localStorage.setItem(SIGN_KEY,JSON.stringify(updated));signatures=updated
+}catch{return alert('Unable to save signature.')}
+j.status='completed';j.completedAt=signedAt;j.customerSignedAt=signedAt;
+saveJobs();closeSignature();show('mine');notice('Job signed and completed!')
 }
 function timeline(j){
- const steps=['available','claimed','submitted','completed'];
- const current=steps.indexOf(j.status);
- return '<div class="timeline">'+steps.map((s,i)=>
- '<span class="step '+(i<current?'done':i===current?'current':'')+'">'+
- ['Available','In Progress','Awaiting Signature','Completed'][i]+'</span>'
- ).join('')+'</div>'
+const steps=['available','claimed','submitted','completed'];
+const current=steps.indexOf(j.status);
+return '<div class="timeline">'+steps.map((s,i)=>
+'<span class="step '+(i<current?'done':i===current?'current':'')+'">'+
+['Available','In Progress','Awaiting Signature','Completed'][i]+'</span>'
+).join('')+'</div>'
 }
+
+/* FIX: MESSAGING */
 function messageBox(j){
- const u=me();
- const list=messages[j.id]||[];
- return '<div class="card"><h4>💬 Job Messages</h4>'+
- list.map(m=>'<div class="message '+(m.from===u.id?'mine':'')+'">'+
- '<b>'+esc(m.name)+'</b> · '+fmt(m.at)+'<p>'+esc(m.text)+'</p></div>').join('')+
- '<textarea id="msg-'+esc(j.id)+'" maxlength="1000" placeholder="Write a message"></textarea>'+
- '<button onclick="sendMessage('+JSON.stringify(j.id)+')">SEND MESSAGE</button></div>'
+const u=me();
+const list=messages[j.id]||[];
+const id=esc(j.id);
+return '<div class="card"><h4>💬 Job Messages</h4>'+
+list.map(m=>'<div class="message '+(m.from===u.id?'mine':'')+'">'+
+'<b>'+esc(m.name)+'</b> · '+fmt(m.at)+'<p>'+esc(m.text)+'</p></div>').join('')+
+'<textarea id="msg-'+id+'" maxlength="1000" placeholder="Write a message"></textarea>'+
+'<button type="button" data-send="'+id+'">SEND MESSAGE</button></div>'
 }
 function sendMessage(id){
- const u=me(),j=findJob(id);
- if(!u||!j||![j.ownerId,j.workerId].includes(u.id)||!j.workerId)return;
- const field=$('msg-'+id),text=field?.value.trim();
- if(!text)return;
- const updated={...messages,[id]:[...(messages[id]||[]),
- {id:uid(),from:u.id,name:u.name,text:text.slice(0,1000),at:Date.now()}]};
- try{localStorage.setItem(MSG_KEY,JSON.stringify(updated));messages=updated;render()}
- catch{alert('Could not save message.')}
+const u=me(),j=findJob(id);
+if(!u||!j||![j.ownerId,j.workerId].includes(u.id)||!j.workerId)return;
+const field=$('msg-'+id),text=field?.value.trim();
+if(!text)return alert('Write a message first.');
+const updated={...messages,[id]:[...(messages[id]||[]),
+{id:uid(),from:u.id,name:u.name,text:text.slice(0,1000),at:Date.now()}]};
+try{
+localStorage.setItem(MSG_KEY,JSON.stringify(updated));
+messages=updated;render();notice('Message sent!')
+}catch{alert('Could not save message.')}
 }
+document.addEventListener('click',e=>{
+const btn=e.target.closest('[data-send]');
+if(btn)sendMessage(btn.dataset.send)
+});
+
 function reviewForm(j){
- const existing=reviews[j.id];
- if(existing)return '<div class="card"><h4>Customer Review</h4><p class="stars">'+
- '★'.repeat(existing.rating)+'☆'.repeat(5-existing.rating)+'</p><p>'+
- esc(existing.text)+'</p></div>';
- return '<div class="card"><h4>⭐ Rate This Worker</h4>'+
- '<label>Rating</label><select id="rating-'+esc(j.id)+'">'+
- [5,4,3,2,1].map(n=>'<option value="'+n+'">'+n+' Stars</option>').join('')+
- '</select><textarea id="review-'+esc(j.id)+'" maxlength="500" placeholder="Write a review"></textarea>'+
- '<button onclick="saveReview('+JSON.stringify(j.id)+')">SUBMIT REVIEW</button></div>'
+const existing=reviews[j.id];
+if(existing)return '<div class="card"><h4>Customer Review</h4><p class="stars">'+
+'★'.repeat(existing.rating)+'☆'.repeat(5-existing.rating)+'</p><p>'+
+esc(existing.text)+'</p></div>';
+return '<div class="card"><h4>⭐ Rate This Worker</h4>'+
+'<label>Rating</label><select id="rating-'+esc(j.id)+'">'+
+[5,4,3,2,1].map(n=>'<option value="'+n+'">'+n+' Stars</option>').join('')+
+'</select><textarea id="review-'+esc(j.id)+'" maxlength="500" placeholder="Write a review"></textarea>'+
+'<button onclick="saveReview('+JSON.stringify(j.id)+')">SUBMIT REVIEW</button></div>'
 }
 function saveReview(id){
- const u=me(),j=findJob(id);
- if(!u||!j||j.ownerId!==u.id||j.status!=='completed'||!j.workerId||reviews[id])return;
- const rating=Number($('rating-'+id).value);
- const text=$('review-'+id).value.trim();
- if(!text)return alert('Write a review.');
- const updated={...reviews,[id]:{rating,text,workerId:j.workerId,customerId:u.id,at:Date.now()}};
- try{localStorage.setItem(REVIEW_KEY,JSON.stringify(updated));reviews=updated;render()}
- catch{alert('Could not save review.')}
+const u=me(),j=findJob(id);
+if(!u||!j||j.ownerId!==u.id||j.status!=='completed'||!j.workerId||reviews[id])return;
+const rating=Number($('rating-'+id).value);
+const text=$('review-'+id).value.trim();
+if(!text)return alert('Write a review.');
+const updated={...reviews,[id]:{rating,text,workerId:j.workerId,customerId:u.id,at:Date.now()}};
+try{
+localStorage.setItem(REVIEW_KEY,JSON.stringify(updated));
+reviews=updated;render()
+}catch{alert('Could not save review.')}
 }
 function workerProfile(u){
- const done=jobs.filter(j=>j.workerId===u.id&&j.status==='completed');
- const ratings=Object.values(reviews).filter(r=>r.workerId===u.id);
- const avg=ratings.length?
- (ratings.reduce((s,r)=>s+r.rating,0)/ratings.length).toFixed(1):'New';
- return '<div class="card"><div class="row">'+
- (u.avatar?'<img class="avatar" src="'+u.avatar+'" alt="Profile photo">':'<div style="font-size:45px">👷</div>')+
- '<div><h3>'+esc(u.name)+'</h3><p>'+esc(u.service||'Services')+'</p>'+
- '<p class="stars">★ '+avg+' ('+ratings.length+' reviews)</p></div></div>'+
- '<p>'+esc(u.bio||'No bio added yet.')+'</p>'+
- '<p><b>Service Area:</b> '+esc(u.area||u.city)+'</p>'+
- '<p><b>Experience:</b> '+esc(u.years||0)+' years</p>'+
- '<p><b>Completed Jobs:</b> '+done.length+'</p>'+
- '<p class="muted">Identity not verified</p></div>'
+const done=jobs.filter(j=>j.workerId===u.id&&j.status==='completed');
+const ratings=Object.values(reviews).filter(r=>r.workerId===u.id);
+const avg=ratings.length?
+(ratings.reduce((s,r)=>s+r.rating,0)/ratings.length).toFixed(1):'New';
+return '<div class="card"><div class="row">'+
+(u.avatar?'<img class="avatar" src="'+u.avatar+'" alt="Profile photo">':'<div style="font-size:45px">👷</div>')+
+'<div><h3>'+esc(u.name)+'</h3><p>'+esc(u.service||'Services')+'</p>'+
+'<p class="stars">★ '+avg+' ('+ratings.length+' reviews)</p></div></div>'+
+'<p>'+esc(u.bio||'No bio added yet.')+'</p>'+
+'<p><b>Service Area:</b> '+esc(u.area||u.city)+'</p>'+
+'<p><b>Experience:</b> '+esc(u.years||0)+' years</p>'+
+'<p><b>Completed Jobs:</b> '+done.length+'</p>'+
+'<p class="muted">Identity not verified</p></div>'
 }
+
+/* FIX: IPHONE CALENDAR */
 function calendarEvent(id){
- const u=me(),j=findJob(id);
- if(!u||!j||![j.ownerId,j.workerId].includes(u.id)||!j.date)return;
- const start=new Date(j.date+'T'+(j.time||'09:00')+':00');
- if(isNaN(start))return alert('Invalid job date.');
- const end=new Date(start.getTime()+3600000);
- const stamp=d=>d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+
- String(d.getDate()).padStart(2,'0')+'T'+String(d.getHours()).padStart(2,'0')+
- String(d.getMinutes()).padStart(2,'0')+'00';
- const clean=s=>String(s||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n')
- .replace(/,/g,'\\,').replace(/;/g,'\\;');
- const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//GigLink//Demo//EN',
- 'BEGIN:VEVENT','UID:'+j.id+'@giglink-demo',
- 'DTSTART:'+stamp(start),'DTEND:'+stamp(end),
- 'SUMMARY:'+clean('GigLink: '+j.title),
- 'DESCRIPTION:'+clean(j.description),
- 'LOCATION:'+clean(j.location),
- 'BEGIN:VALARM','TRIGGER:-PT60M','ACTION:DISPLAY',
- 'DESCRIPTION:GigLink job reminder','END:VALARM',
- 'END:VEVENT','END:VCALENDAR'].join('\r\n');
- const url=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));
- const a=document.createElement('a');a.href=url;a.download='GigLink-'+j.id+'.ics';
- document.body.appendChild(a);a.click();a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),1000)
+const u=me(),j=findJob(id);
+if(!u||!j||![j.ownerId,j.workerId].includes(u.id)||!j.date)return;
+const start=new Date(j.date+'T'+(j.time||'09:00')+':00');
+if(isNaN(start))return alert('Invalid job date.');
+const end=new Date(start.getTime()+3600000);
+const pad=n=>String(n).padStart(2,'0');
+const stamp=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+
+'T'+pad(d.getHours())+pad(d.getMinutes())+'00';
+const url='https://calendar.google.com/calendar/render?action=TEMPLATE'+
+'&text='+encodeURIComponent('GigLink: '+j.title)+
+'&dates='+encodeURIComponent(stamp(start)+'/'+stamp(end))+
+'&details='+encodeURIComponent(j.description||'GigLink scheduled job')+
+'&location='+encodeURIComponent(j.location||'');
+window.location.href=url
 }
+
 function receipt(id){
- const u=me(),j=findJob(id);
- if(!u||!j||j.status!=='completed'||![j.ownerId,j.workerId].includes(u.id))return;
- const p=split(j.budget),sig=signatures[id];
- const text=[
- 'GIGLINK — DEMO JOB RECEIPT',
- 'Diamond Shine Service LLC',
- 'Job: '+j.title,
- 'Customer: '+j.poster,
- 'Worker: '+(j.claimedBy||'Unknown'),
- 'Scheduled: '+j.date+' '+(j.time||''),
- 'Location: '+j.location,
- 'Status: Completed',
- 'First Clock In: '+fmt(j.startedAt),
- 'Time Worked: '+duration(workTime(j)),
- 'Before Photos: '+countPhotos(j,'before'),
- 'After Photos: '+countPhotos(j,'after'),
- 'Job Price: '+money(p.gross),
- 'GigLink Fee (15%): '+money(p.fee),
- 'Worker Earnings (85%): '+money(p.worker),
- 'Customer Signature: '+(sig?sig.name:'Legacy job — not recorded'),
- 'Completion Date: '+fmt(j.completedAt),
- '',
- 'DEMO ONLY — NOT PROOF OF PAYMENT',
- 'No actual payment has been collected or issued.'
- ].join('\n');
- const url=URL.createObjectURL(new Blob([text],{type:'text/plain'}));
- const a=document.createElement('a');a.href=url;a.download='GigLink-Receipt-'+id+'.txt';
- document.body.appendChild(a);a.click();a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),1000)
+const u=me(),j=findJob(id);
+if(!u||!j||j.status!=='completed'||![j.ownerId,j.workerId].includes(u.id))return;
+const p=split(j.budget),sig=signatures[id];
+const text=[
+'GIGLINK — DEMO JOB RECEIPT',
+'Diamond Shine Service LLC',
+'Job: '+j.title,
+'Customer: '+j.poster,
+'Worker: '+(j.claimedBy||'Unknown'),
+'Scheduled: '+j.date+' '+(j.time||''),
+'Location: '+j.location,
+'Status: Completed',
+'First Clock In: '+fmt(j.startedAt),
+'Time Worked: '+duration(workTime(j)),
+'Before Photos: '+countPhotos(j,'before'),
+'After Photos: '+countPhotos(j,'after'),
+'Job Price: '+money(p.gross),
+'GigLink Fee (15%): '+money(p.fee),
+'Worker Earnings (85%): '+money(p.worker),
+'Customer Signature: '+(sig?sig.name:'Legacy job — not recorded'),
+'Completion Date: '+fmt(j.completedAt),
+'',
+'DEMO ONLY — NOT PROOF OF PAYMENT',
+'No actual payment has been collected or issued.'
+].join('\n');
+const url=URL.createObjectURL(new Blob([text],{type:'text/plain'}));
+const a=document.createElement('a');a.href=url;a.download='GigLink-Receipt-'+id+'.txt';
+document.body.appendChild(a);a.click();a.remove();
+setTimeout(()=>URL.revokeObjectURL(url),1000)
 }
+
 function jobCard(j,context){
- const u=me();
- const worker=u.role==='worker'&&j.workerId===u.id;
- const owner=u.role==='customer'&&j.ownerId===u.id;
- let h='<div class="card job"><h3>'+esc(j.title)+'</h3>'+
- '<p><b>Category:</b> '+esc(j.category)+'</p>'+
- '<p>📍 '+esc(j.location)+' · 📅 '+esc(j.date)+' '+esc(j.time||'')+'</p>'+
- '<p>'+esc(j.description)+'</p>'+
- '<p><b>Status:</b> '+esc(j.status)+'</p>'+
- '<p><b>Worker:</b> '+esc(j.claimedBy||'Not assigned')+'</p>'+
- timeline(j)+bill(j.budget);
- if(context==='browse'&&u.role==='worker'&&j.status==='available')
- h+='<button onclick="claimJob('+JSON.stringify(j.id)+')">CLAIM GIG</button>';
- if(worker||owner){
- h+='<div class="card"><h3>📷 Photos & Time</h3>'+
- photoGallery(j,'before')+
- '<p><b>First Clock In:</b> '+fmt(j.startedAt)+'</p>'+
- '<p><b>Current Clock In:</b> '+fmt(j.clockInAt)+'</p>'+
- '<div class="clock" data-clock="'+esc(j.id)+'">'+duration(workTime(j))+'</div>'+
- photoGallery(j,'after');
- if(worker&&j.status==='claimed'){
- const before=!j.startedAt,after=!!j.startedAt&&!j.clockInAt;
- h+='<div class="controls"><h3>🧰 WORKER JOB CONTROLS</h3>'+
- '<label class="upload '+(before?'':'off')+'" for="before-'+esc(j.id)+'">📷 UPLOAD BEFORE PHOTOS ('+countPhotos(j,'before')+'/3)</label>'+
- '<input class="file" type="file" accept="image/*" id="before-'+esc(j.id)+'" onchange="addPhoto('+JSON.stringify(j.id)+',\'before\',this)" '+(before?'':'disabled')+'>'+
- '<button class="in" onclick="clockIn('+JSON.stringify(j.id)+')" '+(j.clockInAt||!countPhotos(j,'before')?'disabled':'')+'>▶ CLOCK IN</button>'+
- '<button class="out" onclick="clockOut('+JSON.stringify(j.id)+')" '+(!j.clockInAt?'disabled':'')+'>⏹ CLOCK OUT</button>'+
- '<label class="upload '+(after?'':'off')+'" for="after-'+esc(j.id)+'">📷 UPLOAD AFTER PHOTOS ('+countPhotos(j,'after')+'/3)</label>'+
- '<input class="file" type="file" accept="image/*" id="after-'+esc(j.id)+'" onchange="addPhoto('+JSON.stringify(j.id)+',\'after\',this)" '+(after?'':'disabled')+'>'+
- '<button class="submit" onclick="submitWork('+JSON.stringify(j.id)+')" '+
- (j.clockInAt||!j.startedAt||!countPhotos(j,'before')||!countPhotos(j,'after')?'disabled':'')+
- '>✅ SUBMIT FOR CUSTOMER SIGNATURE</button></div>'
- }
- if(owner&&j.status==='submitted')
- h+='<button onclick="openSignature('+JSON.stringify(j.id)+')">✍️ REVIEW, SIGN & APPROVE</button>';
- if(j.status==='completed'){
- const sig=signatures[j.id];
- h+=sig?'<p><b>Signed By:</b> '+esc(sig.name)+' · '+fmt(sig.signedAt)+'</p>'+
- '<img class="signature-image" src="'+sig.image+'" alt="Customer signature">':
- '<p class="muted">Legacy job without recorded signature.</p>';
- h+='<button onclick="receipt('+JSON.stringify(j.id)+')">📄 DOWNLOAD JOB RECEIPT</button>';
- if(owner&&j.workerId)h+=reviewForm(j)
- }
- h+='</div>';
- if(j.workerId)h+=messageBox(j);
- if(j.date)h+='<button onclick="calendarEvent('+JSON.stringify(j.id)+')">📅 ADD TO CALENDAR</button>'
- }
- return h+'</div>'
+const u=me();
+const worker=u.role==='worker'&&j.workerId===u.id;
+const owner=u.role==='customer'&&j.ownerId===u.id;
+let h='<div class="card job"><h3>'+esc(j.title)+'</h3>'+
+'<p><b>Category:</b> '+esc(j.category)+'</p>'+
+'<p>📍 '+esc(j.location)+' · 📅 '+esc(j.date)+' '+esc(j.time||'')+'</p>'+
+'<p>'+esc(j.description)+'</p>'+
+'<p><b>Status:</b> '+esc(j.status)+'</p>'+
+'<p><b>Worker:</b> '+esc(j.claimedBy||'Not assigned')+'</p>'+
+timeline(j)+bill(j.budget);
+if(context==='browse'&&u.role==='worker'&&j.status==='available')
+h+='<button onclick="claimJob('+JSON.stringify(j.id)+')">CLAIM GIG</button>';
+if(worker||owner){
+h+='<div class="card"><h3>📷 Photos & Time</h3>'+
+photoGallery(j,'before')+
+'<p><b>First Clock In:</b> '+fmt(j.startedAt)+'</p>'+
+'<p><b>Current Clock In:</b> '+fmt(j.clockInAt)+'</p>'+
+'<div class="clock" data-clock="'+esc(j.id)+'">'+duration(workTime(j))+'</div>'+
+photoGallery(j,'after');
+if(worker&&j.status==='claimed'){
+const before=!j.startedAt,after=!!j.startedAt&&!j.clockInAt;
+h+='<div class="controls"><h3>🧰 WORKER JOB CONTROLS</h3>'+
+'<label class="upload '+(before?'':'off')+'" for="before-'+esc(j.id)+'">📷 UPLOAD BEFORE PHOTOS ('+countPhotos(j,'before')+'/3)</label>'+
+'<input class="file" type="file" accept="image/*" id="before-'+esc(j.id)+'" onchange="addPhoto('+JSON.stringify(j.id)+',\'before\',this)" '+(before?'':'disabled')+'>'+
+'<button class="in" onclick="clockIn('+JSON.stringify(j.id)+')" '+(j.clockInAt||!countPhotos(j,'before')?'disabled':'')+'>▶ CLOCK IN</button>'+
+'<button class="out" onclick="clockOut('+JSON.stringify(j.id)+')" '+(!j.clockInAt?'disabled':'')+'>⏹ CLOCK OUT</button>'+
+'<label class="upload '+(after?'':'off')+'" for="after-'+esc(j.id)+'">📷 UPLOAD AFTER PHOTOS ('+countPhotos(j,'after')+'/3)</label>'+
+'<input class="file" type="file" accept="image/*" id="after-'+esc(j.id)+'" onchange="addPhoto('+JSON.stringify(j.id)+',\'after\',this)" '+(after?'':'disabled')+'>'+
+'<button class="submit" onclick="submitWork('+JSON.stringify(j.id)+')" '+
+(j.clockInAt||!j.startedAt||!countPhotos(j,'before')||!countPhotos(j,'after')?'disabled':'')+
+'>✅ SUBMIT FOR CUSTOMER SIGNATURE</button></div>'
 }
+if(owner&&j.status==='submitted')
+h+='<button onclick="openSignature('+JSON.stringify(j.id)+')">✍️ REVIEW, SIGN & APPROVE</button>';
+if(j.status==='completed'){
+const sig=signatures[j.id];
+h+=sig?'<p><b>Signed By:</b> '+esc(sig.name)+' · '+fmt(sig.signedAt)+'</p>'+
+'<img class="signature-image" src="'+sig.image+'" alt="Customer signature">':
+'<p class="muted">Legacy job without recorded signature.</p>';
+h+='<button onclick="receipt('+JSON.stringify(j.id)+')">📄 DOWNLOAD JOB RECEIPT</button>';
+if(owner&&j.workerId)h+=reviewForm(j)
+}
+h+='</div>';
+if(j.workerId)h+=messageBox(j);
+if(j.date)h+='<button onclick="calendarEvent('+JSON.stringify(j.id)+')">📅 ADD TO CALENDAR</button>'
+}
+return h+'</div>'
+}
+
 function render(){
- const u=me();if(!u)return;
- const mine=jobs.filter(j=>u.role==='worker'?j.workerId===u.id:j.ownerId===u.id);
- const available=jobs.filter(j=>j.status==='available'&&
- ($('categoryFilter').value==='All'||$('categoryFilter').value===j.category));
- const done=mine.filter(j=>j.status==='completed');
- const pending=mine.filter(j=>['claimed','submitted'].includes(j.status));
- const sum=(list,key)=>list.reduce((s,j)=>s+split(j.budget)[key],0);
- $('browseList').innerHTML=available.length?
- available.map(j=>jobCard(j,'browse')).join(''):'<div class="card">No available gigs.</div>';
- $('mineList').innerHTML=mine.length?
- mine.map(j=>jobCard(j,'mine')).join(''):'<div class="card">No gigs yet.</div>';
- $('dashboardStats').innerHTML=
- stat('Available Gigs',jobs.filter(j=>j.status==='available').length)+
- stat('My Gigs',mine.length);
- $('earningsStats').innerHTML=u.role==='worker'?
- stat('Completed Gigs',done.length)+stat('Estimated Earnings',money(sum(done,'worker')))+
- stat('Pending Gigs',pending.length)+stat('Potential Earnings',money(sum(pending,'worker'))):
- stat('Completed Jobs',done.length)+stat('Completed Job Value',money(sum(done,'gross')))+
- stat('Pending Jobs',pending.length)+stat('Pending Job Value',money(sum(pending,'gross')));
- $('earningsList').innerHTML=done.map(j=>
- '<div class="card"><b>'+esc(j.title)+'</b>'+bill(j.budget)+
- '<button onclick="receipt('+JSON.stringify(j.id)+')">DOWNLOAD RECEIPT</button></div>'
- ).join('');
- const allDone=jobs.filter(j=>j.status==='completed');
- const allPending=jobs.filter(j=>['claimed','submitted'].includes(j.status));
- $('platformStats').innerHTML=
- stat('Completed Gigs',allDone.length)+stat('Estimated Fees',money(sum(allDone,'fee')))+
- stat('Pending Gigs',allPending.length)+stat('Potential Fees',money(sum(allPending,'fee')))+
- stat('Completed Job Value',money(sum(allDone,'gross')))+
- stat('Worker Earnings',money(sum(allDone,'worker')));
- $('messageList').innerHTML=mine.filter(j=>j.workerId).map(j=>
- '<div class="card"><h3>'+esc(j.title)+'</h3>'+messageBox(j)+'</div>'
- ).join('')||'<div class="card">No conversations yet.</div>';
- $('scheduleList').innerHTML=mine.filter(j=>j.date).sort((a,b)=>
- (a.date+' '+(a.time||'')).localeCompare(b.date+' '+(b.time||''))).map(j=>
- '<div class="card"><b>'+esc(j.title)+'</b><p>'+esc(j.date)+' '+esc(j.time||'')+
- '</p><p>'+esc(j.location)+'</p><p>Status: '+esc(j.status)+'</p>'+
- '<button onclick="calendarEvent('+JSON.stringify(j.id)+')">ADD TO CALENDAR</button></div>'
- ).join('')||'<div class="card">No scheduled gigs.</div>';
- $('workerList').innerHTML=users.filter(x=>x.role==='worker').map(workerProfile).join('')||
- '<div class="card">No worker profiles yet.</div>';
- $('profileDetails').innerHTML=u.role==='worker'?workerProfile(u):
- '<p><b>'+esc(u.name)+'</b> · '+esc(u.city)+'</p><p>Customer Account</p>'
+const u=me();if(!u)return;
+const mine=jobs.filter(j=>u.role==='worker'?j.workerId===u.id:j.ownerId===u.id);
+const available=jobs.filter(j=>j.status==='available'&&
+($('categoryFilter').value==='All'||$('categoryFilter').value===j.category));
+const done=mine.filter(j=>j.status==='completed');
+const pending=mine.filter(j=>['claimed','submitted'].includes(j.status));
+const sum=(list,key)=>list.reduce((s,j)=>s+split(j.budget)[key],0);
+$('browseList').innerHTML=available.length?
+available.map(j=>jobCard(j,'browse')).join(''):'<div class="card">No available gigs.</div>';
+$('mineList').innerHTML=mine.length?
+mine.map(j=>jobCard(j,'mine')).join(''):'<div class="card">No gigs yet.</div>';
+$('dashboardStats').innerHTML=
+stat('Available Gigs',jobs.filter(j=>j.status==='available').length)+
+stat('My Gigs',mine.length);
+$('earningsStats').innerHTML=u.role==='worker'?
+stat('Completed Gigs',done.length)+stat('Estimated Earnings',money(sum(done,'worker')))+
+stat('Pending Gigs',pending.length)+stat('Potential Earnings',money(sum(pending,'worker'))):
+stat('Completed Jobs',done.length)+stat('Completed Job Value',money(sum(done,'gross')))+
+stat('Pending Jobs',pending.length)+stat('Pending Job Value',money(sum(pending,'gross')));
+$('earningsList').innerHTML=done.map(j=>
+'<div class="card"><b>'+esc(j.title)+'</b>'+bill(j.budget)+
+'<button onclick="receipt('+JSON.stringify(j.id)+')">DOWNLOAD RECEIPT</button></div>'
+).join('');
+const allDone=jobs.filter(j=>j.status==='completed');
+const allPending=jobs.filter(j=>['claimed','submitted'].includes(j.status));
+$('platformStats').innerHTML=
+stat('Completed Gigs',allDone.length)+stat('Estimated Fees',money(sum(allDone,'fee')))+
+stat('Pending Gigs',allPending.length)+stat('Potential Fees',money(sum(allPending,'fee')))+
+stat('Completed Job Value',money(sum(allDone,'gross')))+
+stat('Worker Earnings',money(sum(allDone,'worker')));
+$('messageList').innerHTML=mine.filter(j=>j.workerId).map(j=>
+'<div class="card"><h3>'+esc(j.title)+'</h3>'+messageBox(j)+'</div>'
+).join('')||'<div class="card">No conversations yet.</div>';
+$('scheduleList').innerHTML=mine.filter(j=>j.date).sort((a,b)=>
+(a.date+' '+(a.time||'')).localeCompare(b.date+' '+(b.time||''))).map(j=>
+'<div class="card"><b>'+esc(j.title)+'</b><p>'+esc(j.date)+' '+esc(j.time||'')+
+'</p><p>'+esc(j.location)+'</p><p>Status: '+esc(j.status)+'</p>'+
+'<button onclick="calendarEvent('+JSON.stringify(j.id)+')">ADD TO CALENDAR</button></div>'
+).join('')||'<div class="card">No scheduled gigs.</div>';
+$('workerList').innerHTML=users.filter(x=>x.role==='worker').map(workerProfile).join('')||
+'<div class="card">No worker profiles yet.</div>';
+$('profileDetails').innerHTML=u.role==='worker'?workerProfile(u):
+'<p><b>'+esc(u.name)+'</b> · '+esc(u.city)+'</p><p>Customer Account</p>'
 }
+
 $('profileForm').onsubmit=async e=>{
- e.preventDefault();
- const u=me();if(!u)return;
- let avatar=u.avatar||'';
- const file=$('profilePhoto').files?.[0];
- if(file){
- if(!file.type.startsWith('image/')||file.size>8*1024*1024)
- return alert('Choose a photo under 8 MB.');
- try{avatar=await compressPhoto(file,220,.55)}
- catch{return alert('Unable to read photo.')}
- }
- const updated={...u,
- bio:$('profileBio').value.trim().slice(0,500),
- area:$('profileArea').value.trim().slice(0,100),
- years:Math.min(80,Math.max(0,Number($('profileYears').value)||0)),
- service:$('profileService').value,avatar};
- const next=users.map(x=>x.id===u.id?updated:x);
- try{
- localStorage.setItem(USER_KEY,JSON.stringify(next));
- users=next;$('profilePhoto').value='';render();notice('Profile saved!')
- }catch{alert('Browser storage full. Try a smaller photo.')}
+e.preventDefault();
+const u=me();if(!u)return;
+let avatar=u.avatar||'';
+const file=$('profilePhoto').files?.[0];
+if(file){
+if(!file.type.startsWith('image/')||file.size>8*1024*1024)
+return alert('Choose a photo under 8 MB.');
+try{avatar=await compressPhoto(file,220,.55)}
+catch{return alert('Unable to read photo.')}
+}
+const updated={...u,
+bio:$('profileBio').value.trim().slice(0,500),
+area:$('profileArea').value.trim().slice(0,100),
+years:Math.min(80,Math.max(0,Number($('profileYears').value)||0)),
+service:$('profileService').value,avatar};
+const next=users.map(x=>x.id===u.id?updated:x);
+try{
+localStorage.setItem(USER_KEY,JSON.stringify(next));
+users=next;$('profilePhoto').value='';render();notice('Profile saved!')
+}catch{alert('Browser storage full. Try a smaller photo.')}
 };
+
 function helpAnswer(q){
- const t=q.toLowerCase();
- if(/message|chat/.test(t))return 'Open Messages after a worker claims a job. Messages are stored in this browser.';
- if(/review|rating|star/.test(t))return 'Customers can leave a 1–5 star review after signing and approving a job.';
- if(/calendar|schedule|remind/.test(t))return 'Open Schedule and download a calendar event to your phone.';
- if(/receipt|invoice/.test(t))return 'Completed jobs include a downloadable demo receipt.';
- if(/profile|experience/.test(t))return 'Open Profile to add a photo, experience, bio and service area.';
- if(/sign|approve/.test(t))return 'Customers must draw a signature before a submitted job is completed.';
- if(/photo|picture|before|after/.test(t))return 'Upload BEFORE photos, clock in, clock out, upload AFTER photos, then submit.';
- if(/clock|time|hour/.test(t))return 'Open My Gigs for the CLOCK IN and CLOCK OUT buttons.';
- if(/fee|earn|pay|money/.test(t))return 'GigLink deducts an estimated 15% fee. No real payments are processed.';
- return 'Ask about messages, reviews, scheduling, receipts, profiles, photos, time tracking or signatures.'
+const t=q.toLowerCase();
+if(/message|chat/.test(t))return 'Open Messages after a worker claims a job. Messages are stored in this browser.';
+if(/review|rating|star/.test(t))return 'Customers can leave a 1–5 star review after signing and approving a job.';
+if(/calendar|schedule|remind/.test(t))return 'Open Schedule and tap Add to Calendar to open Google Calendar.';
+if(/receipt|invoice/.test(t))return 'Completed jobs include a downloadable demo receipt.';
+if(/profile|experience/.test(t))return 'Open Profile to add a photo, experience, bio and service area.';
+if(/sign|approve/.test(t))return 'Customers must draw a signature before a submitted job is completed.';
+if(/photo|picture|before|after/.test(t))return 'Upload BEFORE photos, clock in, clock out, upload AFTER photos, then submit.';
+if(/clock|time|hour/.test(t))return 'Open My Gigs for the CLOCK IN and CLOCK OUT buttons.';
+if(/fee|earn|pay|money/.test(t))return 'GigLink deducts an estimated 15% fee. No real payments are processed.';
+return 'Ask about messages, reviews, scheduling, receipts, profiles, photos, time tracking or signatures.'
 }
 function ask(){
- const q=$('question').value.trim();if(!q)return;
- const a=document.createElement('div');a.className='message mine';a.textContent='You: '+q;
- const b=document.createElement('div');b.className='message';b.textContent='GigLink: '+helpAnswer(q);
- $('chat').append(a,b);$('question').value='';
- $('chat').scrollTop=$('chat').scrollHeight
+const q=$('question').value.trim();if(!q)return;
+const a=document.createElement('div');a.className='message mine';a.textContent='You: '+q;
+const b=document.createElement('div');b.className='message';b.textContent='GigLink: '+helpAnswer(q);
+$('chat').append(a,b);$('question').value='';
+$('chat').scrollTop=$('chat').scrollHeight
 }
 $('question').addEventListener('keydown',e=>{
- if(e.key==='Enter'){e.preventDefault();ask()}
+if(e.key==='Enter'){e.preventDefault();ask()}
 });
 for(const id of ['accountService','jobCategory','profileService'])
- categories.forEach(c=>$(id).add(new Option(c,c)));
+categories.forEach(c=>$(id).add(new Option(c,c)));
 $('categoryFilter').add(new Option('All Categories','All'));
 categories.forEach(c=>$('categoryFilter').add(new Option(c,c)));
 setInterval(()=>{
- document.querySelectorAll('[data-clock]').forEach(node=>{
- const j=findJob(node.dataset.clock);
- if(j)node.textContent=duration(workTime(j))
- })
+document.querySelectorAll('[data-clock]').forEach(node=>{
+const j=findJob(node.dataset.clock);
+if(j)node.textContent=duration(workTime(j))
+})
 },1000);
 if(me())loginAs(session);
 </script>
