@@ -4,13 +4,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GigLink — Step 11B</title>
+<title>GigLink — Step 11C</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font:16px Arial,sans-serif;background:#f1f5fb;color:#192e48}
 header,footer{background:#0d1d38;color:white;text-align:center;padding:20px}
 nav{background:#204a79;display:flex;flex-wrap:wrap;justify-content:center;padding:8px}
-button{background:#147af3;color:white;border:0;border-radius:10px;padding:12px 15px;margin:4px;cursor:pointer;font-weight:bold}
+button{background:#147af3;color:white;border:0;border-radius:10px;padding:12px 15px;margin:4px;cursor:pointer;font-weight:bold;min-height:44px}
 button:disabled{opacity:.4;cursor:not-allowed}
 input,select,textarea{width:100%;font:inherit;padding:11px;margin:6px 0 12px;border:1px solid #b8cbe0;border-radius:9px}
 textarea{min-height:80px}
@@ -37,6 +37,7 @@ main{max-width:920px;margin:auto;padding:14px;min-height:60vh}
 .in{background:#14834b}
 .out{background:#b93232}
 .submit{background:#263d75}
+.approve{background:#12834b;width:100%;font-size:17px}
 .clock{text-align:center;font-size:27px;font-weight:bold;color:#1757a0}
 .photos{display:flex;flex-wrap:wrap;gap:8px}
 .photos img{width:105px;height:105px;object-fit:cover;border-radius:8px}
@@ -44,9 +45,9 @@ main{max-width:920px;margin:auto;padding:14px;min-height:60vh}
 .step{padding:7px;border-radius:8px;background:#e7eaf0;font-size:12px}
 .step.done{background:#d6f4e3;color:#11633a}
 .step.current{background:#d7e8ff;color:#124c96;font-weight:bold}
-.modal{position:fixed;inset:0;background:#06162bcc;z-index:20;display:flex;align-items:center;justify-content:center;padding:12px}
+.modal{position:fixed;inset:0;background:#06162bdd;z-index:100;display:flex;align-items:center;justify-content:center;padding:12px}
 .dialog{background:white;padding:18px;border-radius:14px;width:min(100%,600px);max-height:94dvh;overflow:auto}
-#signatureCanvas{width:100%;height:175px;border:2px dashed #7c9bbd;border-radius:8px;touch-action:none;background:white}
+#signatureCanvas{display:block;width:100%;height:190px;border:2px dashed #7c9bbd;border-radius:8px;touch-action:none;background:white;user-select:none;-webkit-user-select:none}
 .signature-image{max-width:100%;height:85px;object-fit:contain}
 .message{background:#edf4ff;padding:9px;border-radius:9px;margin:7px 0;white-space:pre-wrap}
 .message.mine{background:#dff5e8}
@@ -56,6 +57,7 @@ main{max-width:920px;margin:auto;padding:14px;min-height:60vh}
 .stars{color:#a86b00;font-size:20px}
 .chat{height:200px;overflow:auto;background:#f4f8ff;border-radius:10px;padding:10px}
 #notice{color:#08774a;font-weight:bold}
+#signatureStatus{font-weight:bold;color:#1757a0}
 @media print{
 header,nav,footer,button{display:none!important}
 main{max-width:100%}
@@ -90,7 +92,7 @@ main{max-width:100%}
 <label>Email</label><input id="accountEmail" type="email" required>
 <label>City / State</label><input id="accountCity" required>
 <label>Primary Service</label><select id="accountService"></select>
-<p class="warning">Demo only. Use fictional account information.</p>
+<p class="warning">Demo only. Use fictional information.</p>
 <button>CREATE ACCOUNT</button>
 </form>
 </div>
@@ -168,13 +170,13 @@ main{max-width:100%}
 
 <section id="messages" class="hidden">
 <h2>Customer & Worker Messages</h2>
-<p class="warning">Messages work between demo accounts in this browser only.</p>
+<p class="warning">Messages are shared between demo accounts in this browser only.</p>
 <div id="messageList"></div>
 </section>
 
 <section id="schedule" class="hidden">
 <h2>Job Schedule</h2>
-<p>Tap Add to Calendar to open Google Calendar with the job details.</p>
+<p>Download an Apple Calendar event and open it on your iPhone.</p>
 <div id="scheduleList"></div>
 </section>
 
@@ -258,14 +260,16 @@ main{max-width:100%}
 <div class="dialog">
 <h2>Customer Completion Signature</h2>
 <p id="signatureJob"></p>
-<p>By signing, you confirm you reviewed the photos and time record and approve completion.</p>
-<p class="warning">Demo signature, not a verified e-signature service.</p>
-<label>Customer Name</label><input id="signerName">
-<label>Draw Signature With Your Finger</label>
+<p>Review the completed work, then sign below.</p>
+<p class="warning">Demo signature only. Not a verified e-signature service.</p>
+<label>Customer Name</label>
+<input id="signerName" autocomplete="off">
+<label>Sign With Your Finger</label>
 <canvas id="signatureCanvas"></canvas>
-<button onclick="clearSignature()">CLEAR</button>
-<button onclick="closeSignature()">CANCEL</button>
-<button onclick="finishSignature()">SIGN & APPROVE</button>
+<p id="signatureStatus">Draw your signature in the box.</p>
+<button type="button" id="clearSignatureButton">CLEAR</button>
+<button type="button" id="cancelSignatureButton">CANCEL</button>
+<button type="button" class="approve" id="finishSignatureButton">SIGN & APPROVE</button>
 </div>
 </div>
 
@@ -301,7 +305,10 @@ let photos=read(PHOTO_KEY,{});
 let signatures=read(SIGN_KEY,{});
 let messages=read(MSG_KEY,{});
 let reviews=read(REVIEW_KEY,{});
-let signingId=null,drawn=false,pointer=null;
+let signingId=null;
+let drawn=false;
+let drawing=false;
+let activePointer=null;
 
 if(!Array.isArray(jobs))jobs=[];
 if(!Array.isArray(users))users=[];
@@ -311,7 +318,7 @@ if(!messages||typeof messages!=='object')messages={};
 if(!reviews||typeof reviews!=='object')reviews={};
 
 const me=()=>users.find(u=>u.id===session);
-const findJob=id=>jobs.find(j=>j.id===id);
+const findJob=id=>jobs.find(j=>String(j.id)===String(id));
 const saveJobs=()=>localStorage.setItem(JOB_KEY,JSON.stringify(jobs));
 const saveUsers=()=>localStorage.setItem(USER_KEY,JSON.stringify(users));
 const notice=t=>$('notice').textContent=t;
@@ -515,69 +522,159 @@ j.status='submitted';j.submittedAt=Date.now();
 saveJobs();show('mine');notice('Waiting for customer approval.')
 }
 
-/* FIX: CUSTOMER SIGNATURE */
+/* STEP 11C: CUSTOMER SIGNATURE FIX */
 function openSignature(id){
 const u=me(),j=findJob(id);
-if(!u||!j||u.role!=='customer'||j.ownerId!==u.id||j.status!=='submitted')return;
-signingId=id;drawn=false;pointer=null;
+if(!u||u.role!=='customer'){
+alert('Sign in with the customer account.');
+return;
+}
+if(!j){
+alert('This job could not be found.');
+return;
+}
+if(j.ownerId!==u.id){
+alert('Only the customer who posted this job can approve it.');
+return;
+}
+if(j.status!=='submitted'){
+alert('Worker must submit the job first. Current status: '+j.status);
+return;
+}
+signingId=j.id;
+drawn=false;
+drawing=false;
+activePointer=null;
 $('signerName').value=u.name;
 $('signatureJob').textContent=j.title;
+$('signatureStatus').textContent='Draw your signature in the box.';
 $('signatureModal').classList.remove('hidden');
-requestAnimationFrame(setupSignature)
+document.body.style.overflow='hidden';
+requestAnimationFrame(()=>{
+setupSignature();
+setTimeout(setupSignature,100);
+});
 }
 function setupSignature(){
-const c=$('signatureCanvas'),r=c.getBoundingClientRect(),d=devicePixelRatio||1;
-c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);
-const ctx=c.getContext('2d');ctx.scale(d,d);
-ctx.strokeStyle='#142c50';ctx.lineWidth=2.5;
-ctx.lineCap='round';ctx.lineJoin='round'
+const c=$('signatureCanvas');
+const r=c.getBoundingClientRect();
+if(r.width<10||r.height<10)return;
+const ratio=window.devicePixelRatio||1;
+c.width=Math.round(r.width*ratio);
+c.height=Math.round(r.height*ratio);
+const ctx=c.getContext('2d');
+ctx.setTransform(ratio,0,0,ratio,0,0);
+ctx.strokeStyle='#142c50';
+ctx.lineWidth=3;
+ctx.lineCap='round';
+ctx.lineJoin='round';
 }
 function clearSignature(){
 drawn=false;
 const c=$('signatureCanvas');
-c.getContext('2d').clearRect(0,0,c.width,c.height)
+c.getContext('2d').clearRect(0,0,c.width,c.height);
+$('signatureStatus').textContent='Draw your signature in the box.';
 }
 function closeSignature(){
-signingId=null;pointer=null;
-$('signatureModal').classList.add('hidden')
+signingId=null;
+drawing=false;
+activePointer=null;
+$('signatureModal').classList.add('hidden');
+document.body.style.overflow='';
 }
 function sigPoint(e){
 const r=$('signatureCanvas').getBoundingClientRect();
-return {x:e.clientX-r.left,y:e.clientY-r.top}
+return {x:e.clientX-r.left,y:e.clientY-r.top};
 }
-$('signatureCanvas').addEventListener('pointerdown',e=>{
-if(pointer!==null)return;
-pointer=e.pointerId;
-const c=$('signatureCanvas'),ctx=c.getContext('2d'),p=sigPoint(e);
-c.setPointerCapture(e.pointerId);
-ctx.beginPath();ctx.moveTo(p.x,p.y);
-ctx.lineTo(p.x+.1,p.y+.1);ctx.stroke();drawn=true
-});
-$('signatureCanvas').addEventListener('pointermove',e=>{
-if(pointer!==e.pointerId)return;
-const p=sigPoint(e),ctx=$('signatureCanvas').getContext('2d');
-ctx.lineTo(p.x,p.y);ctx.stroke()
-});
-['pointerup','pointercancel'].forEach(t=>
-$('signatureCanvas').addEventListener(t,e=>{
-if(pointer===e.pointerId)pointer=null
-}));
+const sigCanvas=$('signatureCanvas');
+sigCanvas.addEventListener('pointerdown',e=>{
+e.preventDefault();
+if(drawing)return;
+drawing=true;
+activePointer=e.pointerId;
+try{sigCanvas.setPointerCapture(e.pointerId)}catch{}
+const p=sigPoint(e),ctx=sigCanvas.getContext('2d');
+ctx.beginPath();
+ctx.moveTo(p.x,p.y);
+ctx.lineTo(p.x+.1,p.y+.1);
+ctx.stroke();
+drawn=true;
+$('signatureStatus').textContent='Signature detected. Tap SIGN & APPROVE.';
+},{passive:false});
+sigCanvas.addEventListener('pointermove',e=>{
+if(!drawing||activePointer!==e.pointerId)return;
+e.preventDefault();
+const p=sigPoint(e),ctx=sigCanvas.getContext('2d');
+ctx.lineTo(p.x,p.y);
+ctx.stroke();
+},{passive:false});
+function endDrawing(e){
+if(activePointer===e.pointerId){
+drawing=false;
+activePointer=null;
+}
+}
+sigCanvas.addEventListener('pointerup',endDrawing);
+sigCanvas.addEventListener('pointercancel',endDrawing);
+
+$('clearSignatureButton').addEventListener('click',clearSignature);
+$('cancelSignatureButton').addEventListener('click',closeSignature);
+$('finishSignatureButton').addEventListener('click',finishSignature);
+
 function finishSignature(){
 const u=me(),j=findJob(signingId);
-if(!u||!j||u.role!=='customer'||j.ownerId!==u.id||j.status!=='submitted')return;
-if($('signerName').value.trim().toLowerCase()!==u.name.toLowerCase())
-return alert('Enter the customer account name.');
-if(!drawn)return alert('Draw your signature.');
-if(!confirm('Sign and approve the job?'))return;
+if(!u||!j||j.ownerId!==u.id||j.status!=='submitted'){
+alert('The job is not ready for customer approval.');
+return;
+}
+const name=$('signerName').value.trim();
+if(!name){
+alert('Enter your name.');
+return;
+}
+if(!drawn){
+alert('Please draw your signature with your finger.');
+return;
+}
+if(!confirm('Approve this completed job?'))return;
 const signedAt=Date.now();
-const record={name:u.name,signedAt,image:$('signatureCanvas').toDataURL('image/png')};
+const record={
+name,
+signedAt,
+image:sigCanvas.toDataURL('image/png')
+};
 try{
 const updated={...signatures,[j.id]:record};
-localStorage.setItem(SIGN_KEY,JSON.stringify(updated));signatures=updated
-}catch{return alert('Unable to save signature.')}
-j.status='completed';j.completedAt=signedAt;j.customerSignedAt=signedAt;
-saveJobs();closeSignature();show('mine');notice('Job signed and completed!')
+localStorage.setItem(SIGN_KEY,JSON.stringify(updated));
+signatures=updated;
+j.status='completed';
+j.completedAt=signedAt;
+j.customerSignedAt=signedAt;
+saveJobs();
+}catch(e){
+alert('Could not save approval. Browser storage may be full.');
+return;
 }
+closeSignature();
+show('mine');
+notice('Job signed and completed!');
+}
+
+/* RELIABLE BUTTON HANDLING */
+document.addEventListener('click',e=>{
+const approve=e.target.closest('[data-approve]');
+if(approve){
+e.preventDefault();
+openSignature(approve.dataset.approve);
+return;
+}
+const send=e.target.closest('[data-send]');
+if(send){
+e.preventDefault();
+sendMessage(send.dataset.send);
+}
+});
+
 function timeline(j){
 const steps=['available','claimed','submitted','completed'];
 const current=steps.indexOf(j.status);
@@ -587,11 +684,8 @@ return '<div class="timeline">'+steps.map((s,i)=>
 ).join('')+'</div>'
 }
 
-/* FIX: MESSAGING */
 function messageBox(j){
-const u=me();
-const list=messages[j.id]||[];
-const id=esc(j.id);
+const u=me(),list=messages[j.id]||[],id=esc(j.id);
 return '<div class="card"><h4>💬 Job Messages</h4>'+
 list.map(m=>'<div class="message '+(m.from===u.id?'mine':'')+'">'+
 '<b>'+esc(m.name)+'</b> · '+fmt(m.at)+'<p>'+esc(m.text)+'</p></div>').join('')+
@@ -610,11 +704,6 @@ localStorage.setItem(MSG_KEY,JSON.stringify(updated));
 messages=updated;render();notice('Message sent!')
 }catch{alert('Could not save message.')}
 }
-document.addEventListener('click',e=>{
-const btn=e.target.closest('[data-send]');
-if(btn)sendMessage(btn.dataset.send)
-});
-
 function reviewForm(j){
 const existing=reviews[j.id];
 if(existing)return '<div class="card"><h4>Customer Review</h4><p class="stars">'+
@@ -654,22 +743,65 @@ return '<div class="card"><div class="row">'+
 '<p class="muted">Identity not verified</p></div>'
 }
 
-/* FIX: IPHONE CALENDAR */
+/* STEP 11C: APPLE CALENDAR FIX */
 function calendarEvent(id){
 const u=me(),j=findJob(id);
-if(!u||!j||![j.ownerId,j.workerId].includes(u.id)||!j.date)return;
+if(!u||!j||![j.ownerId,j.workerId].includes(u.id)){
+alert('Sign in to view this scheduled job.');
+return;
+}
+if(!j.date){
+alert('This gig has no scheduled date.');
+return;
+}
 const start=new Date(j.date+'T'+(j.time||'09:00')+':00');
-if(isNaN(start))return alert('Invalid job date.');
+if(Number.isNaN(start.getTime())){
+alert('Invalid scheduled date or time.');
+return;
+}
 const end=new Date(start.getTime()+3600000);
-const pad=n=>String(n).padStart(2,'0');
-const stamp=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+
-'T'+pad(d.getHours())+pad(d.getMinutes())+'00';
-const url='https://calendar.google.com/calendar/render?action=TEMPLATE'+
-'&text='+encodeURIComponent('GigLink: '+j.title)+
-'&dates='+encodeURIComponent(stamp(start)+'/'+stamp(end))+
-'&details='+encodeURIComponent(j.description||'GigLink scheduled job')+
-'&location='+encodeURIComponent(j.location||'');
-window.location.href=url
+const stamp=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+const clean=v=>String(v||'').replace(/\\/g,'\\\\')
+.replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
+const ics=[
+'BEGIN:VCALENDAR',
+'VERSION:2.0',
+'PRODID:-//GigLink//Job Calendar//EN',
+'CALSCALE:GREGORIAN',
+'METHOD:PUBLISH',
+'BEGIN:VEVENT',
+'UID:'+j.id+'@giglink.demo',
+'DTSTAMP:'+stamp(new Date()),
+'DTSTART:'+stamp(start),
+'DTEND:'+stamp(end),
+'SUMMARY:'+clean('GigLink: '+j.title),
+'DESCRIPTION:'+clean(j.description||'GigLink scheduled job'),
+'LOCATION:'+clean(j.location),
+'END:VEVENT',
+'END:VCALENDAR'
+].join('\r\n')+'\r\n';
+
+const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+const file=new File([blob],'GigLink-'+j.id+'.ics',{type:'text/calendar'});
+if(navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){
+navigator.share({files:[file],title:'GigLink Calendar Event'})
+.catch(err=>{
+if(err.name!=='AbortError')downloadCalendar(blob,j.id);
+});
+}else{
+downloadCalendar(blob,j.id);
+}
+}
+function downloadCalendar(blob,id){
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download='GigLink-'+id+'.ics';
+document.body.appendChild(a);
+a.click();
+a.remove();
+setTimeout(()=>URL.revokeObjectURL(url),10000);
+alert('Calendar file prepared. Open the .ics file from Downloads or Files and choose Add to Calendar if your iPhone offers that option.');
 }
 
 function receipt(id){
@@ -699,7 +831,8 @@ const text=[
 'No actual payment has been collected or issued.'
 ].join('\n');
 const url=URL.createObjectURL(new Blob([text],{type:'text/plain'}));
-const a=document.createElement('a');a.href=url;a.download='GigLink-Receipt-'+id+'.txt';
+const a=document.createElement('a');
+a.href=url;a.download='GigLink-Receipt-'+id+'.txt';
 document.body.appendChild(a);a.click();a.remove();
 setTimeout(()=>URL.revokeObjectURL(url),1000)
 }
@@ -738,7 +871,7 @@ h+='<div class="controls"><h3>🧰 WORKER JOB CONTROLS</h3>'+
 '>✅ SUBMIT FOR CUSTOMER SIGNATURE</button></div>'
 }
 if(owner&&j.status==='submitted')
-h+='<button onclick="openSignature('+JSON.stringify(j.id)+')">✍️ REVIEW, SIGN & APPROVE</button>';
+h+='<button type="button" class="approve" data-approve="'+esc(j.id)+'">✍️ REVIEW, SIGN & APPROVE</button>';
 if(j.status==='completed'){
 const sig=signatures[j.id];
 h+=sig?'<p><b>Signed By:</b> '+esc(sig.name)+' · '+fmt(sig.signedAt)+'</p>'+
@@ -749,7 +882,7 @@ if(owner&&j.workerId)h+=reviewForm(j)
 }
 h+='</div>';
 if(j.workerId)h+=messageBox(j);
-if(j.date)h+='<button onclick="calendarEvent('+JSON.stringify(j.id)+')">📅 ADD TO CALENDAR</button>'
+if(j.date)h+='<button onclick="calendarEvent('+JSON.stringify(j.id)+')">📅 ADD TO APPLE CALENDAR</button>'
 }
 return h+'</div>'
 }
@@ -792,7 +925,7 @@ $('scheduleList').innerHTML=mine.filter(j=>j.date).sort((a,b)=>
 (a.date+' '+(a.time||'')).localeCompare(b.date+' '+(b.time||''))).map(j=>
 '<div class="card"><b>'+esc(j.title)+'</b><p>'+esc(j.date)+' '+esc(j.time||'')+
 '</p><p>'+esc(j.location)+'</p><p>Status: '+esc(j.status)+'</p>'+
-'<button onclick="calendarEvent('+JSON.stringify(j.id)+')">ADD TO CALENDAR</button></div>'
+'<button onclick="calendarEvent('+JSON.stringify(j.id)+')">ADD TO APPLE CALENDAR</button></div>'
 ).join('')||'<div class="card">No scheduled gigs.</div>';
 $('workerList').innerHTML=users.filter(x=>x.role==='worker').map(workerProfile).join('')||
 '<div class="card">No worker profiles yet.</div>';
@@ -827,7 +960,7 @@ function helpAnswer(q){
 const t=q.toLowerCase();
 if(/message|chat/.test(t))return 'Open Messages after a worker claims a job. Messages are stored in this browser.';
 if(/review|rating|star/.test(t))return 'Customers can leave a 1–5 star review after signing and approving a job.';
-if(/calendar|schedule|remind/.test(t))return 'Open Schedule and tap Add to Calendar to open Google Calendar.';
+if(/calendar|schedule|remind/.test(t))return 'Open Schedule and tap Add to Apple Calendar to share or download an ICS event.';
 if(/receipt|invoice/.test(t))return 'Completed jobs include a downloadable demo receipt.';
 if(/profile|experience/.test(t))return 'Open Profile to add a photo, experience, bio and service area.';
 if(/sign|approve/.test(t))return 'Customers must draw a signature before a submitted job is completed.';
