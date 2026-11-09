@@ -4,55 +4,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GigLink — Job Marketplace</title>
+<title>GigLink — Marketplace</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font:16px Arial;background:#f2f6fc;color:#172b44}
-header,footer{background:#101b32;color:white;text-align:center;padding:22px}
-nav{background:#20446f;padding:9px;display:flex;flex-wrap:wrap;justify-content:center}
-button{background:#1685ff;color:white;border:0;border-radius:10px;padding:13px;margin:4px;font-weight:bold;cursor:pointer}
+body{margin:0;font:16px Arial,sans-serif;background:#f1f5fb;color:#192e48}
+header,footer{background:#0d1d38;color:white;text-align:center;padding:20px}
+nav{background:#204a79;display:flex;flex-wrap:wrap;justify-content:center;padding:8px}
+button{background:#147af3;color:white;border:0;border-radius:10px;padding:12px 15px;margin:4px;cursor:pointer;font-weight:bold}
 button:disabled{opacity:.4;cursor:not-allowed}
-input,select,textarea{width:100%;padding:12px;border:1px solid #b7c9dc;border-radius:9px;margin:7px 0 13px;font:inherit}
-textarea{min-height:85px}
-label{display:block;font-weight:bold;margin-top:8px}
-main{max-width:850px;margin:auto;padding:15px;min-height:65vh}
-.card{background:white;padding:18px;margin:14px 0;border-radius:14px;box-shadow:0 2px 12px #0001}
+input,select,textarea{width:100%;font:inherit;padding:11px;margin:6px 0 12px;border:1px solid #b8cbe0;border-radius:9px}
+textarea{min-height:80px}
+label{font-weight:bold;display:block;margin-top:8px}
+main{max-width:920px;margin:auto;padding:14px;min-height:60vh}
+.card{background:white;border-radius:14px;padding:17px;margin:13px 0;box-shadow:0 2px 12px #0001}
 .hidden{display:none!important}
-.hero{min-height:100dvh;background:linear-gradient(135deg,#091629,#19528e);color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
-.hero h1{font-size:52px;margin:12px}
-.hero button{width:min(90%,310px)}
-.muted{color:#64748b}
-.warn{background:#fff2d8;padding:12px;border-radius:10px}
-.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.stat{background:#e9f2ff;padding:15px;text-align:center;border-radius:10px}
-.stat b{display:block;font-size:22px}
+.hero{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(145deg,#071428,#1a579b);color:white;text-align:center;padding:20px}
+.hero h1{font-size:52px;margin:10px}
+.hero button{width:min(90%,300px)}
+.muted{color:#61748b}
+.warning{background:#fff3d8;padding:12px;border-radius:10px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.stat{background:#e9f2ff;border-radius:10px;padding:13px;text-align:center}
+.stat strong{display:block;font-size:22px}
 .job{border-left:5px solid #1685ff}
-.money{background:#edf5ff;padding:12px;border-radius:10px;margin:10px 0}
-.money div{display:flex;justify-content:space-between;margin:7px 0}
-.worker-controls{background:#edf5ff;border:1px solid #bed6f5;border-radius:14px;padding:15px;margin-top:15px}
-.worker-controls button,.upload{display:block;width:100%;margin:9px 0;padding:17px 10px;border-radius:10px;text-align:center;font-weight:bold;font-size:16px}
+.money{background:#eaf3ff;padding:12px;border-radius:9px}
+.money div{display:flex;justify-content:space-between;margin:5px 0}
+.controls{background:#eaf3ff;border-radius:12px;padding:12px;margin:12px 0}
+.controls button,.upload{display:block;width:100%;margin:9px 0;padding:16px;text-align:center;border-radius:10px;font-weight:bold}
 .upload{background:#176bc2;color:white;cursor:pointer}
-.upload.disabled{opacity:.4;pointer-events:none}
-.file-input{position:absolute;width:1px;height:1px;opacity:0}
-.clock-in{background:#11804d}
-.clock-out{background:#b63232}
-.submit{background:#253e72}
-.clock{font-size:27px;font-weight:bold;color:#1559a5;text-align:center;margin:15px}
-.photos{display:flex;gap:8px;flex-wrap:wrap}
-.photos img{width:105px;height:105px;object-fit:cover;border-radius:8px;border:1px solid #ccc}
-.modal{position:fixed;inset:0;background:#07152bcc;display:flex;align-items:center;justify-content:center;padding:15px;z-index:10}
-.dialog{background:white;border-radius:15px;padding:18px;width:min(100%,580px);max-height:95dvh;overflow:auto}
-#signatureCanvas{width:100%;height:170px;border:2px dashed #6997c8;border-radius:10px;touch-action:none;background:white}
-.signature-image{max-width:100%;height:100px;object-fit:contain}
-.chat{height:220px;overflow:auto;background:#f5f9ff;border:1px solid #ccc;border-radius:10px;padding:10px}
-.bubble{background:#e3efff;padding:10px;border-radius:10px;margin:8px 0}
-#notice{color:#087746;font-weight:bold}
+.upload.off{opacity:.4;pointer-events:none}
+.file{position:absolute;width:1px;height:1px;opacity:0}
+.in{background:#14834b}
+.out{background:#b93232}
+.submit{background:#263d75}
+.clock{text-align:center;font-size:27px;font-weight:bold;color:#1757a0}
+.photos{display:flex;flex-wrap:wrap;gap:8px}
+.photos img{width:105px;height:105px;object-fit:cover;border-radius:8px}
+.timeline{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.step{padding:7px;border-radius:8px;background:#e7eaf0;font-size:12px}
+.step.done{background:#d6f4e3;color:#11633a}
+.step.current{background:#d7e8ff;color:#124c96;font-weight:bold}
+.modal{position:fixed;inset:0;background:#06162bcc;z-index:20;display:flex;align-items:center;justify-content:center;padding:12px}
+.dialog{background:white;padding:18px;border-radius:14px;width:min(100%,600px);max-height:94dvh;overflow:auto}
+#signatureCanvas{width:100%;height:175px;border:2px dashed #7c9bbd;border-radius:8px;touch-action:none;background:white}
+.signature-image{max-width:100%;height:85px;object-fit:contain}
+.message{background:#edf4ff;padding:9px;border-radius:9px;margin:7px 0;white-space:pre-wrap}
+.message.mine{background:#dff5e8}
+.avatar{width:72px;height:72px;object-fit:cover;border-radius:50%;border:2px solid #cbd8e8}
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.small{font-size:13px}
+.stars{color:#a86b00;font-size:20px}
+.chat{height:200px;overflow:auto;background:#f4f8ff;border-radius:10px;padding:10px}
+.pill{display:inline-block;background:#dceaff;border-radius:20px;padding:5px 10px;margin:3px;font-size:12px}
+#notice{color:#08774a;font-weight:bold}
+@media print{
+header,nav,footer,button,.no-print{display:none!important}
+main{max-width:100%}
+.card{box-shadow:none;border:1px solid #ddd}
+}
 </style>
 </head>
 <body>
 
 <section id="startup" class="hero">
-<div style="font-size:60px">🔗</div>
+<div style="font-size:55px">🔗</div>
 <h1>GigLink</h1>
 <p>Post It. Claim It. Get It Done.</p>
 <button onclick="openAuth('signup')">CREATE ACCOUNT</button>
@@ -62,9 +77,8 @@ main{max-width:850px;margin:auto;padding:15px;min-height:65vh}
 
 <section id="authScreen" class="hidden">
 <header><h1>GigLink Accounts</h1></header>
-<main>
-<div class="card">
-<button onclick="goStartup()">← Back</button>
+<main><div class="card">
+<button onclick="goStartup()">← BACK</button>
 <div id="signupPanel">
 <h2>Create Demo Account</h2>
 <form id="signupForm">
@@ -73,15 +87,11 @@ main{max-width:850px;margin:auto;padding:15px;min-height:65vh}
 <option value="customer">Customer</option>
 <option value="worker">Worker</option>
 </select>
-<label>Name</label>
-<input id="accountName" required>
-<label>Demo Email</label>
-<input id="accountEmail" type="email" required>
-<label>City / State</label>
-<input id="accountCity" required>
-<label>Primary Service</label>
-<select id="accountService"></select>
-<p class="warn">Demo only. Use fictional account information.</p>
+<label>Name</label><input id="accountName" required>
+<label>Email</label><input id="accountEmail" type="email" required>
+<label>City / State</label><input id="accountCity" required>
+<label>Primary Service</label><select id="accountService"></select>
+<p class="warning">Demo only. Use fictional account information.</p>
 <button>CREATE ACCOUNT</button>
 </form>
 </div>
@@ -90,8 +100,7 @@ main{max-width:850px;margin:auto;padding:15px;min-height:65vh}
 <select id="savedAccounts"></select>
 <button onclick="signIn()">SIGN IN</button>
 </div>
-</div>
-</main>
+</div></main>
 </section>
 
 <section id="app" class="hidden">
@@ -101,26 +110,28 @@ main{max-width:850px;margin:auto;padding:15px;min-height:65vh}
 <p id="accountInfo"></p>
 <button onclick="logout()">Sign Out</button>
 </header>
-
 <nav>
 <button onclick="show('dashboard')">Dashboard</button>
 <button id="postNav" onclick="show('post')">Post Gig</button>
 <button onclick="show('browse')">Find Gigs</button>
 <button onclick="show('mine')">My Gigs</button>
-<button onclick="show('earnings')">💰 Earnings</button>
+<button onclick="show('messages')">Messages</button>
+<button onclick="show('schedule')">Schedule</button>
+<button onclick="show('workers')">Workers</button>
+<button onclick="show('earnings')">Earnings</button>
 <button id="verifyNav" onclick="show('verification')">Verify ID</button>
 <button onclick="show('profile')">Profile</button>
-<button onclick="show('assistant')">🤖 Help</button>
+<button onclick="show('assistant')">Help</button>
 <button onclick="show('platform')">Platform Demo</button>
 </nav>
 
 <main>
-<p id="notice"></p>
+<p id="notice" role="status"></p>
 
 <section id="dashboard">
 <div class="card">
 <h2 id="welcome"></h2>
-<p>Manage jobs, photos, work hours and earnings.</p>
+<p>Manage gigs, messages, photos, time, reviews and receipts.</p>
 <div id="dashboardStats" class="stats"></div>
 <button id="dashboardAction"></button>
 </div>
@@ -130,26 +141,22 @@ main{max-width:850px;margin:auto;padding:15px;min-height:65vh}
 <div class="card">
 <h2>Post a Gig</h2>
 <form id="postForm">
-<label>Job Title</label>
-<input id="jobTitle" required>
-<label>Category</label>
-<select id="jobCategory"></select>
-<label>Location</label>
-<input id="jobLocation" required>
-<label>Job Date</label>
-<input id="jobDate" type="date" required>
+<label>Job Title</label><input id="jobTitle" required>
+<label>Category</label><select id="jobCategory"></select>
+<label>Location</label><input id="jobLocation" required>
+<label>Job Date</label><input id="jobDate" type="date" required>
+<label>Start Time</label><input id="jobTime" type="time" required>
 <label>Budget ($)</label>
 <input id="jobBudget" type="number" min="1" step=".01" required oninput="previewFee()">
 <div id="feePreview"></div>
-<label>Description</label>
-<textarea id="jobDescription" required></textarea>
+<label>Description</label><textarea id="jobDescription" required></textarea>
 <button>POST GIG</button>
 </form>
 </div>
 </section>
 
 <section id="browse" class="hidden">
-<h2>Available Gigs</h2>
+<h2>Find Available Gigs</h2>
 <select id="categoryFilter" onchange="render()"></select>
 <div id="browseList"></div>
 </section>
@@ -159,15 +166,33 @@ main{max-width:850px;margin:auto;padding:15px;min-height:65vh}
 <div id="mineList"></div>
 </section>
 
+<section id="messages" class="hidden">
+<h2>Customer & Worker Messages</h2>
+<p class="warning">Messages work between demo accounts in this browser only.</p>
+<div id="messageList"></div>
+</section>
+
+<section id="schedule" class="hidden">
+<h2>Job Schedule</h2>
+<p>Download a calendar event to add a reminder on your phone.</p>
+<div id="scheduleList"></div>
+</section>
+
+<section id="workers" class="hidden">
+<h2>Worker Directory</h2>
+<div id="workerList"></div>
+</section>
+
 <section id="earnings" class="hidden">
 <h2>Earnings Dashboard</h2>
 <div id="earningsStats" class="stats"></div>
+<div id="earningsList"></div>
 </section>
 
 <section id="verification" class="hidden">
 <div class="card">
 <h2>Worker ID Verification</h2>
-<p class="warn">Do not upload real identification documents in this demo.</p>
+<p class="warning">Do not upload real identity documents.</p>
 <select id="documentType">
 <option value="">Choose ID type</option>
 <option>Driver's License</option>
@@ -175,14 +200,27 @@ main{max-width:850px;margin:auto;padding:15px;min-height:65vh}
 <option>Passport</option>
 </select>
 <button onclick="saveVerification()">SAVE PREFERENCE</button>
-<p id="verificationStatus"></p>
+<p>Identity not verified.</p>
 </div>
 </section>
 
 <section id="profile" class="hidden">
 <div class="card">
-<h2>My Profile</h2>
+<h2>Professional Profile</h2>
 <div id="profileDetails"></div>
+<form id="profileForm">
+<label>Short Bio</label>
+<textarea id="profileBio" maxlength="500"></textarea>
+<label>Service Area</label>
+<input id="profileArea" maxlength="100">
+<label>Years of Experience</label>
+<input id="profileYears" type="number" min="0" max="80">
+<label>Services Offered</label>
+<select id="profileService"></select>
+<label>Profile Photo</label>
+<input type="file" id="profilePhoto" accept="image/*">
+<button>SAVE PROFILE</button>
+</form>
 </div>
 </section>
 
@@ -191,7 +229,7 @@ main{max-width:850px;margin:auto;padding:15px;min-height:65vh}
 <h2>🤖 GigLink Help Assistant</h2>
 <p class="muted">Built-in FAQ assistant, not live AI.</p>
 <div id="chat" class="chat">
-<div class="bubble">Welcome! Ask about photos, clocking in, signatures or earnings.</div>
+<div class="message">Ask about messages, reviews, scheduling, photos, clocking in, signatures or earnings.</div>
 </div>
 <input id="question" placeholder="Ask a question">
 <button onclick="ask()">SEND</button>
@@ -201,7 +239,7 @@ main{max-width:850px;margin:auto;padding:15px;min-height:65vh}
 <section id="platform" class="hidden">
 <div class="card">
 <h2>Platform Revenue Demo</h2>
-<p class="warn">Estimated figures only. Not secure admin reporting or actual revenue.</p>
+<p class="warning">Public demo estimates only. Not actual revenue.</p>
 <div id="platformStats" class="stats"></div>
 </div>
 </section>
@@ -219,16 +257,15 @@ All Rights Reserved.
 <div id="signatureModal" class="modal hidden">
 <div class="dialog">
 <h2>Customer Completion Signature</h2>
-<p>Review the job photos and recorded time before approving.</p>
-<p class="warn">Demo signature only. Not a verified electronic signature.</p>
 <p id="signatureJob"></p>
-<label>Customer Name</label>
-<input id="signerName">
+<p>By signing, you confirm you reviewed the photos and time record and approve completion.</p>
+<p class="warning">Demo signature, not a verified e-signature service.</p>
+<label>Customer Name</label><input id="signerName">
 <label>Draw Signature With Your Finger</label>
 <canvas id="signatureCanvas"></canvas>
 <button onclick="clearSignature()">CLEAR</button>
 <button onclick="closeSignature()">CANCEL</button>
-<button onclick="finishSignature()">SIGN & APPROVE JOB</button>
+<button onclick="finishSignature()">SIGN & APPROVE</button>
 </div>
 </div>
 
@@ -238,804 +275,577 @@ const USER_KEY='giglink_demo_users_v1';
 const SESSION_KEY='giglink_demo_session_v1';
 const PHOTO_KEY='giglink_step10_photos_v1';
 const SIGN_KEY='giglink_step9_signatures_v1';
+const MSG_KEY='giglink_step11_messages_v1';
+const REVIEW_KEY='giglink_step11_reviews_v1';
 
 const categories=[
-'Residential Cleaning','Commercial Cleaning',
-'Lawn Care','Moving','Handyman','Painting',
-'Furniture Assembly','Delivery','Junk Removal',
-'Pet Care','Other Services'
+'Residential Cleaning','Commercial Cleaning','Lawn Care',
+'Moving','Handyman','Painting','Furniture Assembly',
+'Delivery','Junk Removal','Pet Care','Other Services'
 ];
 
-function read(key,fallback){
+const $=id=>document.getElementById(id);
+const read=(key,fallback)=>{
  try{return JSON.parse(localStorage.getItem(key))??fallback}
  catch{return fallback}
-}
+};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({
+'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c]));
 
 let jobs=read(JOB_KEY,[]);
 let users=read(USER_KEY,[]);
 let session=read(SESSION_KEY,null);
 let photos=read(PHOTO_KEY,{});
 let signatures=read(SIGN_KEY,{});
-let signingId=null;
-let hasDrawn=false;
-let activePointer=null;
+let messages=read(MSG_KEY,{});
+let reviews=read(REVIEW_KEY,{});
+let signingId=null,drawn=false,pointer=null;
 
 if(!Array.isArray(jobs))jobs=[];
 if(!Array.isArray(users))users=[];
 if(!photos||typeof photos!=='object')photos={};
 if(!signatures||typeof signatures!=='object')signatures={};
+if(!messages||typeof messages!=='object')messages={};
+if(!reviews||typeof reviews!=='object')reviews={};
 
-const el=id=>document.getElementById(id);
 const me=()=>users.find(u=>u.id===session);
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
-
-function esc(value){
- return String(value??'').replace(/[&<>"']/g,c=>({
- '&':'&amp;','<':'&lt;','>':'&gt;',
- '"':'&quot;',"'":'&#39;'
- }[c]))
-}
-
-function saveJobs(){
- localStorage.setItem(JOB_KEY,JSON.stringify(jobs))
-}
-
-function saveUsers(){
- localStorage.setItem(USER_KEY,JSON.stringify(users))
-}
-
-function cents(value){
- return Math.max(0,Math.round((Number(value)||0)*100))
-}
-
-function split(value){
- const gross=cents(value);
- const fee=Math.round(gross*.15);
+const findJob=id=>jobs.find(j=>j.id===id);
+const saveJobs=()=>localStorage.setItem(JOB_KEY,JSON.stringify(jobs));
+const saveUsers=()=>localStorage.setItem(USER_KEY,JSON.stringify(users));
+const notice=t=>$('notice').textContent=t;
+const cents=n=>Math.max(0,Math.round((Number(n)||0)*100));
+const split=n=>{
+ const gross=cents(n),fee=Math.round(gross*.15);
  return {gross,fee,worker:gross-fee}
-}
-
-function money(value){
- return '$'+(value/100).toFixed(2)
-}
-
-function fmt(value){
- return value?new Date(value).toLocaleString():'Not recorded'
-}
-
-function duration(ms){
- const seconds=Math.floor(Math.max(0,ms)/1000);
- return [
- Math.floor(seconds/3600),
- Math.floor(seconds%3600/60),
- seconds%60
- ].map(n=>String(n).padStart(2,'0')).join(':')
-}
-
-function workTime(job){
- return (Number(job.workMs)||0)+
- (job.clockInAt?Math.max(0,Date.now()-job.clockInAt):0)
-}
-
-function countPhotos(job,type){
- return (photos[job.id]?.[type]||[]).length
-}
-
-function notice(message){
- el('notice').textContent=message
-}
-
-function bill(value){
- const p=split(value);
+};
+const money=n=>'$'+(n/100).toFixed(2);
+const fmt=t=>t?new Date(t).toLocaleString():'Not recorded';
+const duration=ms=>{
+ let s=Math.floor(Math.max(0,ms)/1000);
+ return [Math.floor(s/3600),Math.floor(s%3600/60),s%60]
+ .map(n=>String(n).padStart(2,'0')).join(':')
+};
+const workTime=j=>(Number(j.workMs)||0)+
+(j.clockInAt?Math.max(0,Date.now()-j.clockInAt):0);
+const countPhotos=(j,type)=>(photos[j.id]?.[type]||[]).length;
+const stat=(label,value)=>'<div class="stat"><strong>'+value+'</strong>'+label+'</div>';
+const bill=n=>{
+ const p=split(n);
  return '<div class="money">'+
  '<div>Job Price <b>'+money(p.gross)+'</b></div>'+
  '<div>GigLink Fee (15%) <b>'+money(p.fee)+'</b></div>'+
- '<div>Worker Earnings (85%) <b>'+money(p.worker)+'</b></div>'+
- '</div>'
-}
-
-function stat(label,value){
- return '<div class="stat"><b>'+value+'</b>'+label+'</div>'
-}
+ '<div>Worker Earnings (85%) <b>'+money(p.worker)+'</b></div></div>'
+};
 
 function goStartup(){
- el('startup').classList.remove('hidden');
- el('authScreen').classList.add('hidden');
- el('app').classList.add('hidden')
+ $('startup').classList.remove('hidden');
+ $('authScreen').classList.add('hidden');
+ $('app').classList.add('hidden')
 }
-
 function openAuth(mode){
- el('startup').classList.add('hidden');
- el('authScreen').classList.remove('hidden');
- el('app').classList.add('hidden');
- el('signupPanel').classList.toggle('hidden',mode!=='signup');
- el('loginPanel').classList.toggle('hidden',mode!=='login');
- el('savedAccounts').innerHTML='';
- users.forEach(u=>{
-  el('savedAccounts').add(
-   new Option(u.name+' ('+u.role+')',u.id)
-  )
- })
+ $('startup').classList.add('hidden');
+ $('authScreen').classList.remove('hidden');
+ $('app').classList.add('hidden');
+ $('signupPanel').classList.toggle('hidden',mode!=='signup');
+ $('loginPanel').classList.toggle('hidden',mode!=='login');
+ $('savedAccounts').innerHTML='';
+ users.forEach(u=>$('savedAccounts').add(
+ new Option(u.name+' ('+u.role+')',u.id)))
 }
-
-el('signupForm').addEventListener('submit',e=>{
+$('signupForm').onsubmit=e=>{
  e.preventDefault();
-
- const name=el('accountName').value.trim();
- const email=el('accountEmail').value.trim().toLowerCase();
- const city=el('accountCity').value.trim();
- const role=el('accountRole').value;
-
+ const name=$('accountName').value.trim();
+ const email=$('accountEmail').value.trim().toLowerCase();
+ const city=$('accountCity').value.trim();
+ const role=$('accountRole').value;
  if(!name||!email||!city)return;
-
- if(users.some(u=>u.email===email)){
-  alert('That demo email already exists.');
-  return
- }
-
- const u={
-  id:uid(),name,email,city,role,
-  service:role==='worker'?el('accountService').value:'',
-  documentPreference:''
- };
-
- users.push(u);
- saveUsers();
- loginAs(u.id)
-});
-
+ if(users.some(u=>u.email===email))return alert('Email already used.');
+ const u={id:uid(),name,email,city,role,
+ service:role==='worker'?$('accountService').value:'',
+ documentPreference:''};
+ users.push(u);saveUsers();loginAs(u.id)
+};
 function signIn(){
- const id=el('savedAccounts').value;
- if(!users.some(u=>u.id===id)){
-  alert('Create an account first.');
-  return
- }
+ const id=$('savedAccounts').value;
+ if(!users.some(u=>u.id===id))return alert('Create an account first.');
  loginAs(id)
 }
-
 function loginAs(id){
  session=id;
  localStorage.setItem(SESSION_KEY,JSON.stringify(id));
- el('startup').classList.add('hidden');
- el('authScreen').classList.add('hidden');
- el('app').classList.remove('hidden');
- updateAccount();
- show('dashboard')
+ $('startup').classList.add('hidden');
+ $('authScreen').classList.add('hidden');
+ $('app').classList.remove('hidden');
+ updateAccount();show('dashboard')
 }
-
 function logout(){
- session=null;
- localStorage.removeItem(SESSION_KEY);
- goStartup()
+ session=null;localStorage.removeItem(SESSION_KEY);goStartup()
 }
-
 function updateAccount(){
- const u=me();
- if(!u)return;
-
- el('accountInfo').textContent=u.name+' • '+u.role;
- el('welcome').textContent='Welcome, '+u.name+'!';
- el('postNav').classList.toggle('hidden',u.role!=='customer');
- el('verifyNav').classList.toggle('hidden',u.role!=='worker');
-
- el('dashboardAction').textContent=
- u.role==='customer'?'POST A GIG':'FIND GIGS';
-
- el('dashboardAction').onclick=()=>
- show(u.role==='customer'?'post':'browse');
-
- el('profileDetails').innerHTML=
- '<p><b>Name:</b> '+esc(u.name)+'</p>'+
- '<p><b>Email:</b> '+esc(u.email)+'</p>'+
- '<p><b>City:</b> '+esc(u.city)+'</p>'+
- '<p><b>Role:</b> '+esc(u.role)+'</p>'+
- '<p><b>Service:</b> '+esc(u.service||'N/A')+'</p>';
-
- el('documentType').value=u.documentPreference||'';
- el('verificationStatus').textContent='Identity not verified.'
+ const u=me();if(!u)return;
+ $('accountInfo').textContent=u.name+' • '+u.role;
+ $('welcome').textContent='Welcome, '+u.name+'!';
+ $('postNav').classList.toggle('hidden',u.role!=='customer');
+ $('verifyNav').classList.toggle('hidden',u.role!=='worker');
+ $('dashboardAction').textContent=u.role==='customer'?'POST A GIG':'FIND GIGS';
+ $('dashboardAction').onclick=()=>show(u.role==='customer'?'post':'browse');
+ $('documentType').value=u.documentPreference||'';
+ $('profileBio').value=u.bio||'';
+ $('profileArea').value=u.area||u.city||'';
+ $('profileYears').value=u.years||0;
+ $('profileService').value=u.service||categories[0]
 }
-
 function show(page){
- const u=me();
- if(!u)return;
-
+ const u=me();if(!u)return;
  if(page==='post'&&u.role!=='customer')page='dashboard';
  if(page==='verification'&&u.role!=='worker')page='dashboard';
-
- [
- 'dashboard','post','browse','mine','earnings',
- 'verification','profile','assistant','platform'
- ].forEach(id=>{
-  el(id).classList.toggle('hidden',id!==page)
- });
-
- if(page==='post')el('jobLocation').value=u.city;
-
- notice('');
- render();
- window.scrollTo(0,0)
+ ['dashboard','post','browse','mine','messages','schedule',
+ 'workers','earnings','verification','profile','assistant','platform']
+ .forEach(id=>$(id).classList.toggle('hidden',id!==page));
+ if(page==='post')$('jobLocation').value=u.city;
+ notice('');render();window.scrollTo(0,0)
 }
-
 function saveVerification(){
- const u=me();
- if(!u||u.role!=='worker')return;
-
- const type=el('documentType').value;
- if(!type)return alert('Choose a document type.');
-
- u.documentPreference=type;
- saveUsers();
- notice('Preference saved. Identity is not verified.')
+ const u=me();if(!u||u.role!=='worker')return;
+ if(!$('documentType').value)return alert('Select ID type.');
+ u.documentPreference=$('documentType').value;
+ saveUsers();notice('Preference saved. Identity is NOT verified.')
 }
-
 function previewFee(){
- const value=Number(el('jobBudget').value);
- el('feePreview').innerHTML=value>0?bill(value):''
+ const n=Number($('jobBudget').value);
+ $('feePreview').innerHTML=n>0?bill(n):''
 }
-
-el('postForm').addEventListener('submit',e=>{
+$('postForm').onsubmit=e=>{
  e.preventDefault();
-
- const u=me();
- if(!u||u.role!=='customer')return;
-
- const title=el('jobTitle').value.trim();
- const location=el('jobLocation').value.trim();
- const description=el('jobDescription').value.trim();
- const budget=Number(el('jobBudget').value);
-
- if(!title||!location||!description||budget<=0)return;
-
+ const u=me();if(!u||u.role!=='customer')return;
+ const budget=Number($('jobBudget').value);
+ if(!Number.isFinite(budget)||budget<=0)return;
  jobs.push({
-  id:uid(),
-  ownerId:u.id,
-  poster:u.name,
-  title,
-  category:el('jobCategory').value,
-  location,
-  date:el('jobDate').value,
-  budget,
-  description,
-  status:'available',
-  workerId:null,
-  claimedBy:'',
-  clockInAt:null,
-  startedAt:null,
-  workMs:0,
-  workSessions:[]
+ id:uid(),ownerId:u.id,poster:u.name,
+ title:$('jobTitle').value.trim(),
+ category:$('jobCategory').value,
+ location:$('jobLocation').value.trim(),
+ date:$('jobDate').value,time:$('jobTime').value,
+ budget,description:$('jobDescription').value.trim(),
+ status:'available',workerId:null,claimedBy:'',
+ clockInAt:null,startedAt:null,workMs:0,workSessions:[]
  });
-
- saveJobs();
- e.target.reset();
- show('mine');
- notice('Gig posted successfully!')
-});
-
+ saveJobs();e.target.reset();show('mine');notice('Gig posted!')
+};
 function claimJob(id){
- const u=me();
- const j=jobs.find(x=>x.id===id);
-
+ const u=me(),j=findJob(id);
  if(!u||u.role!=='worker'||!j||j.status!=='available')return;
  if(!confirm('Claim this gig?'))return;
-
- j.workerId=u.id;
- j.claimedBy=u.name;
- j.status='claimed';
- j.clockInAt=null;
- j.startedAt=null;
- j.workMs=0;
- j.workSessions=[];
-
- saveJobs();
- show('mine');
- notice('Gig claimed. Upload BEFORE photos to begin.')
+ j.workerId=u.id;j.claimedBy=u.name;j.status='claimed';
+ j.clockInAt=null;j.startedAt=null;j.workMs=0;j.workSessions=[];
+ saveJobs();show('mine');notice('Gig claimed. Upload BEFORE photos.')
 }
-
 function clockIn(id){
- const u=me();
- const j=jobs.find(x=>x.id===id);
-
+ const u=me(),j=findJob(id);
  if(!u||!j||j.workerId!==u.id||j.status!=='claimed')return;
-
- if(j.clockInAt)return alert('You are already clocked in.');
-
- if(!countPhotos(j,'before')){
-  return alert('Upload a BEFORE photo before clocking in.')
- }
-
+ if(j.clockInAt)return alert('Already clocked in.');
+ if(!countPhotos(j,'before'))return alert('Upload a BEFORE photo first.');
  j.clockInAt=Date.now();
  if(!j.startedAt)j.startedAt=j.clockInAt;
-
- saveJobs();
- render();
- notice('CLOCKED IN — Timer started.')
+ saveJobs();render();notice('CLOCKED IN')
 }
-
 function clockOut(id){
- const u=me();
- const j=jobs.find(x=>x.id===id);
-
- if(!u||!j||j.workerId!==u.id||
- j.status!=='claimed'||!j.clockInAt)return;
-
- const out=Date.now();
- const start=j.clockInAt;
-
+ const u=me(),j=findJob(id);
+ if(!u||!j||j.workerId!==u.id||j.status!=='claimed'||!j.clockInAt)return;
+ const out=Date.now(),start=j.clockInAt;
  j.workMs=(Number(j.workMs)||0)+Math.max(0,out-start);
  j.workSessions=j.workSessions||[];
  j.workSessions.push({in:start,out});
- j.clockInAt=null;
-
- saveJobs();
- render();
- notice('CLOCKED OUT — Time saved.')
+ j.clockInAt=null;saveJobs();render();notice('CLOCKED OUT')
 }
-
-function compressPhoto(file){
+function compressPhoto(file,max=700,quality=.5){
  return new Promise((resolve,reject)=>{
-  const reader=new FileReader();
-
-  reader.onerror=reject;
-
-  reader.onload=()=>{
-   const img=new Image();
-
-   img.onerror=reject;
-
-   img.onload=()=>{
-    const scale=Math.min(1,700/Math.max(img.width,img.height));
-    const canvas=document.createElement('canvas');
-
-    canvas.width=Math.max(1,Math.round(img.width*scale));
-    canvas.height=Math.max(1,Math.round(img.height*scale));
-
-    canvas.getContext('2d').drawImage(
-     img,0,0,canvas.width,canvas.height
-    );
-
-    resolve(canvas.toDataURL('image/jpeg',.5))
-   };
-
-   img.src=reader.result
-  };
-
-  reader.readAsDataURL(file)
+ const reader=new FileReader();
+ reader.onerror=reject;
+ reader.onload=()=>{
+ const img=new Image();
+ img.onerror=reject;
+ img.onload=()=>{
+ const scale=Math.min(1,max/Math.max(img.width,img.height));
+ const canvas=document.createElement('canvas');
+ canvas.width=Math.max(1,Math.round(img.width*scale));
+ canvas.height=Math.max(1,Math.round(img.height*scale));
+ canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+ resolve(canvas.toDataURL('image/jpeg',quality))
+ };
+ img.src=reader.result
+ };
+ reader.readAsDataURL(file)
  })
 }
-
 async function addPhoto(id,type,input){
- const u=me();
- const j=jobs.find(x=>x.id===id);
-
+ const u=me(),j=findJob(id);
  if(!u||!j||j.workerId!==u.id||j.status!=='claimed')return;
-
- if(type==='before'&&j.startedAt){
-  return alert('BEFORE photos must be uploaded before work begins.')
- }
-
- if(type==='after'&&(!j.startedAt||j.clockInAt)){
-  return alert('Clock in and then clock out before uploading AFTER photos.')
- }
-
- const file=input.files?.[0];
- if(!file)return;
-
- if(!file.type.startsWith('image/')){
-  return alert('Choose a photo.')
- }
-
- if(file.size>12*1024*1024){
-  return alert('Choose a photo under 12 MB.')
- }
-
+ if(type==='before'&&j.startedAt)return alert('Before photos must be added before starting.');
+ if(type==='after'&&(!j.startedAt||j.clockInAt))return alert('Clock out first.');
+ const file=input.files?.[0];if(!file)return;
+ if(!file.type.startsWith('image/')||file.size>12*1024*1024)
+ return alert('Choose a photo under 12 MB.');
  try{
-  const image=await compressPhoto(file);
-  const group=photos[id]||{before:[],after:[]};
-
-  group[type]=group[type]||[];
-
-  if(group[type].length>=3){
-   return alert('Maximum 3 photos per stage.')
-  }
-
-  group[type].push(image);
-
-  const updated={...photos,[id]:group};
-  localStorage.setItem(PHOTO_KEY,JSON.stringify(updated));
-  photos=updated;
-
-  show('mine');
-  notice(type.toUpperCase()+' photo uploaded successfully.')
- }catch{
-  alert('Unable to save photo. Browser storage may be full.')
- }finally{
-  input.value=''
- }
+ const image=await compressPhoto(file);
+ const group=photos[id]||{before:[],after:[]};
+ group[type]=group[type]||[];
+ if(group[type].length>=3)return alert('Maximum 3 photos.');
+ const updated={...photos,[id]:{...group,[type]:[...group[type],image]}};
+ localStorage.setItem(PHOTO_KEY,JSON.stringify(updated));
+ photos=updated;show('mine');notice('Photo saved.')
+ }catch{alert('Unable to save photo. Storage may be full.')}
+ finally{input.value=''}
 }
-
 function photoGallery(j,type){
  const list=photos[j.id]?.[type]||[];
-
- return '<p><b>'+type.toUpperCase()+
- ' Photos ('+list.length+'/3)</b></p>'+
- '<div class="photos">'+list.map(src=>
- '<img src="'+src+'" alt="'+type+' photo">'
- ).join('')+'</div>'
+ return '<p><b>'+type.toUpperCase()+' Photos ('+list.length+'/3)</b></p>'+
+ '<div class="photos">'+list.map(src=>'<img src="'+src+'" alt="Work photo">').join('')+'</div>'
 }
-
 function submitWork(id){
- const u=me();
- const j=jobs.find(x=>x.id===id);
-
+ const u=me(),j=findJob(id);
  if(!u||!j||j.workerId!==u.id||j.status!=='claimed')return;
-
- if(j.clockInAt)return alert('CLOCK OUT first.');
- if(!j.startedAt)return alert('You must clock in and out.');
- if(!countPhotos(j,'before'))return alert('BEFORE photo required.');
- if(!countPhotos(j,'after'))return alert('AFTER photo required.');
-
- if(!confirm('Submit completed work for customer signature?'))return;
-
- j.status='submitted';
- j.submittedAt=Date.now();
-
- saveJobs();
- show('mine');
- notice('Work submitted. Waiting for customer signature.')
+ if(j.clockInAt)return alert('Clock out first.');
+ if(!j.startedAt||!countPhotos(j,'before')||!countPhotos(j,'after'))
+ return alert('Complete clock-in/out and both photo stages first.');
+ if(!confirm('Submit for customer signature?'))return;
+ j.status='submitted';j.submittedAt=Date.now();
+ saveJobs();show('mine');notice('Waiting for customer approval.')
 }
-
 function openSignature(id){
- const u=me();
- const j=jobs.find(x=>x.id===id);
-
- if(!u||!j||u.role!=='customer'||
- j.ownerId!==u.id||j.status!=='submitted')return;
-
- if(!countPhotos(j,'before')||!countPhotos(j,'after')||
- !j.startedAt||j.clockInAt){
-  return alert('Job documentation is incomplete.')
- }
-
- signingId=id;
- hasDrawn=false;
- activePointer=null;
-
- el('signerName').value=u.name;
- el('signatureJob').textContent=j.title;
- el('signatureModal').classList.remove('hidden');
-
+ const u=me(),j=findJob(id);
+ if(!u||!j||u.role!=='customer'||j.ownerId!==u.id||j.status!=='submitted')return;
+ if(!j.startedAt||j.clockInAt||!countPhotos(j,'before')||!countPhotos(j,'after'))
+ return alert('Incomplete job documentation.');
+ signingId=id;drawn=false;pointer=null;
+ $('signerName').value=u.name;
+ $('signatureJob').textContent=j.title;
+ $('signatureModal').classList.remove('hidden');
  requestAnimationFrame(setupSignature)
 }
-
 function setupSignature(){
- const canvas=el('signatureCanvas');
- const rect=canvas.getBoundingClientRect();
- const ratio=window.devicePixelRatio||1;
-
- canvas.width=Math.round(rect.width*ratio);
- canvas.height=Math.round(rect.height*ratio);
-
- const ctx=canvas.getContext('2d');
- ctx.scale(ratio,ratio);
- ctx.strokeStyle='#142c50';
- ctx.lineWidth=2.5;
- ctx.lineCap='round';
- ctx.lineJoin='round'
+ const c=$('signatureCanvas'),r=c.getBoundingClientRect(),d=devicePixelRatio||1;
+ c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);
+ const ctx=c.getContext('2d');ctx.scale(d,d);
+ ctx.strokeStyle='#142c50';ctx.lineWidth=2.5;
+ ctx.lineCap='round';ctx.lineJoin='round'
 }
-
 function clearSignature(){
- hasDrawn=false;
- const canvas=el('signatureCanvas');
- canvas.getContext('2d').clearRect(
-  0,0,canvas.width,canvas.height
- )
+ drawn=false;
+ const c=$('signatureCanvas');
+ c.getContext('2d').clearRect(0,0,c.width,c.height)
 }
-
 function closeSignature(){
- signingId=null;
- activePointer=null;
- el('signatureModal').classList.add('hidden')
+ signingId=null;pointer=null;
+ $('signatureModal').classList.add('hidden')
 }
-
-function signaturePoint(e){
- const rect=el('signatureCanvas').getBoundingClientRect();
- return {
-  x:e.clientX-rect.left,
-  y:e.clientY-rect.top
- }
+function sigPoint(e){
+ const r=$('signatureCanvas').getBoundingClientRect();
+ return {x:e.clientX-r.left,y:e.clientY-r.top}
 }
-
-el('signatureCanvas').addEventListener('pointerdown',e=>{
- if(activePointer!==null)return;
-
- activePointer=e.pointerId;
-
- const canvas=el('signatureCanvas');
- const ctx=canvas.getContext('2d');
- const p=signaturePoint(e);
-
- canvas.setPointerCapture(e.pointerId);
- ctx.beginPath();
- ctx.moveTo(p.x,p.y);
- ctx.lineTo(p.x+.1,p.y+.1);
- ctx.stroke();
-
- hasDrawn=true
+$('signatureCanvas').addEventListener('pointerdown',e=>{
+ if(pointer!==null)return;
+ pointer=e.pointerId;
+ const c=$('signatureCanvas'),ctx=c.getContext('2d'),p=sigPoint(e);
+ c.setPointerCapture(e.pointerId);
+ ctx.beginPath();ctx.moveTo(p.x,p.y);
+ ctx.lineTo(p.x+.1,p.y+.1);ctx.stroke();drawn=true
 });
-
-el('signatureCanvas').addEventListener('pointermove',e=>{
- if(activePointer!==e.pointerId)return;
-
- const p=signaturePoint(e);
- const ctx=el('signatureCanvas').getContext('2d');
-
- ctx.lineTo(p.x,p.y);
- ctx.stroke()
+$('signatureCanvas').addEventListener('pointermove',e=>{
+ if(pointer!==e.pointerId)return;
+ const p=sigPoint(e),ctx=$('signatureCanvas').getContext('2d');
+ ctx.lineTo(p.x,p.y);ctx.stroke()
 });
-
-['pointerup','pointercancel'].forEach(type=>{
- el('signatureCanvas').addEventListener(type,e=>{
-  if(activePointer===e.pointerId)activePointer=null
- })
-});
-
+['pointerup','pointercancel'].forEach(t=>
+ $('signatureCanvas').addEventListener(t,e=>{
+ if(pointer===e.pointerId)pointer=null
+ }));
 function finishSignature(){
- const u=me();
- const j=jobs.find(x=>x.id===signingId);
- const name=el('signerName').value.trim();
-
- if(!u||!j||u.role!=='customer'||
- j.ownerId!==u.id||j.status!=='submitted')return;
-
- if(name.toLowerCase()!==u.name.trim().toLowerCase()){
-  return alert('Enter the customer account name.')
- }
-
- if(!hasDrawn)return alert('Draw your signature first.');
-
- if(!confirm('Sign and approve this job?'))return;
-
+ const u=me(),j=findJob(signingId);
+ if(!u||!j||u.role!=='customer'||j.ownerId!==u.id||j.status!=='submitted')return;
+ if($('signerName').value.trim().toLowerCase()!==u.name.toLowerCase())
+ return alert('Enter the customer account name.');
+ if(!drawn)return alert('Draw your signature.');
+ if(!confirm('Sign and approve the job?'))return;
  const signedAt=Date.now();
-
- const record={
-  name,
-  signedAt,
-  image:el('signatureCanvas').toDataURL('image/png')
- };
-
+ const record={name:u.name,signedAt,image:$('signatureCanvas').toDataURL('image/png')};
  try{
-  const updated={...signatures,[j.id]:record};
-  localStorage.setItem(SIGN_KEY,JSON.stringify(updated));
-  signatures=updated
- }catch{
-  return alert('Could not save signature.')
- }
-
- j.status='completed';
- j.completedAt=signedAt;
- j.customerSignedAt=signedAt;
-
- saveJobs();
- closeSignature();
- show('mine');
- notice('Customer signed. Job completed!')
+ const updated={...signatures,[j.id]:record};
+ localStorage.setItem(SIGN_KEY,JSON.stringify(updated));signatures=updated
+ }catch{return alert('Unable to save signature.')}
+ j.status='completed';j.completedAt=signedAt;j.customerSignedAt=signedAt;
+ saveJobs();closeSignature();show('mine');notice('Job signed and completed!')
 }
-
+function timeline(j){
+ const steps=['available','claimed','submitted','completed'];
+ const current=steps.indexOf(j.status);
+ return '<div class="timeline">'+steps.map((s,i)=>
+ '<span class="step '+(i<current?'done':i===current?'current':'')+'">'+
+ ['Available','In Progress','Awaiting Signature','Completed'][i]+'</span>'
+ ).join('')+'</div>'
+}
+function messageBox(j){
+ const u=me();
+ const list=messages[j.id]||[];
+ return '<div class="card"><h4>💬 Job Messages</h4>'+
+ list.map(m=>'<div class="message '+(m.from===u.id?'mine':'')+'">'+
+ '<b>'+esc(m.name)+'</b> · '+fmt(m.at)+'<p>'+esc(m.text)+'</p></div>').join('')+
+ '<textarea id="msg-'+esc(j.id)+'" maxlength="1000" placeholder="Write a message"></textarea>'+
+ '<button onclick="sendMessage('+JSON.stringify(j.id)+')">SEND MESSAGE</button></div>'
+}
+function sendMessage(id){
+ const u=me(),j=findJob(id);
+ if(!u||!j||![j.ownerId,j.workerId].includes(u.id)||!j.workerId)return;
+ const field=$('msg-'+id),text=field?.value.trim();
+ if(!text)return;
+ const updated={...messages,[id]:[...(messages[id]||[]),
+ {id:uid(),from:u.id,name:u.name,text:text.slice(0,1000),at:Date.now()}]};
+ try{localStorage.setItem(MSG_KEY,JSON.stringify(updated));messages=updated;render()}
+ catch{alert('Could not save message.')}
+}
+function reviewForm(j){
+ const existing=reviews[j.id];
+ if(existing)return '<div class="card"><h4>Customer Review</h4><p class="stars">'+
+ '★'.repeat(existing.rating)+'☆'.repeat(5-existing.rating)+'</p><p>'+
+ esc(existing.text)+'</p></div>';
+ return '<div class="card"><h4>⭐ Rate This Worker</h4>'+
+ '<label>Rating</label><select id="rating-'+esc(j.id)+'">'+
+ [5,4,3,2,1].map(n=>'<option value="'+n+'">'+n+' Stars</option>').join('')+
+ '</select><textarea id="review-'+esc(j.id)+'" maxlength="500" placeholder="Write a review"></textarea>'+
+ '<button onclick="saveReview('+JSON.stringify(j.id)+')">SUBMIT REVIEW</button></div>'
+}
+function saveReview(id){
+ const u=me(),j=findJob(id);
+ if(!u||!j||j.ownerId!==u.id||j.status!=='completed'||!j.workerId||reviews[id])return;
+ const rating=Number($('rating-'+id).value);
+ const text=$('review-'+id).value.trim();
+ if(!text)return alert('Write a review.');
+ const updated={...reviews,[id]:{rating,text,workerId:j.workerId,customerId:u.id,at:Date.now()}};
+ try{localStorage.setItem(REVIEW_KEY,JSON.stringify(updated));reviews=updated;render()}
+ catch{alert('Could not save review.')}
+}
+function workerProfile(u){
+ const done=jobs.filter(j=>j.workerId===u.id&&j.status==='completed');
+ const ratings=Object.values(reviews).filter(r=>r.workerId===u.id);
+ const avg=ratings.length?
+ (ratings.reduce((s,r)=>s+r.rating,0)/ratings.length).toFixed(1):'New';
+ return '<div class="card"><div class="row">'+
+ (u.avatar?'<img class="avatar" src="'+u.avatar+'" alt="Profile photo">':'<div style="font-size:45px">👷</div>')+
+ '<div><h3>'+esc(u.name)+'</h3><p>'+esc(u.service||'Services')+'</p>'+
+ '<p class="stars">★ '+avg+' ('+ratings.length+' reviews)</p></div></div>'+
+ '<p>'+esc(u.bio||'No bio added yet.')+'</p>'+
+ '<p><b>Service Area:</b> '+esc(u.area||u.city)+'</p>'+
+ '<p><b>Experience:</b> '+esc(u.years||0)+' years</p>'+
+ '<p><b>Completed Jobs:</b> '+done.length+'</p>'+
+ '<p class="muted">Identity not verified</p></div>'
+}
+function calendarEvent(id){
+ const u=me(),j=findJob(id);
+ if(!u||!j||![j.ownerId,j.workerId].includes(u.id)||!j.date)return;
+ const start=new Date(j.date+'T'+(j.time||'09:00')+':00');
+ if(isNaN(start))return alert('Invalid job date.');
+ const end=new Date(start.getTime()+3600000);
+ const stamp=d=>d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+
+ String(d.getDate()).padStart(2,'0')+'T'+String(d.getHours()).padStart(2,'0')+
+ String(d.getMinutes()).padStart(2,'0')+'00';
+ const clean=s=>String(s||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n')
+ .replace(/,/g,'\\,').replace(/;/g,'\\;');
+ const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//GigLink//Demo//EN',
+ 'BEGIN:VEVENT','UID:'+j.id+'@giglink-demo',
+ 'DTSTART:'+stamp(start),'DTEND:'+stamp(end),
+ 'SUMMARY:'+clean('GigLink: '+j.title),
+ 'DESCRIPTION:'+clean(j.description),
+ 'LOCATION:'+clean(j.location),
+ 'BEGIN:VALARM','TRIGGER:-PT60M','ACTION:DISPLAY',
+ 'DESCRIPTION:GigLink job reminder','END:VALARM',
+ 'END:VEVENT','END:VCALENDAR'].join('\r\n');
+ const url=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));
+ const a=document.createElement('a');a.href=url;a.download='GigLink-'+j.id+'.ics';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000)
+}
+function receipt(id){
+ const u=me(),j=findJob(id);
+ if(!u||!j||j.status!=='completed'||![j.ownerId,j.workerId].includes(u.id))return;
+ const p=split(j.budget),sig=signatures[id];
+ const text=[
+ 'GIGLINK — DEMO JOB RECEIPT',
+ 'Diamond Shine Service LLC',
+ 'Job: '+j.title,
+ 'Customer: '+j.poster,
+ 'Worker: '+(j.claimedBy||'Unknown'),
+ 'Scheduled: '+j.date+' '+(j.time||''),
+ 'Location: '+j.location,
+ 'Status: Completed',
+ 'First Clock In: '+fmt(j.startedAt),
+ 'Time Worked: '+duration(workTime(j)),
+ 'Before Photos: '+countPhotos(j,'before'),
+ 'After Photos: '+countPhotos(j,'after'),
+ 'Job Price: '+money(p.gross),
+ 'GigLink Fee (15%): '+money(p.fee),
+ 'Worker Earnings (85%): '+money(p.worker),
+ 'Customer Signature: '+(sig?sig.name:'Legacy job — not recorded'),
+ 'Completion Date: '+fmt(j.completedAt),
+ '',
+ 'DEMO ONLY — NOT PROOF OF PAYMENT',
+ 'No actual payment has been collected or issued.'
+ ].join('\n');
+ const url=URL.createObjectURL(new Blob([text],{type:'text/plain'}));
+ const a=document.createElement('a');a.href=url;a.download='GigLink-Receipt-'+id+'.txt';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000)
+}
 function jobCard(j,context){
  const u=me();
  const worker=u.role==='worker'&&j.workerId===u.id;
  const owner=u.role==='customer'&&j.ownerId===u.id;
-
- let html='<div class="card job">'+
- '<h3>'+esc(j.title)+'</h3>'+
+ let h='<div class="card job"><h3>'+esc(j.title)+'</h3>'+
  '<p><b>Category:</b> '+esc(j.category)+'</p>'+
- '<p>📍 '+esc(j.location)+'</p>'+
- '<p>📅 '+esc(j.date)+'</p>'+
+ '<p>📍 '+esc(j.location)+' · 📅 '+esc(j.date)+' '+esc(j.time||'')+'</p>'+
  '<p>'+esc(j.description)+'</p>'+
  '<p><b>Status:</b> '+esc(j.status)+'</p>'+
  '<p><b>Worker:</b> '+esc(j.claimedBy||'Not assigned')+'</p>'+
- bill(j.budget);
-
+ timeline(j)+bill(j.budget);
+ if(context==='browse'&&u.role==='worker'&&j.status==='available')
+ h+='<button onclick="claimJob('+JSON.stringify(j.id)+')">CLAIM GIG</button>';
  if(worker||owner){
-  html+='<div class="card">'+
-  '<h3>📷 Job Photos & Time Records</h3>'+
-  photoGallery(j,'before')+
-  '<p><b>First Clock In:</b> '+fmt(j.startedAt)+'</p>'+
-  '<p><b>Current Clock In:</b> '+fmt(j.clockInAt)+'</p>'+
-  '<div class="clock" data-clock="'+esc(j.id)+'">'+
-  duration(workTime(j))+'</div>'+
-  photoGallery(j,'after');
-
-  if(worker&&j.status==='claimed'){
-   const canBefore=!j.startedAt;
-   const canAfter=!!j.startedAt&&!j.clockInAt;
-
-   html+='<div class="worker-controls">'+
-   '<h3>🧰 WORKER JOB CONTROLS</h3>'+
-   '<p>Follow each step to complete the job.</p>'+
-
-   '<label class="upload '+(canBefore?'':'disabled')+
-   '" for="before-'+esc(j.id)+'">'+
-   '📷 UPLOAD BEFORE PHOTOS ('+countPhotos(j,'before')+'/3)</label>'+
-
-   '<input class="file-input" type="file" accept="image/*" '+
-   'id="before-'+esc(j.id)+'" '+
-   'onchange="addPhoto(\''+esc(j.id)+'\',\'before\',this)" '+
-   (canBefore?'':'disabled')+'>'+
-
-   '<button class="clock-in" '+
-   'onclick="clockIn(\''+esc(j.id)+'\')" '+
-   (j.clockInAt||!countPhotos(j,'before')?'disabled':'')+
-   '>▶ CLOCK IN</button>'+
-
-   '<button class="clock-out" '+
-   'onclick="clockOut(\''+esc(j.id)+'\')" '+
-   (!j.clockInAt?'disabled':'')+
-   '>⏹ CLOCK OUT</button>'+
-
-   '<label class="upload '+(canAfter?'':'disabled')+
-   '" for="after-'+esc(j.id)+'">'+
-   '📷 UPLOAD AFTER PHOTOS ('+countPhotos(j,'after')+'/3)</label>'+
-
-   '<input class="file-input" type="file" accept="image/*" '+
-   'id="after-'+esc(j.id)+'" '+
-   'onchange="addPhoto(\''+esc(j.id)+'\',\'after\',this)" '+
-   (canAfter?'':'disabled')+'>'+
-
-   '<button class="submit" '+
-   'onclick="submitWork(\''+esc(j.id)+'\')" '+
-   (j.clockInAt||!j.startedAt||
-   !countPhotos(j,'before')||!countPhotos(j,'after')?'disabled':'')+
-   '>✅ SUBMIT JOB FOR CUSTOMER SIGNATURE</button>'+
-
-   '</div>'
-  }
-
-  if(owner&&j.status==='submitted'){
-   html+='<button onclick="openSignature(\''+esc(j.id)+'\')">'+
-   '✍️ REVIEW, SIGN & APPROVE</button>'
-  }
-
-  if(j.status==='completed'){
-   const sig=signatures[j.id];
-
-   if(sig){
-    html+='<p><b>Signed By:</b> '+esc(sig.name)+'</p>'+
-    '<p><b>Signed At:</b> '+fmt(sig.signedAt)+'</p>'+
-    '<img class="signature-image" src="'+sig.image+'" alt="Signature">'
-   }else{
-    html+='<p class="muted">Older demo completion without signature.</p>'
-   }
-  }
-
-  html+='</div>'
+ h+='<div class="card"><h3>📷 Photos & Time</h3>'+
+ photoGallery(j,'before')+
+ '<p><b>First Clock In:</b> '+fmt(j.startedAt)+'</p>'+
+ '<p><b>Current Clock In:</b> '+fmt(j.clockInAt)+'</p>'+
+ '<div class="clock" data-clock="'+esc(j.id)+'">'+duration(workTime(j))+'</div>'+
+ photoGallery(j,'after');
+ if(worker&&j.status==='claimed'){
+ const before=!j.startedAt,after=!!j.startedAt&&!j.clockInAt;
+ h+='<div class="controls"><h3>🧰 WORKER JOB CONTROLS</h3>'+
+ '<label class="upload '+(before?'':'off')+'" for="before-'+esc(j.id)+'">📷 UPLOAD BEFORE PHOTOS ('+countPhotos(j,'before')+'/3)</label>'+
+ '<input class="file" type="file" accept="image/*" id="before-'+esc(j.id)+'" onchange="addPhoto('+JSON.stringify(j.id)+',\'before\',this)" '+(before?'':'disabled')+'>'+
+ '<button class="in" onclick="clockIn('+JSON.stringify(j.id)+')" '+(j.clockInAt||!countPhotos(j,'before')?'disabled':'')+'>▶ CLOCK IN</button>'+
+ '<button class="out" onclick="clockOut('+JSON.stringify(j.id)+')" '+(!j.clockInAt?'disabled':'')+'>⏹ CLOCK OUT</button>'+
+ '<label class="upload '+(after?'':'off')+'" for="after-'+esc(j.id)+'">📷 UPLOAD AFTER PHOTOS ('+countPhotos(j,'after')+'/3)</label>'+
+ '<input class="file" type="file" accept="image/*" id="after-'+esc(j.id)+'" onchange="addPhoto('+JSON.stringify(j.id)+',\'after\',this)" '+(after?'':'disabled')+'>'+
+ '<button class="submit" onclick="submitWork('+JSON.stringify(j.id)+')" '+
+ (j.clockInAt||!j.startedAt||!countPhotos(j,'before')||!countPhotos(j,'after')?'disabled':'')+
+ '>✅ SUBMIT FOR CUSTOMER SIGNATURE</button></div>'
  }
-
- if(context==='browse'&&u.role==='worker'&&j.status==='available'){
-  html+='<button onclick="claimJob(\''+esc(j.id)+'\')">'+
-  'CLAIM GIG</button>'
+ if(owner&&j.status==='submitted')
+ h+='<button onclick="openSignature('+JSON.stringify(j.id)+')">✍️ REVIEW, SIGN & APPROVE</button>';
+ if(j.status==='completed'){
+ const sig=signatures[j.id];
+ h+=sig?'<p><b>Signed By:</b> '+esc(sig.name)+' · '+fmt(sig.signedAt)+'</p>'+
+ '<img class="signature-image" src="'+sig.image+'" alt="Customer signature">':
+ '<p class="muted">Legacy job without recorded signature.</p>';
+ h+='<button onclick="receipt('+JSON.stringify(j.id)+')">📄 DOWNLOAD JOB RECEIPT</button>';
+ if(owner&&j.workerId)h+=reviewForm(j)
  }
-
- return html+'</div>'
+ h+='</div>';
+ if(j.workerId)h+=messageBox(j);
+ if(j.date)h+='<button onclick="calendarEvent('+JSON.stringify(j.id)+')">📅 ADD TO CALENDAR</button>'
+ }
+ return h+'</div>'
 }
-
 function render(){
- const u=me();
- if(!u)return;
-
- const mine=jobs.filter(j=>u.role==='worker'?
- j.workerId===u.id:j.ownerId===u.id);
-
- const available=jobs.filter(j=>
- j.status==='available'&&
- (el('categoryFilter').value==='All'||
- el('categoryFilter').value===j.category)
- );
-
- const completed=mine.filter(j=>j.status==='completed');
- const pending=mine.filter(j=>
- j.status==='claimed'||j.status==='submitted'
- );
-
- const sum=(list,key)=>list.reduce(
- (total,j)=>total+split(j.budget)[key],0
- );
-
- el('browseList').innerHTML=available.length?
- available.map(j=>jobCard(j,'browse')).join(''):
- '<div class="card">No available gigs.</div>';
-
- el('mineList').innerHTML=mine.length?
- mine.map(j=>jobCard(j,'mine')).join(''):
- '<div class="card">No gigs yet.</div>';
-
- el('dashboardStats').innerHTML=
+ const u=me();if(!u)return;
+ const mine=jobs.filter(j=>u.role==='worker'?j.workerId===u.id:j.ownerId===u.id);
+ const available=jobs.filter(j=>j.status==='available'&&
+ ($('categoryFilter').value==='All'||$('categoryFilter').value===j.category));
+ const done=mine.filter(j=>j.status==='completed');
+ const pending=mine.filter(j=>['claimed','submitted'].includes(j.status));
+ const sum=(list,key)=>list.reduce((s,j)=>s+split(j.budget)[key],0);
+ $('browseList').innerHTML=available.length?
+ available.map(j=>jobCard(j,'browse')).join(''):'<div class="card">No available gigs.</div>';
+ $('mineList').innerHTML=mine.length?
+ mine.map(j=>jobCard(j,'mine')).join(''):'<div class="card">No gigs yet.</div>';
+ $('dashboardStats').innerHTML=
  stat('Available Gigs',jobs.filter(j=>j.status==='available').length)+
  stat('My Gigs',mine.length);
-
- el('earningsStats').innerHTML=u.role==='worker'?
- stat('Completed Gigs',completed.length)+
- stat('Estimated Earnings',money(sum(completed,'worker')))+
- stat('Pending Gigs',pending.length)+
- stat('Potential Earnings',money(sum(pending,'worker'))):
- stat('Completed Jobs',completed.length)+
- stat('Completed Job Value',money(sum(completed,'gross')))+
- stat('Pending Jobs',pending.length)+
- stat('Pending Job Value',money(sum(pending,'gross')));
-
- const done=jobs.filter(j=>j.status==='completed');
- const open=jobs.filter(j=>
- j.status==='claimed'||j.status==='submitted'
- );
-
- el('platformStats').innerHTML=
- stat('Completed Gigs',done.length)+
- stat('Estimated Platform Fees',money(sum(done,'fee')))+
- stat('Pending Gigs',open.length)+
- stat('Potential Fees',money(sum(open,'fee')))+
- stat('Completed Job Value',money(sum(done,'gross')))+
- stat('Worker Earnings',money(sum(done,'worker')))
+ $('earningsStats').innerHTML=u.role==='worker'?
+ stat('Completed Gigs',done.length)+stat('Estimated Earnings',money(sum(done,'worker')))+
+ stat('Pending Gigs',pending.length)+stat('Potential Earnings',money(sum(pending,'worker'))):
+ stat('Completed Jobs',done.length)+stat('Completed Job Value',money(sum(done,'gross')))+
+ stat('Pending Jobs',pending.length)+stat('Pending Job Value',money(sum(pending,'gross')));
+ $('earningsList').innerHTML=done.map(j=>
+ '<div class="card"><b>'+esc(j.title)+'</b>'+bill(j.budget)+
+ '<button onclick="receipt('+JSON.stringify(j.id)+')">DOWNLOAD RECEIPT</button></div>'
+ ).join('');
+ const allDone=jobs.filter(j=>j.status==='completed');
+ const allPending=jobs.filter(j=>['claimed','submitted'].includes(j.status));
+ $('platformStats').innerHTML=
+ stat('Completed Gigs',allDone.length)+stat('Estimated Fees',money(sum(allDone,'fee')))+
+ stat('Pending Gigs',allPending.length)+stat('Potential Fees',money(sum(allPending,'fee')))+
+ stat('Completed Job Value',money(sum(allDone,'gross')))+
+ stat('Worker Earnings',money(sum(allDone,'worker')));
+ $('messageList').innerHTML=mine.filter(j=>j.workerId).map(j=>
+ '<div class="card"><h3>'+esc(j.title)+'</h3>'+messageBox(j)+'</div>'
+ ).join('')||'<div class="card">No conversations yet.</div>';
+ $('scheduleList').innerHTML=mine.filter(j=>j.date).sort((a,b)=>
+ (a.date+' '+(a.time||'')).localeCompare(b.date+' '+(b.time||''))).map(j=>
+ '<div class="card"><b>'+esc(j.title)+'</b><p>'+esc(j.date)+' '+esc(j.time||'')+
+ '</p><p>'+esc(j.location)+'</p><p>Status: '+esc(j.status)+'</p>'+
+ '<button onclick="calendarEvent('+JSON.stringify(j.id)+')">ADD TO CALENDAR</button></div>'
+ ).join('')||'<div class="card">No scheduled gigs.</div>';
+ $('workerList').innerHTML=users.filter(x=>x.role==='worker').map(workerProfile).join('')||
+ '<div class="card">No worker profiles yet.</div>';
+ $('profileDetails').innerHTML=u.role==='worker'?workerProfile(u):
+ '<p><b>'+esc(u.name)+'</b> · '+esc(u.city)+'</p><p>Customer Account</p>'
 }
-
+$('profileForm').onsubmit=async e=>{
+ e.preventDefault();
+ const u=me();if(!u)return;
+ let avatar=u.avatar||'';
+ const file=$('profilePhoto').files?.[0];
+ if(file){
+ if(!file.type.startsWith('image/')||file.size>8*1024*1024)
+ return alert('Choose a photo under 8 MB.');
+ try{avatar=await compressPhoto(file,220,.55)}
+ catch{return alert('Unable to read photo.')}
+ }
+ const updated={...u,
+ bio:$('profileBio').value.trim().slice(0,500),
+ area:$('profileArea').value.trim().slice(0,100),
+ years:Math.min(80,Math.max(0,Number($('profileYears').value)||0)),
+ service:$('profileService').value,avatar};
+ const next=users.map(x=>x.id===u.id?updated:x);
+ try{
+ localStorage.setItem(USER_KEY,JSON.stringify(next));
+ users=next;$('profilePhoto').value='';render();notice('Profile saved!')
+ }catch{alert('Browser storage full. Try a smaller photo.')}
+};
 function helpAnswer(q){
  const t=q.toLowerCase();
-
- if(/sign|signature|approve/.test(t))
- return 'Customers review the photos and time records, then draw a signature to approve completion.';
-
- if(/photo|picture|before|after/.test(t))
- return 'Open My Gigs. Upload BEFORE photos before clocking in. After clocking out, upload AFTER photos.';
-
- if(/clock|time|hour/.test(t))
- return 'Workers must upload a BEFORE photo, then tap CLOCK IN. Tap CLOCK OUT when finished. Multiple work sessions are supported.';
-
- if(/fee|earn|pay|money/.test(t))
- return 'GigLink takes an estimated 15% platform fee. For a $200 job, GigLink receives $30 and the worker receives $170. No real payments occur.';
-
- if(/verify|identity|license/.test(t))
- return 'Workers can save an ID type preference. This is not actual identity verification.';
-
- return 'Ask about photos, clock-in, clock-out, customer signatures, earnings or verification.'
+ if(/message|chat/.test(t))return 'Open Messages after a worker claims a job. Messages are stored in this browser.';
+ if(/review|rating|star/.test(t))return 'Customers can leave a 1–5 star review after signing and approving a job.';
+ if(/calendar|schedule|remind/.test(t))return 'Open Schedule and download a calendar event to your phone.';
+ if(/receipt|invoice/.test(t))return 'Completed jobs include a downloadable demo receipt.';
+ if(/profile|experience/.test(t))return 'Open Profile to add a photo, experience, bio and service area.';
+ if(/sign|approve/.test(t))return 'Customers must draw a signature before a submitted job is completed.';
+ if(/photo|picture|before|after/.test(t))return 'Upload BEFORE photos, clock in, clock out, upload AFTER photos, then submit.';
+ if(/clock|time|hour/.test(t))return 'Open My Gigs for the CLOCK IN and CLOCK OUT buttons.';
+ if(/fee|earn|pay|money/.test(t))return 'GigLink deducts an estimated 15% fee. No real payments are processed.';
+ return 'Ask about messages, reviews, scheduling, receipts, profiles, photos, time tracking or signatures.'
 }
-
 function ask(){
- const q=el('question').value.trim();
- if(!q)return;
-
- const human=document.createElement('div');
- human.className='bubble';
- human.textContent='You: '+q;
- el('chat').appendChild(human);
-
- const bot=document.createElement('div');
- bot.className='bubble';
- bot.textContent='GigLink: '+helpAnswer(q);
- el('chat').appendChild(bot);
-
- el('question').value='';
- el('chat').scrollTop=el('chat').scrollHeight
+ const q=$('question').value.trim();if(!q)return;
+ const a=document.createElement('div');a.className='message mine';a.textContent='You: '+q;
+ const b=document.createElement('div');b.className='message';b.textContent='GigLink: '+helpAnswer(q);
+ $('chat').append(a,b);$('question').value='';
+ $('chat').scrollTop=$('chat').scrollHeight
 }
-
-el('question').addEventListener('keydown',e=>{
- if(e.key==='Enter'){
-  e.preventDefault();
-  ask()
- }
+$('question').addEventListener('keydown',e=>{
+ if(e.key==='Enter'){e.preventDefault();ask()}
 });
-
-for(const id of ['accountService','jobCategory']){
- categories.forEach(c=>el(id).add(new Option(c,c)))
-}
-
-el('categoryFilter').add(new Option('All Categories','All'));
-categories.forEach(c=>el('categoryFilter').add(new Option(c,c)));
-
+for(const id of ['accountService','jobCategory','profileService'])
+ categories.forEach(c=>$(id).add(new Option(c,c)));
+$('categoryFilter').add(new Option('All Categories','All'));
+categories.forEach(c=>$('categoryFilter').add(new Option(c,c)));
 setInterval(()=>{
  document.querySelectorAll('[data-clock]').forEach(node=>{
-  const j=jobs.find(x=>x.id===node.dataset.clock);
-  if(j)node.textContent=duration(workTime(j))
+ const j=findJob(node.dataset.clock);
+ if(j)node.textContent=duration(workTime(j))
  })
 },1000);
-
 if(me())loginAs(session);
 </script>
 </body>
