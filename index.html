@@ -1,854 +1,310 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GigLink | Diamond Shine Service LLC</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;font:16px Arial,sans-serif;background:#f2f6fc;color:#172b44}
-.hidden{display:none!important}
-button,input,select,textarea{font:inherit}
-button{background:#1685ff;color:white;border:0;border-radius:9px;padding:11px 14px;margin:4px;cursor:pointer;font-weight:bold}
-button:disabled{opacity:.45;cursor:not-allowed}
-input,select,textarea{width:100%;padding:12px;border:1px solid #b9cce0;border-radius:9px;margin:7px 0 13px}
-textarea{min-height:90px}
-label{display:block;font-weight:bold;margin-top:9px}
-header,footer{background:#101b32;color:white;text-align:center;padding:22px}
-nav{background:#1d3c65;padding:9px;display:flex;flex-wrap:wrap;justify-content:center}
-nav button{background:#315c8d}
-main{max-width:850px;margin:auto;padding:15px;min-height:60vh}
-.card{background:white;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 3px 14px #0001}
-.job{border-left:5px solid #1685ff}
-.hero{min-height:100dvh;background:linear-gradient(140deg,#081529,#19518d);color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
-.hero h1{font-size:52px;margin:10px}
-.hero button{width:min(90%,310px)}
-.muted{color:#65788e}
-.warn{background:#fff2d8;padding:12px;border-radius:10px;color:#715000}
-.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.stat{background:#e9f2ff;border-radius:12px;padding:15px;text-align:center}
-.stat strong{display:block;font-size:22px;color:#1558a6}
-.line{display:flex;justify-content:space-between;gap:12px;margin:9px 0}
-.breakdown{background:#edf5ff;border-radius:10px;padding:12px;margin:12px 0}
-.photos{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
-.photos img{width:105px;height:105px;object-fit:cover;border-radius:8px;border:1px solid #cbd5e1}
-.clock{font-size:24px;color:#1459a8;font-weight:bold}
-.chat{height:240px;overflow:auto;background:#f5f9ff;border:1px solid #cbd8e8;border-radius:10px;padding:10px}
-.bubble{background:#e3efff;padding:10px;border-radius:10px;margin:8px 0;white-space:pre-wrap}
-.human{background:#d9f5e5}
-.signature-pad{width:100%;height:175px;border:2px dashed #6997c8;border-radius:10px;touch-action:none;background:white}
-.signature-image{max-width:100%;height:100px;object-fit:contain;border:1px solid #cbd5e1}
-.modal{position:fixed;inset:0;background:#07152bcc;display:flex;align-items:center;justify-content:center;padding:15px;z-index:100}
-.dialog{background:white;border-radius:15px;padding:18px;width:min(100%,580px);max-height:95dvh;overflow:auto}
-#notice{color:#087746;font-weight:bold}
-</style>
-</head>
-<body>
-
-<section id="startup" class="hero">
-<div style="font-size:60px">🔗</div>
-<h1>GigLink</h1>
-<p>Post It. Claim It. Get It Done.</p>
-<p>Your All-in-One Job Marketplace</p>
-<button onclick="openAuth('signup')">CREATE ACCOUNT</button>
-<button onclick="openAuth('login')">SIGN IN</button>
-<p>© 2026 Diamond Shine Service LLC</p>
-</section>
-
-<section id="authScreen" class="hidden">
-<header><h1>🔗 GigLink Accounts</h1></header>
-<main><div class="card">
-<button onclick="goStartup()">← Back</button>
-
-<div id="signupPanel">
-<h2>Create Demo Account</h2>
-<form id="signupForm">
-<label>Account Type</label>
-<select id="accountRole">
-<option value="customer">Customer</option>
-<option value="worker">Worker</option>
-</select>
-<label>Name</label>
-<input id="accountName" required maxlength="60">
-<label>Demo Email</label>
-<input id="accountEmail" type="email" required>
-<label>City / State</label>
-<input id="accountCity" required>
-<label>Primary Service (workers)</label>
-<select id="accountService"></select>
-<p class="warn">Use fictional information. Demo accounts are not secure.</p>
-<button>CREATE ACCOUNT</button>
-</form>
-</div>
-
-<div id="loginPanel" class="hidden">
-<h2>Sign In</h2>
-<select id="savedAccounts"></select>
-<button onclick="signIn()">SIGN IN</button>
-</div>
-</div></main>
-</section>
-
-<section id="app" class="hidden">
-<header>
-<h1>🔗 GigLink</h1>
-<p>Post It. Claim It. Get It Done.</p>
-<p id="accountInfo"></p>
-<button onclick="logout()">Sign Out</button>
-</header>
-
-<nav>
-<button onclick="show('dashboard')">Dashboard</button>
-<button id="postNav" onclick="show('post')">Post Gig</button>
-<button onclick="show('browse')">Find Gigs</button>
-<button onclick="show('mine')">My Gigs</button>
-<button onclick="show('earnings')">💰 Earnings</button>
-<button id="verifyNav" onclick="show('verification')">Verify ID</button>
-<button onclick="show('profile')">Profile</button>
-<button onclick="show('assistant')">🤖 Help</button>
-<button onclick="show('platform')">Platform Demo</button>
-</nav>
-
-<main>
-<p id="notice" role="status"></p>
-
-<section id="dashboard">
-<div class="card">
-<h2 id="welcome"></h2>
-<p>Manage jobs, work photos, time records, and estimated earnings.</p>
-<div id="dashboardStats" class="stats"></div>
-<p>GigLink deducts a 15% platform fee from worker earnings.</p>
-<button id="dashboardAction"></button>
-</div>
-</section>
-
-<section id="post" class="hidden">
-<div class="card">
-<h2>Post a Gig</h2>
-<form id="postForm">
-<label>Job Title</label>
-<input id="jobTitle" required>
-<label>Category</label>
-<select id="jobCategory"></select>
-<label>Location</label>
-<input id="jobLocation" required>
-<label>Job Date</label>
-<input id="jobDate" type="date" required>
-<label>Budget ($)</label>
-<input id="jobBudget" type="number" min="1" step=".01" required oninput="previewFee()">
-<div id="feePreview"></div>
-<label>Description</label>
-<textarea id="jobDescription" required></textarea>
-<button>POST GIG</button>
-</form>
-</div>
-</section>
-
-<section id="browse" class="hidden">
-<h2>Available Gigs</h2>
-<div class="card">
-<select id="categoryFilter" onchange="render()"></select>
-</div>
-<div id="browseList"></div>
-</section>
-
-<section id="mine" class="hidden">
-<h2>My Gigs & Work Tracking</h2>
-<div id="mineList"></div>
-</section>
-
-<section id="earnings" class="hidden">
-<h2>Earnings Dashboard</h2>
-<div id="earningsStats" class="stats"></div>
-<div id="earningsList"></div>
-</section>
-
-<section id="verification" class="hidden">
-<div class="card">
-<h2>🛡️ Worker ID Verification</h2>
-<p class="warn">Demo only. Do not upload real identification documents.</p>
-<p id="verificationStatus"></p>
-<label>Document Type</label>
-<select id="documentType">
-<option value="">Select document</option>
-<option>Driver's License</option>
-<option>State ID</option>
-<option>Passport</option>
-</select>
-<button onclick="saveVerification()">SAVE PREFERENCE</button>
-<p class="muted">Identity verification requires a secure provider. No identity is verified in this demo.</p>
-</div>
-</section>
-
-<section id="profile" class="hidden">
-<div class="card">
-<h2>My Profile</h2>
-<div id="profileDetails"></div>
-</div>
-</section>
-
-<section id="assistant" class="hidden">
-<div class="card">
-<h2>🤖 GigLink Help Assistant</h2>
-<p class="muted">Built-in help answers. Not connected to live AI.</p>
-<div id="chat" class="chat">
-<div class="bubble">Welcome! Ask about photos, clocking in, customer signatures, earnings, or ID verification.</div>
-</div>
-<input id="question" placeholder="Ask a question">
-<button onclick="ask()">SEND</button>
-<button onclick="quickAsk('How do I clock in?')">Clock In</button>
-<button onclick="quickAsk('How does customer signing work?')">Signature</button>
-</div>
-</section>
-
-<section id="platform" class="hidden">
-<div class="card">
-<h2>GigLink Platform Revenue Demo</h2>
-<p class="warn">Public demo estimates only. This is not a secure administrator dashboard or actual revenue.</p>
-<div id="platformStats" class="stats"></div>
-</div>
-</section>
-</main>
-
-<footer>
-<strong>GigLink™</strong>
-<p>Post It. Claim It. Get It Done.</p>
-© 2026 Diamond Shine Service LLC.<br>
-All Rights Reserved.
-<p>Owned and Operated by Diamond Shine Service LLC</p>
-<small>GigLink Marketplace Prototype</small>
-</footer>
-</section>
-
-<div id="signatureModal" class="modal hidden" role="dialog" aria-modal="true">
-<div class="dialog">
-<h2>✍️ Customer Completion Signature</h2>
-<p id="signatureJob"></p>
-<p>By signing, you confirm you have reviewed the job photos and recorded work time and approve completion.</p>
-<p class="warn">Demo signature only. This is not a verified electronic-signature service.</p>
-<label>Customer Name</label>
-<input id="signerName" maxlength="80">
-<label>Draw Signature With Your Finger</label>
-<canvas id="signatureCanvas" class="signature-pad"></canvas>
-<button onclick="clearSignature()">CLEAR</button>
-<button onclick="closeSignature()">CANCEL</button>
-<button onclick="finishSignature()">SIGN & APPROVE JOB</button>
-</div>
-</div>
-
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,
+initial-scale=1"><title>GigLink — Work Tracking</title><style>
+*{box-sizing:border-box}body{margin:0;background:#f2f6fc;color:#182940;font:16px Arial}header,
+footer{background:#101b32;color:white;text-align:center;padding:22px}nav{background:#1c3b65;display:flex;
+flex-wrap:wrap;justify-content:center;padding:8px}button{border:0;border-radius:9px;padding:11px 13px;
+background:#1685ff;color:white;font-weight:bold;margin:4px;cursor:pointer}nav
+button{background:#305c8f}main{max-width:850px;margin:auto;padding:15px;min-height:60vh}.card{background:white;
+border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 2px 12px #0001}.hidden{display:none!important}input,
+select,textarea{display:block;width:100%;padding:12px;margin:7px 0 14px;border:1px solid #b7c9dc;border-radius:9px;
+font:inherit}label{font-weight:bold}textarea{min-height:90px}.muted{color:#64748b}.warn{background:#fff2d8;
+padding:12px;border-radius:9px}.hero{min-height:100dvh;background:linear-gradient(135deg,#091629,#19528e);
+color:white;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+padding:24px}.hero h1{font-size:52px;margin:12px}.hero button{width:min(90%,300px)}.row{display:flex;
+justify-content:space-between;gap:12px;margin:7px 0}.job{border-left:5px solid #1685ff}.photos{display:flex;
+gap:8px;flex-wrap:wrap}.photos img{width:110px;height:110px;object-fit:cover;border-radius:8px;border:1px solid
+#cbd5e1}.pill{background:#e7f2ff;padding:6px 10px;border-radius:20px;
+display:inline-block}.green{color:#087746}.stats{display:grid;grid-template-columns:repeat(2,1fr);
+gap:10px}.stat{background:#e8f1ff;padding:15px;border-radius:12px;text-align:center}.stat b{display:block;
+font-size:21px}.chat{height:220px;overflow:auto;background:#f5f9ff;border:1px solid #ccd8e8;border-radius:10px;
+padding:10px}.bubble{padding:10px;background:#e2edff;margin:7px 0;border-radius:10px;
+white-space:pre-wrap}.mine{background:#d9f6e8}.actions{display:flex;flex-wrap:wrap}.clock{font-size:24px;
+font-weight:bold;color:#1559a5}.small{font-size:13px}.signature-pad{width:100%;height:180px;border:2px dashed
+#6796c9;border-radius:10px;background:white;touch-action:none}.signature-image{max-width:100%;height:100px;
+border:1px solid #ccd8e8;border-radius:8px;background:white}.signature-modal{position:fixed;inset:0;
+background:#091629bb;z-index:100;display:flex;align-items:center;justify-content:center;
+padding:15px}.signature-dialog{background:white;width:min(100%,580px);padding:18px;border-radius:15px;
+max-height:95dvh;overflow:auto}
+.worker-controls{display:flex;flex-direction:column;gap:9px;background:#eef5ff;border:1px solid #bed6f5;
+border-radius:14px;padding:16px;margin:14px 0}.worker-controls button,.worker-controls .upload-button{width:100%;
+margin:0;padding:17px 12px;border-radius:11px;font-size:16px;text-align:center;
+display:block}.upload-button{background:#176bc2;color:white;cursor:pointer;
+font-weight:bold}.clock-in-button{background:#11804d}.clock-out-button{background:#b63232}.submit-button{background
+:#253e72}.worker-controls button:disabled,.disabled-control{opacity:.42;
+cursor:not-allowed}.file-control{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;padding:0;
+margin:0;border:0}.worker-controls h3{margin:0}.worker-controls .muted{margin:0 0 6px}</style></head><body>
+<section id="start" class="hero"><div style="font-size:64px">■</div><h1>GigLink</h1><p>Post It. Claim It. Get It
+Done.</p><button onclick="auth('signup')">CREATE ACCOUNT</button><button onclick="auth('login')">SIGN
+IN</button><p>© 2026 Diamond Shine Service LLC</p></section>
+<section id="auth" class="hidden"><header><h1>GigLink Accounts</h1></header><main><div class="card"><button
+onclick="goStart()">← Back</button><div id="signup"><h2>Create Demo Account</h2><form id=
+"signupForm"><label>Account Type</label><select id="role"><option value="customer">Customer</option><option value=
+"worker">Worker</option></select><label>Name</label><input id="name" required maxlength="60"><label>Demo
+Email</label><input id="email" type="email" required><label>City / State</label><input id="city"
+required><label>Primary Service (workers)</label><select id="service"></select><p class="warn">Use fictional
+information. This is not secure sign-in.</p><button>CREATE ACCOUNT</button></form></div><div id="login" class=
+"hidden"><h2>Sign In</h2><select id="savedUsers"></select><button onclick="signIn()">SIGN
+IN</button></div></div></main></section>
+<section id="app" class="hidden"><header><h1>■ GigLink</h1><p>Post It. Claim It. Get It Done.</p><p id=
+"who"></p><button onclick="logout()">Sign Out</button></header><nav><button onclick=
+"show('dashboard')">Dashboard</button><button id="postBtn" onclick="show('post')">Post Gig</button><button onclick=
+"show('browse')">Find Gigs</button><button onclick="show('mine')">My Gigs</button><button onclick=
+"show('earnings')">■ Earnings</button><button id="verifyBtn" onclick="show('verify')">Verify ID</button><button
+onclick="show('profile')">Profile</button><button onclick="show('help')">■ Help</button><button onclick=
+"show('platform')">Platform Demo</button></nav><main><p id="notice" class="green"></p>
+<section id="dashboard"><div class="card"><h2 id="greeting"></h2><p>Track jobs, photos, time worked, and estimated
+earnings.</p><div id="dashStats" class="stats"></div><p>GigLink retains 15% of completed job prices. Workers
+receive 85% before other costs.</p><button id="dashAction"></button></div></section>
+<section id="post" class="hidden"><div class="card"><h2>Post a Gig</h2><form id="postForm"><label>Job
+Title</label><input id="title" required><label>Category</label><select id=
+"category"></select><label>Location</label><input id="location" required><label>Job Date</label><input id="date"
+type="date" required><label>Budget ($)</label><input id="budget" type="number" min="1" step=".01" required oninput=
+"preview()"><div id="preview"></div><label>Description</label><textarea id="description"
+required></textarea><button>POST GIG</button></form></div></section>
+<section id="browse" class="hidden"><h2>Available Gigs</h2><div class="card"><select id="filter" onchange=
+"render()"></select></div><div id="browseList"></div></section>
+<section id="mine" class="hidden"><h2>My Gigs & Work Tracking</h2><div id="mineList"></div></section>
+<section id="earnings" class="hidden"><h2>Earnings Dashboard</h2><div id="earnStats" class="stats"></div><div id=
+"earnList"></div></section>
+<section id="verify" class="hidden"><div class="card"><h2>■■ Worker ID Verification</h2><p class="warn">Demo only.
+Do not enter or upload real ID documents.</p><p id="verifyStatus"></p><label>Future ID Type</label><select id=
+"docType"><option value="">Select document</option><option>Driver's License</option><option>State
+ID</option><option>Passport</option></select><button onclick="saveDoc()">SAVE PREFERENCE</button><p>This does not
+verify identity. A secure provider is required.</p></div></section>
+<section id="profile" class="hidden"><div class="card"><h2>My Profile</h2><div id=
+"profileText"></div></div></section>
+<section id="help" class="hidden"><div class="card"><h2>■ GigLink Help Assistant</h2><p class="muted">Guided
+answers only; not live AI.</p><div class="chat" id="chat"><div class="bubble">Welcome! Ask about before photos,
+clocking in, after photos, payments, or ID verification.</div></div><input id="question" placeholder="Ask a
+question"><button onclick="ask()">Send</button><button onclick="quick('How do I clock in?')">Clock
+In</button><button onclick="quick('How do I submit photos?')">Photos</button></div></section>
+<section id="platform" class="hidden"><div class="card"><h2>GigLink Platform Revenue Demo</h2><p class=
+"warn">Public demo figures only. Not secure admin reporting or actual collected revenue.</p><div id=
+"platformStats" class="stats"></div></div></section>
+</main><footer><b>GigLink™</b><p>Post It. Claim It. Get It Done.</p>© 2026 Diamond Shine Service LLC.<br>All
+Rights Reserved.<p class="small">Owned and Operated by Diamond Shine Service LLC · Prototype</p></footer></section>
+<div id="signatureModal" class="signature-modal hidden" role="dialog" aria-modal="true" aria-label="Customer
+completion signature"><div class="signature-dialog"><h2>Customer Completion Signature</h2><p>Review the
+before/after photos and time record first. Sign below to approve completion of this gig.</p><p class="warn">Demo
+signature only. It is stored on this browser, not a legally verified electronic signature.</p><p id=
+"signatureJobTitle"></p><label for="signerName">Customer name</label><input id="signerName" maxlength="80"
+placeholder="Customer name"><label>Draw your signature using your finger</label><canvas id="signatureCanvas" class=
+"signature-pad"></canvas><div class="actions"><button type="button" onclick=
+"clearSignature()">CLEAR</button><button type="button" onclick="closeSignature()">CANCEL</button><button type=
+"button" onclick="finishSignature()">SIGN & APPROVE JOB</button></div></div></div>
 <script>
-const JOB_KEY='giglink_jobs_v1';
-const USER_KEY='giglink_demo_users_v1';
-const SESSION_KEY='giglink_demo_session_v1';
-const PHOTO_KEY='giglink_step9_photos_v1';
-const SIGN_KEY='giglink_step9_signatures_v1';
-const FEE=0.15;
-
-const categories=[
-'Residential Cleaning','Commercial Cleaning',
-'Lawn Care','Moving','Handyman','Painting',
-'Furniture Assembly','Delivery','Junk Removal',
-'Pet Care','Other Services'
-];
-
-function read(key,fallback){
- try{return JSON.parse(localStorage.getItem(key))??fallback}
- catch{return fallback}
+const JOB_KEY='giglink_jobs_v1',USER_KEY='giglink_demo_users_v1',SESSION_KEY='giglink_demo_session_v1',PHOTO_KEY=
+'giglink_step8_photos_v1',SIGN_KEY='giglink_step9_signatures_v1';
+const categories=['Residential Cleaning','Commercial Cleaning','Lawn Care','Moving','Handyman','Painting',
+'Furniture Assembly','Delivery','Junk Removal','Pet Care','Other Services'];
+const read=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+let jobs=read(JOB_KEY,[]),users=read(USER_KEY,[]),session=read(SESSION_KEY,null),photos=read(PHOTO_KEY,{}),
+signatures=read(SIGN_KEY,{});let signingJobId=null,hasDrawn=false,signingPointer=null;
+if(!Array.isArray(jobs))jobs=[];if(!Array.isArray(users))users=[];if(!photos||typeof photos!=='object')photos={};
+const $=id=>document.getElementById(id),me=()=>users.find(x=>x.id===session),id=()=
+>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;
+'}[c]));
+const saveJobs=()=>localStorage.setItem(JOB_KEY,JSON.stringify(jobs)),saveUsers=()=>localStorage.setItem(USER_KEY,
+JSON.stringify(users));
+const cents=n=>Math.max(0,Math.round((Number(n)||0)*100)),split=n=>{let gross=cents(n),fee=Math.round(gross*.15);
+return {gross,fee,worker:gross-fee}},money=n=>'$'+(n/100).toFixed(2);
+const fmt=t=>t?new Date(t).toLocaleString():'Not recorded';
+function elapsed(ms){let sec=Math.max(0,Math.floor(ms/1000)),h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=
+sec%60;return [h,m,s].map(v=>String(v).padStart(2,'0')).join(':')}
+function timeTotal(j){return (Number(j.workMs)||0)+(j.clockInAt?Math.max(0,Date.now()-j.clockInAt):0)}
+function bill(n){let s=split(n);return `<div class="card" style="background:#edf5ff"><div class="row"><span>Job
+price</span><b>${money(s.gross)}</b></div><div class="row"><span>GigLink
+15%</span><b>${money(s.fee)}</b></div><div class="row"><span>Worker
+85%</span><b>${money(s.worker)}</b></div></div>`}
+function goStart(){$('start').classList.remove('hidden');$('auth').classList.add('hidden');
+$('app').classList.add('hidden')}
+function auth(which){$('start').classList.add('hidden');$('auth').classList.remove('hidden');
+$('signup').classList.toggle('hidden',which!=='signup');$('login').classList.toggle('hidden',which!=='login');
+$('savedUsers').innerHTML=users.map(u=>`<option value="${esc(u.id)}">${esc(u.name)}
+(${esc(u.role)})</option>`).join('')}
+$('signupForm').onsubmit=e=>{e.preventDefault();let email=$('email').value.trim().toLowerCase();if(users.some(u=
+>u.email===email))return alert('Demo email already exists');let u={id:id(),name:$('name').value.trim(),email,
+city:$('city').value.trim(),role:$('role').value,service:$('service').value,verificationStatus:'not_started',
+documentPreference:''};users.push(u);saveUsers();loginAs(u.id)};
+function signIn(){if($('savedUsers').value)loginAs($('savedUsers').value)}
+function loginAs(uid){session=uid;localStorage.setItem(SESSION_KEY,JSON.stringify(uid));
+$('start').classList.add('hidden');$('auth').classList.add('hidden');$('app').classList.remove('hidden');
+show('dashboard')}
+function logout(){session=null;localStorage.removeItem(SESSION_KEY);goStart()}
+function show(which){let u=me();if(!u)return goStart();if(which==='post'&&u.role!=='customer')which='dashboard';
+if(which==='verify'&&u.role!=='worker')which='dashboard';['dashboard','post','browse','mine','earnings','verify',
+'profile','help','platform'].forEach(k=>$(k).classList.toggle('hidden',k!==which));
+$('postBtn').classList.toggle('hidden',u.role!=='customer');$('verifyBtn').classList.toggle('hidden',u.role!==
+'worker');$('who').textContent=u.name+' · '+u.role;$('greeting').textContent='Welcome, '+u.name;
+$('dashAction').textContent=u.role==='worker'?'FIND GIGS':'POST A GIG';$('dashAction').onclick=()=>show(u.role===
+'worker'?'browse':'post');$('location').value=u.city;$('docType').value=u.documentPreference||'';
+$('verifyStatus').textContent=u.verificationStatus==='preference_saved'?'Preference saved — NOT verified':'Not
+verified';$('profileText').innerHTML=`<p>Name: ${esc(u.name)}</p><p>Demo email: ${esc(u.email)}</p><p>City:
+${esc(u.city)}</p><p>Role: ${esc(u.role)}</p><p>Identity: ${u.role==='worker'?'Not verified':'Not
+applicable'}</p>`;$('notice').textContent='';render();window.scrollTo(0,0)}
+function saveDoc(){let u=me();if(!u||u.role!=='worker')return;let type=$('docType').value;if(!type)return
+alert('Select a document type');u.documentPreference=type;u.verificationStatus='preference_saved';saveUsers();
+show('verify');$('notice').textContent='Preference saved. Identity is not verified.'}
+function preview(){$('preview').innerHTML=Number($('budget').value)>0?bill($('budget').value):''}
+$('postForm').onsubmit=e=>{e.preventDefault();let u=me();if(!u||u.role!=='customer')return;let budget=
+Number($('budget').value);if(!Number.isFinite(budget)||budget<=0)return alert('Enter a valid budget');
+jobs.push({id:id(),ownerId:u.id,poster:u.name,title:$('title').value.trim(),category:$('category').value,
+location:$('location').value.trim(),date:$('date').value,budget,description:$('description').value.trim(),
+status:'available',workerId:null,claimedBy:'',platformFeeRate:.15,clockInAt:null,workMs:0,workSessions:[],
+submittedAt:null});saveJobs();e.target.reset();show('mine');$('notice').textContent='Gig posted!'};
+function claim(jid){let u=me(),j=jobs.find(x=>x.id===jid);if(!u||u.role!=='worker'||!j||j.status!==
+'available')return;if(!confirm('Claim this gig? Estimated worker earnings: '+money(split(j.budget).worker)))return;
+j.workerId=u.id;j.claimedBy=u.name;j.status='claimed';saveJobs();show('mine')}
+function beforeCount(j){return (photos[j.id]?.before||[]).length}
+function afterCount(j){return (photos[j.id]?.after||[]).length}
+function clockIn(jid){let u=me(),j=jobs.find(x=>x.id===jid);if(!u||!j||u.id!==j.workerId||j.status!==
+'claimed'||j.clockInAt)return;if(!beforeCount(j))return alert('Take at least one BEFORE photo before clocking
+in.');j.clockInAt=Date.now();j.startedAt=j.startedAt||j.clockInAt;saveJobs();show('mine')}
+function clockOut(jid){let u=me(),j=jobs.find(x=>x.id===jid);if(!u||!j||u.id!==j.workerId||j.status!==
+'claimed'||!j.clockInAt)return;let end=Date.now();j.workMs=(Number(j.workMs)||0)+Math.max(0,end-j.clockInAt);
+j.workSessions=Array.isArray(j.workSessions)?j.workSessions:[];j.workSessions.push({in:j.clockInAt,out:end});
+j.clockInAt=null;saveJobs();show('mine')}
+function submitWork(jid){let u=me(),j=jobs.find(x=>x.id===jid);if(!u||!j||u.id!==j.workerId||j.status!==
+'claimed')return;if(j.clockInAt)return alert('Clock out before submitting.');if(!j.startedAt&&!j.workMs)return
+alert('Clock in and out to record work time.');if(!beforeCount(j)||!afterCount(j))return alert('Both BEFORE and
+AFTER photos are required.');j.status='submitted';j.submittedAt=Date.now();saveJobs();show('mine');
+$('notice').textContent='Work submitted for customer review.'}
+function approve(jid){
+let u=me(),j=jobs.find(x=>x.id===jid);
+if(!u||u.role!=='customer'||!j||u.id!==j.ownerId||j.status!=='submitted')return;
+if(!beforeCount(j)||!afterCount(j)||j.clockInAt)return alert('Photos and clock-out are required.');
+signingJobId=jid;
+$('signerName').value=u.name;
+$('signatureJobTitle').textContent='Gig: '+j.title;
+$('signatureModal').classList.remove('hidden');
+requestAnimationFrame(()=>{let c=$('signatureCanvas');c.width=Math.max(250,
+Math.round(c.getBoundingClientRect().width*devicePixelRatio));c.height=Math.round(180*devicePixelRatio);let ctx=
+c.getContext('2d');ctx.scale(devicePixelRatio,devicePixelRatio);ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin=
+'round';ctx.strokeStyle='#142c4c';hasDrawn=false;signingPointer=null});
 }
-
-let jobs=read(JOB_KEY,[]);
-let users=read(USER_KEY,[]);
-let session=read(SESSION_KEY,null);
-let photos=read(PHOTO_KEY,{});
-let signatures=read(SIGN_KEY,{});
-let signingId=null;
-let hasDrawn=false;
-let pointer=null;
-
-if(!Array.isArray(jobs))jobs=[];
-if(!Array.isArray(users))users=[];
-if(!photos||typeof photos!=='object')photos={};
-if(!signatures||typeof signatures!=='object')signatures={};
-
-const el=id=>document.getElementById(id);
-const me=()=>users.find(u=>u.id===session);
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
-
-function esc(value){
- return String(value??'').replace(/[&<>"']/g,c=>({
- '&':'&amp;','<':'&lt;','>':'&gt;',
- '"':'&quot;',"'":'&#39;'
- }[c]))
-}
-function saveJobs(){
- localStorage.setItem(JOB_KEY,JSON.stringify(jobs))
-}
-function saveUsers(){
- localStorage.setItem(USER_KEY,JSON.stringify(users))
-}
-function cents(value){
- return Math.max(0,Math.round((Number(value)||0)*100))
-}
-function split(value){
- const gross=cents(value);
- const fee=Math.round(gross*FEE);
- return {gross,fee,worker:gross-fee}
-}
-function money(value){
- return '$'+(value/100).toFixed(2)
-}
-function fmt(value){
- return value?new Date(value).toLocaleString():'Not recorded'
-}
-function duration(ms){
- const seconds=Math.floor(Math.max(0,ms)/1000);
- return [
- Math.floor(seconds/3600),
- Math.floor(seconds%3600/60),
- seconds%60
- ].map(n=>String(n).padStart(2,'0')).join(':')
-}
-function workTime(job){
- return (Number(job.workMs)||0)+
- (job.clockInAt?Math.max(0,Date.now()-job.clockInAt):0)
-}
-function countPhotos(job,type){
- return (photos[job.id]?.[type]||[]).length
-}
-function notice(message){
- el('notice').textContent=message
-}
-function bill(value){
- const p=split(value);
- return '<div class="breakdown">'+
- '<div class="line"><span>Job price</span><b>'+money(p.gross)+'</b></div>'+
- '<div class="line"><span>GigLink fee (15%)</span><b>'+money(p.fee)+'</b></div>'+
- '<div class="line"><span>Worker receives (85%)</span><b>'+money(p.worker)+'</b></div>'+
- '</div>'
-}
-function stat(label,value){
- return '<div class="stat"><strong>'+value+'</strong>'+label+'</div>'
-}
-
-function goStartup(){
- el('startup').classList.remove('hidden');
- el('authScreen').classList.add('hidden');
- el('app').classList.add('hidden')
-}
-function openAuth(mode){
- el('startup').classList.add('hidden');
- el('authScreen').classList.remove('hidden');
- el('app').classList.add('hidden');
- el('signupPanel').classList.toggle('hidden',mode!=='signup');
- el('loginPanel').classList.toggle('hidden',mode!=='login');
- el('savedAccounts').innerHTML='';
- users.forEach(u=>el('savedAccounts').add(
- new Option(u.name+' ('+u.role+')',u.id)
- ))
-}
-el('signupForm').addEventListener('submit',e=>{
- e.preventDefault();
- const name=el('accountName').value.trim();
- const email=el('accountEmail').value.trim().toLowerCase();
- const city=el('accountCity').value.trim();
- const role=el('accountRole').value;
- if(!name||!email||!city)return;
- if(users.some(u=>u.email===email)){
-  alert('Demo email already exists.');
-  return
- }
- const u={
-  id:uid(),name,email,city,role,
-  service:role==='worker'?el('accountService').value:'',
-  verificationStatus:'not_started',
-  documentPreference:''
- };
- users.push(u);
- saveUsers();
- loginAs(u.id)
-});
-function signIn(){
- const id=el('savedAccounts').value;
- if(!users.some(u=>u.id===id)){
-  alert('Create a demo account first.');
-  return
- }
- loginAs(id)
-}
-function loginAs(id){
- session=id;
- localStorage.setItem(SESSION_KEY,JSON.stringify(id));
- el('startup').classList.add('hidden');
- el('authScreen').classList.add('hidden');
- el('app').classList.remove('hidden');
- updateAccount();
- show('dashboard')
-}
-function logout(){
- session=null;
- localStorage.removeItem(SESSION_KEY);
- goStartup()
-}
-function updateAccount(){
- const u=me();
- if(!u)return;
- el('accountInfo').textContent=u.name+' • '+u.role;
- el('welcome').textContent='Welcome, '+u.name+'!';
- el('postNav').classList.toggle('hidden',u.role!=='customer');
- el('verifyNav').classList.toggle('hidden',u.role!=='worker');
- el('dashboardAction').textContent=u.role==='customer'?'POST A GIG':'FIND GIGS';
- el('dashboardAction').onclick=()=>show(u.role==='customer'?'post':'browse');
- el('profileDetails').innerHTML=
- '<p><b>Name:</b> '+esc(u.name)+'</p>'+
- '<p><b>Email:</b> '+esc(u.email)+'</p>'+
- '<p><b>City:</b> '+esc(u.city)+'</p>'+
- '<p><b>Role:</b> '+esc(u.role)+'</p>'+
- (u.service?'<p><b>Service:</b> '+esc(u.service)+'</p>':'')+
- (u.role==='worker'?'<p><b>Identity:</b> Not verified</p>':'');
- el('verificationStatus').textContent=
- u.verificationStatus==='preference_saved'?
- 'Preference saved — not verified':'Not verified';
- el('documentType').value=u.documentPreference||''
-}
-function show(page){
- const u=me();
- if(!u)return;
- if(page==='post'&&u.role!=='customer')page='dashboard';
- if(page==='verification'&&u.role!=='worker')page='dashboard';
- ['dashboard','post','browse','mine','earnings',
- 'verification','profile','assistant','platform']
- .forEach(id=>el(id).classList.toggle('hidden',id!==page));
- if(page==='post')el('jobLocation').value=u.city;
- notice('');
- render();
- window.scrollTo(0,0)
-}
-function saveVerification(){
- const u=me();
- if(!u||u.role!=='worker')return;
- const type=el('documentType').value;
- if(!type)return alert('Select a document type.');
- u.documentPreference=type;
- u.verificationStatus='preference_saved';
- saveUsers();
- updateAccount();
- notice('Preference saved. Identity is not verified.')
-}
-
-function previewFee(){
- const value=Number(el('jobBudget').value);
- el('feePreview').innerHTML=value>0?bill(value):''
-}
-el('postForm').addEventListener('submit',e=>{
- e.preventDefault();
- const u=me();
- if(!u||u.role!=='customer')return;
- const title=el('jobTitle').value.trim();
- const location=el('jobLocation').value.trim();
- const description=el('jobDescription').value.trim();
- const budget=Number(el('jobBudget').value);
- if(!title||!location||!description||
- !Number.isFinite(budget)||budget<=0)return;
- jobs.push({
-  id:uid(),
-  ownerId:u.id,
-  poster:u.name,
-  title,
-  category:el('jobCategory').value,
-  location,
-  date:el('jobDate').value,
-  budget,
-  description,
-  status:'available',
-  workerId:null,
-  claimedBy:'',
-  clockInAt:null,
-  startedAt:null,
-  workMs:0,
-  workSessions:[]
- });
- saveJobs();
- e.target.reset();
- show('mine');
- notice('Gig posted successfully!')
-});
-function claimJob(id){
- const u=me();
- const j=jobs.find(x=>x.id===id);
- if(!u||u.role!=='worker'||!j||j.status!=='available')return;
- if(!confirm('Claim this demo gig?'))return;
- j.workerId=u.id;
- j.claimedBy=u.name;
- j.status='claimed';
- j.clockInAt=null;
- j.startedAt=null;
- j.workMs=0;
- j.workSessions=[];
- saveJobs();
- show('mine');
- notice('Gig claimed. Add a BEFORE photo before clocking in.')
-}
-function clockIn(id){
- const u=me();
- const j=jobs.find(x=>x.id===id);
- if(!u||!j||j.workerId!==u.id||j.status!=='claimed')return;
- if(j.clockInAt)return alert('Already clocked in.');
- if(!countPhotos(j,'before'))return alert('Add at least one BEFORE photo first.');
- j.clockInAt=Date.now();
- if(!j.startedAt)j.startedAt=j.clockInAt;
- saveJobs();
- render();
- notice('Clocked in!')
-}
-function clockOut(id){
- const u=me();
- const j=jobs.find(x=>x.id===id);
- if(!u||!j||j.workerId!==u.id||j.status!=='claimed'||!j.clockInAt)return;
- const out=Date.now();
- const start=j.clockInAt;
- j.workMs=(Number(j.workMs)||0)+Math.max(0,out-start);
- j.workSessions=j.workSessions||[];
- j.workSessions.push({in:start,out});
- j.clockInAt=null;
- saveJobs();
- render();
- notice('Clocked out!')
-}
-function submitWork(id){
- const u=me();
- const j=jobs.find(x=>x.id===id);
- if(!u||!j||j.workerId!==u.id||j.status!=='claimed')return;
- if(j.clockInAt)return alert('Clock out before submitting.');
- if(!countPhotos(j,'before'))return alert('BEFORE photo required.');
- if(!j.startedAt)return alert('Clock in and clock out first.');
- if(!countPhotos(j,'after'))return alert('AFTER photo required.');
- if(!confirm('Submit work for customer signature and approval?'))return;
- j.status='submitted';
- j.submittedAt=Date.now();
- saveJobs();
- show('mine');
- notice('Submitted! Waiting for customer signature.')
-}
-
-async function addPhoto(id,type,input){
- const u=me();
- const j=jobs.find(x=>x.id===id);
- if(!u||!j||j.workerId!==u.id||j.status!=='claimed')return;
- if(type==='before'&&j.startedAt)return alert('BEFORE photos must be taken before starting.');
- if(type==='after'&&(!j.startedAt||j.clockInAt))return alert('Clock out before adding AFTER photos.');
- const file=input.files?.[0];
- if(!file)return;
- if(!file.type.startsWith('image/'))return alert('Select an image.');
- if(file.size>12*1024*1024)return alert('Choose a photo under 12 MB.');
- try{
-  const image=await compressPhoto(file);
-  const group=photos[id]||{before:[],after:[]};
-  group[type]=group[type]||[];
-  if(group[type].length>=3)return alert('Maximum 3 photos per stage.');
-  group[type].push(image);
-  const updated={...photos,[id]:group};
-  localStorage.setItem(PHOTO_KEY,JSON.stringify(updated));
-  photos=updated;
-  show('mine');
-  notice(type.toUpperCase()+' photo saved locally.')
- }catch(err){
-  alert('Unable to save photo. Browser storage may be full.')
- }finally{
-  input.value=''
- }
-}
-function compressPhoto(file){
- return new Promise((resolve,reject)=>{
-  const reader=new FileReader();
-  reader.onerror=reject;
-  reader.onload=()=>{
-   const img=new Image();
-   img.onerror=reject;
-   img.onload=()=>{
-    const scale=Math.min(1,800/Math.max(img.width,img.height));
-    const canvas=document.createElement('canvas');
-    canvas.width=Math.max(1,Math.round(img.width*scale));
-    canvas.height=Math.max(1,Math.round(img.height*scale));
-    canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-    resolve(canvas.toDataURL('image/jpeg',.55))
-   };
-   img.src=reader.result
-  };
-  reader.readAsDataURL(file)
- })
-}
-function photoGallery(j,type){
- const list=photos[j.id]?.[type]||[];
- return '<p><b>'+type.toUpperCase()+' Photos ('+list.length+'/3)</b></p>'+
- '<div class="photos">'+list.map(src=>
- '<img src="'+src+'" alt="'+type+' work photo">'
- ).join('')+'</div>'
-}
-
-function openSignature(id){
- const u=me();
- const j=jobs.find(x=>x.id===id);
- if(!u||!j||u.role!=='customer'||j.ownerId!==u.id||
- j.status!=='submitted'||j.clockInAt||
- !countPhotos(j,'before')||!countPhotos(j,'after')||
- !j.startedAt)return alert('Job is not ready for approval.');
- signingId=id;
- hasDrawn=false;
- pointer=null;
- el('signerName').value=u.name;
- el('signatureJob').textContent=j.title;
- el('signatureModal').classList.remove('hidden');
- requestAnimationFrame(setupSignature)
-}
-function setupSignature(){
- const canvas=el('signatureCanvas');
- const rect=canvas.getBoundingClientRect();
- const ratio=window.devicePixelRatio||1;
- canvas.width=Math.max(1,Math.round(rect.width*ratio));
- canvas.height=Math.max(1,Math.round(rect.height*ratio));
- const ctx=canvas.getContext('2d');
- ctx.scale(ratio,ratio);
- ctx.strokeStyle='#142c50';
- ctx.lineWidth=2.5;
- ctx.lineCap='round';
- ctx.lineJoin='round'
-}
-function clearSignature(){
- hasDrawn=false;
- const canvas=el('signatureCanvas');
- canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height)
-}
-function closeSignature(){
- signingId=null;
- pointer=null;
- el('signatureModal').classList.add('hidden')
-}
-function signaturePoint(e){
- const rect=el('signatureCanvas').getBoundingClientRect();
- return {x:e.clientX-rect.left,y:e.clientY-rect.top}
-}
-el('signatureCanvas').addEventListener('pointerdown',e=>{
- if(pointer!==null)return;
- pointer=e.pointerId;
- const canvas=el('signatureCanvas');
- const ctx=canvas.getContext('2d');
- const p=signaturePoint(e);
- canvas.setPointerCapture(e.pointerId);
- ctx.beginPath();
- ctx.moveTo(p.x,p.y);
- ctx.lineTo(p.x+.1,p.y+.1);
- ctx.stroke();
- hasDrawn=true
-});
-el('signatureCanvas').addEventListener('pointermove',e=>{
- if(pointer!==e.pointerId)return;
- const p=signaturePoint(e);
- const ctx=el('signatureCanvas').getContext('2d');
- ctx.lineTo(p.x,p.y);
- ctx.stroke()
-});
-['pointerup','pointercancel'].forEach(type=>{
- el('signatureCanvas').addEventListener(type,e=>{
-  if(pointer===e.pointerId)pointer=null
- })
-});
+function clearSignature(){let c=$('signatureCanvas');c.getContext('2d').clearRect(0,0,c.width,c.height);hasDrawn=
+false}
+function closeSignature(){$('signatureModal').classList.add('hidden');signingJobId=null;signingPointer=null}
+function signaturePoint(e){let r=$('signatureCanvas').getBoundingClientRect();return {x:e.clientX-r.left,
+y:e.clientY-r.top}}
+$('signatureCanvas').addEventListener('pointerdown',e=>{if(signingPointer!==null)return;signingPointer=e.pointerId;
+let c=$('signatureCanvas'),p=signaturePoint(e),ctx=c.getContext('2d');c.setPointerCapture(e.pointerId);
+ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+.1,p.y+.1);ctx.stroke();hasDrawn=true});
+$('signatureCanvas').addEventListener('pointermove',e=>{if(e.pointerId!==signingPointer)return;let p=
+signaturePoint(e),ctx=$('signatureCanvas').getContext('2d');ctx.lineTo(p.x,p.y);ctx.stroke()});
+for(let event of ['pointerup','pointercancel'])$('signatureCanvas').addEventListener(event,e=>{if(e.pointerId===
+signingPointer)signingPointer=null});
 function finishSignature(){
- const u=me();
- const j=jobs.find(x=>x.id===signingId);
- const name=el('signerName').value.trim();
- if(!u||!j||u.role!=='customer'||j.ownerId!==u.id||
- j.status!=='submitted'||j.clockInAt||
- !countPhotos(j,'before')||!countPhotos(j,'after')){
-  return alert('Job cannot be approved.')
- }
- if(name.toLowerCase()!==u.name.trim().toLowerCase()){
-  return alert('Enter the name on the customer demo account.')
- }
- if(!hasDrawn)return alert('Draw your signature first.');
- if(!confirm('Sign and approve this completed gig?'))return;
- const timestamp=Date.now();
- const record={
-  name,
-  signedAt:timestamp,
-  image:el('signatureCanvas').toDataURL('image/png')
- };
- try{
-  const updated={...signatures,[j.id]:record};
-  localStorage.setItem(SIGN_KEY,JSON.stringify(updated));
-  signatures=updated
- }catch{
-  return alert('Signature could not be saved.')
- }
- j.status='completed';
- j.completedAt=timestamp;
- j.customerSignedAt=timestamp;
- saveJobs();
- closeSignature();
- show('mine');
- notice('Customer signed and approved the job!')
+let u=me(),j=jobs.find(x=>x.id===signingJobId),name=$('signerName').value.trim();
+if(!u||!j||u.role!=='customer'||j.ownerId!==u.id||j.status!==
+'submitted'||!beforeCount(j)||!afterCount(j)||j.clockInAt)return alert('Job is not eligible for approval.');
+if(!name||name.toLowerCase()!==u.name.trim().toLowerCase())return alert('Enter the name on your customer demo
+account.');
+if(!hasDrawn)return alert('Please draw your signature before approving.');
+if(!confirm('Sign and approve this completed job? This records estimated earnings only.'))return;
+let signedAt=Date.now(),record={name,signedAt,image:$('signatureCanvas').toDataURL('image/png')};
+try{let updated={...signatures,[j.id]:record};localStorage.setItem(SIGN_KEY,JSON.stringify(updated));signatures=
+updated}
+catch{return alert('Could not save signature. Check browser storage and try again.')}
+j.status='completed';j.completedAt=signedAt;j.customerSignedAt=signedAt;saveJobs();closeSignature();show('mine');
+$('notice').textContent='Customer signed and approved the completed job.';
 }
-
-function jobCard(j,context){
- const u=me();
- const worker=u.role==='worker'&&j.workerId===u.id;
- const owner=u.role==='customer'&&j.ownerId===u.id;
- let html='<div class="card job">'+
- '<h3>'+esc(j.title)+'</h3>'+
- '<p><b>Category:</b> '+esc(j.category)+'</p>'+
- '<p>📍 '+esc(j.location)+' · 📅 '+esc(j.date)+'</p>'+
- '<p>'+esc(j.description)+'</p>'+
- '<p><b>Status:</b> '+esc(j.status)+'</p>'+
- '<p><b>Worker:</b> '+esc(j.claimedBy||'Not assigned')+'</p>'+
- bill(j.budget);
-
- if(worker||owner){
-  html+='<div class="card"><h3>📷 Work Documentation</h3>'+
-  photoGallery(j,'before')+
-  '<p><b>First clock-in:</b> '+fmt(j.startedAt)+'</p>'+
-  '<p><b>Currently clocked in:</b> '+(j.clockInAt?'Yes':'No')+'</p>'+
-  '<p><b>Time worked:</b> <span class="clock" data-clock="'+esc(j.id)+'">'+duration(workTime(j))+'</span></p>'+
-  photoGallery(j,'after');
-
-  if(worker&&j.status==='claimed'){
-   if(!j.startedAt){
-    html+='<label>Add BEFORE Photo<input type="file" accept="image/*" capture="environment" onchange="addPhoto(\''+esc(j.id)+'\',\'before\',this)"></label>'
-   }
-   if(j.clockInAt){
-    html+='<button onclick="clockOut(\''+esc(j.id)+'\')">⏹ CLOCK OUT</button>'
-   }else{
-    html+='<button onclick="clockIn(\''+esc(j.id)+'\')">▶ CLOCK IN</button>'
-   }
-   if(j.startedAt&&!j.clockInAt){
-    html+='<label>Add AFTER Photo<input type="file" accept="image/*" capture="environment" onchange="addPhoto(\''+esc(j.id)+'\',\'after\',this)"></label>'
-   }
-   html+='<button onclick="submitWork(\''+esc(j.id)+'\')">SUBMIT COMPLETED WORK</button>'
-  }
-
-  if(owner&&j.status==='submitted'){
-   html+='<button onclick="openSignature(\''+esc(j.id)+'\')">✍️ REVIEW, SIGN & APPROVE</button>'
-  }
-
-  if(j.status==='completed'){
-   const sig=signatures[j.id];
-   if(sig){
-    html+='<p><b>Signed by:</b> '+esc(sig.name)+'</p>'+
-    '<p><b>Signed at:</b> '+fmt(sig.signedAt)+'</p>'+
-    '<img class="signature-image" src="'+sig.image+'" alt="Customer signature">'
-   }else{
-    html+='<p class="muted">Older demo completion — no signature recorded.</p>'
-   }
-  }
-  html+='</div>'
- }
-
- if(context==='browse'&&u.role==='worker'&&j.status==='available'){
-  html+='<button onclick="claimJob(\''+esc(j.id)+'\')">CLAIM GIG</button>'
- }
- return html+'</div>'
+async function addPhoto(jid,kind,input){let u=me(),j=jobs.find(x=>x.id===jid);if(!u||!j||j.workerId!==
+u.id||j.status!=='claimed'||!['before','after'].includes(kind))return;if(kind==='before'&&j.clockInAt)return
+alert('Before photos must be added before clock-in.');if(kind==='before'&&(j.startedAt||j.workMs))return
+alert('Before photos cannot be changed after work starts.');if(kind==='after'&&j.clockInAt)return alert('Clock out
+before adding AFTER photos.');if(kind==='after'&&!j.startedAt&&!j.workMs)return alert('Clock in and out before
+taking AFTER photos.');let file=input.files?.[0];if(!file)return;if(!file.type.startsWith('image/'))return
+alert('Choose an image.');if(file.size>12*1024*1024)return alert('Choose a photo under 12 MB.');try{let url=await
+shrink(file);let group=photos[jid]||{before:[],after:[]};group[kind]=group[kind]||[];if(group[kind].length>=
+3)return alert('Maximum 3 '+kind+' photos per gig.');group[kind].push(url);photos[jid]=group;
+localStorage.setItem(PHOTO_KEY,JSON.stringify(photos));show('mine');$('notice').textContent=kind.toUpperCase()+'
+photo saved on this device.'}catch(err){alert('Photo could not be saved. Browser storage may be full. Try a
+smaller photo.')}finally{input.value=''}}
+function shrink(file){return new Promise((resolve,reject)=>{let reader=new FileReader();reader.onerror=reject;
+reader.onload=()=>{let im=new Image();im.onerror=reject;im.onload=()=>{let scale=Math.min(1,900/Math.max(im.width,
+im.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(im.width*scale));
+canvas.height=Math.max(1,Math.round(im.height*scale));canvas.getContext('2d').drawImage(im,0,0,canvas.width,
+canvas.height);resolve(canvas.toDataURL('image/jpeg',.65))};im.src=reader.result};reader.readAsDataURL(file)})}
+function photoSection(j,kind){let arr=photos[j.id]?.[kind]||[];return `<p><b>${kind.toUpperCase()} Photos
+(${arr.length}/3)</b></p><div class="photos">${arr.map(src=>`<img src="${src}" alt="${kind} work
+photo">`).join('')}</div>`}
+function jobCard(j,context){let u=me(),worker=u.role==='worker'&&j.workerId===u.id,owner=u.role===
+'customer'&&j.ownerId===u.id,active=j.status==='claimed';let html=`<div class="card job"><span class=
+"pill">${esc(j.category)}</span><h3>${esc(j.title)}</h3><p>■ ${esc(j.location)} · ■
+${esc(j.date)}</p><p>${esc(j.description)}</p><p><b>Status:</b> ${esc(j.status)}</p><p><b>Worker:</b>
+${esc(j.claimedBy||'Not assigned')}</p>${bill(j.budget)}`;
+if(worker||owner){html+=`<div class="card"><h3>■ Work Documentation</h3>${photoSection(j,'before')}<p><b>Clock
+In:</b> ${fmt(j.startedAt)}</p><p><b>Current session:</b> ${fmt(j.clockInAt)}</p><p><b>Total time:</b> <span class=
+"clock" data-clock="${esc(j.id)}">${elapsed(timeTotal(j))}</span></p><p><b>Last clock out:</b>
+${fmt((j.workSessions||[]).at(-1)?.out)}</p>${photoSection(j,'after')}`;
+if(worker&&active){let canBefore=!j.startedAt&&!j.workMs&&!j.clockInAt;html+=`<div class="worker-controls"><h3>■
+Worker Job Controls</h3><p class="muted">Follow the steps in order. Photos are stored on this device
+only.</p><label class="upload-button ${canBefore?'':'disabled-control'}" for="before-${esc(j.id)}">■ UPLOAD BEFORE
+PHOTOS (${beforeCount(j)}/3)</label><input class="file-control" id="before-${esc(j.id)}" type="file" accept=
+"image/*" onchange="addPhoto('${esc(j.id)}','before',this)" ${canBefore?'':'disabled'}><button class=
+"clock-in-button" onclick="clockIn('${esc(j.id)}')" ${j.clockInAt||!beforeCount(j)?'disabled':''}>■ CLOCK
+IN</button><button class="clock-out-button" onclick="clockOut('${esc(j.id)}')" ${!j.clockInAt?'disabled':''}>■
+CLOCK OUT</button><label class="upload-button ${(j.startedAt||j.workMs)&&!j.clockInAt?'':'disabled-control'}" for=
+"after-${esc(j.id)}">■ UPLOAD AFTER PHOTOS (${afterCount(j)}/3)</label><input class="file-control" id=
+"after-${esc(j.id)}" type="file" accept="image/*" onchange="addPhoto('${esc(j.id)}','after',this)"
+${(j.startedAt||j.workMs)&&!j.clockInAt?'':'disabled'}><button class="submit-button" onclick=
+"submitWork('${esc(j.id)}')"
+${j.clockInAt||!beforeCount(j)||!afterCount(j)||(!j.startedAt&&!j.workMs)?'disabled':''}>■ SUBMIT JOB FOR CUSTOMER
+SIGNATURE</button></div>`}
+if(owner&&j.status==='submitted')html+=`<button onclick="approve('${esc(j.id)}')">✍■ REVIEW, SIGN &
+APPROVE</button>`;
+if((owner||worker)&&j.status==='completed'){let sig=signatures[j.id];html+=sig?`<p><b>Customer signature:</b>
+${esc(sig.name)} · ${fmt(sig.signedAt)}</p><img class="signature-image" src="${sig.image}" alt="Customer drawn
+signature">`:`<p class="muted">Legacy demo completion: no customer signature recorded.</p>`;}
+html+='</div>'}
+if(context==='browse'&&u.role==='worker'&&j.status==='available')html+=`<button onclick=
+"claim('${esc(j.id)}')">CLAIM GIG</button>`;
+return html+'</div>'}
+function stat(k,v){return `<div class="stat"><b>${v}</b>${k}</div>`}
+function render(){let u=me();if(!u)return;let mine=jobs.filter(j=>u.role==='worker'?j.workerId===u.id:j.ownerId===
+u.id),available=jobs.filter(j=>j.status==='available'&&($('filter').value==='All'||$('filter').value===
+j.category)),completed=mine.filter(j=>j.status==='completed'),pending=mine.filter(j=>j.status===
+'claimed'||j.status==='submitted'),sum=(list,key)=>list.reduce((a,j)=>a+split(j.budget)[key],0);
+$('browseList').innerHTML=available.map(j=>jobCard(j,'browse')).join('')||'<div class="card">No available
+gigs.</div>';
+$('mineList').innerHTML=mine.map(j=>jobCard(j,'mine')).join('')||'<div class="card">No gigs yet.</div>';
+$('dashStats').innerHTML=stat('Available Gigs',jobs.filter(j=>j.status==='available').length)+stat('My Gigs',
+mine.length);
+$('earnStats').innerHTML=u.role==='worker'?stat('Completed Gigs',completed.length)+stat('Estimated Earnings',
+money(sum(completed,'worker')))+stat('Pending Gigs',pending.length)+stat('Potential Earnings',money(sum(pending,
+'worker'))):stat('Completed Jobs',completed.length)+stat('Completed Job Value',money(sum(completed,
+'gross')))+stat('Pending Jobs',pending.length)+stat('Pending Job Value',money(sum(pending,'gross')));
+$('earnList').innerHTML=mine.map(j=>jobCard(j,'earnings')).join('')||'<div class="card">No gig activity
+yet.</div>';
+let done=jobs.filter(j=>j.status==='completed'),open=jobs.filter(j=>j.status==='claimed'||j.status==='submitted');
+$('platformStats').innerHTML=stat('Completed Gigs',done.length)+stat('Estimated Platform Fees',money(sum(done,
+'fee')))+stat('Pending Gigs',open.length)+stat('Potential Future Fees',money(sum(open,'fee')))+stat('Completed Job
+Value',money(sum(done,'gross')))+stat('Worker Earnings',money(sum(done,'worker')))
 }
-function render(){
- const u=me();
- if(!u)return;
- const mine=jobs.filter(j=>u.role==='worker'?
- j.workerId===u.id:j.ownerId===u.id);
- const available=jobs.filter(j=>j.status==='available'&&
- (el('categoryFilter').value==='All'||
- el('categoryFilter').value===j.category));
- const completed=mine.filter(j=>j.status==='completed');
- const pending=mine.filter(j=>['claimed','submitted'].includes(j.status));
- const sum=(list,key)=>list.reduce((total,j)=>total+split(j.budget)[key],0);
-
- el('browseList').innerHTML=available.length?
- available.map(j=>jobCard(j,'browse')).join(''):
- '<div class="card">No available gigs.</div>';
-
- el('mineList').innerHTML=mine.length?
- mine.map(j=>jobCard(j,'mine')).join(''):
- '<div class="card">No gigs yet.</div>';
-
- el('dashboardStats').innerHTML=
- stat('Available Gigs',jobs.filter(j=>j.status==='available').length)+
- stat('My Gigs',mine.length);
-
- el('earningsStats').innerHTML=u.role==='worker'?
- stat('Completed Gigs',completed.length)+
- stat('Estimated Earnings',money(sum(completed,'worker')))+
- stat('Pending Gigs',pending.length)+
- stat('Potential Earnings',money(sum(pending,'worker'))):
- stat('Completed Jobs',completed.length)+
- stat('Completed Job Value',money(sum(completed,'gross')))+
- stat('Pending Jobs',pending.length)+
- stat('Pending Job Value',money(sum(pending,'gross')));
-
- el('earningsList').innerHTML=mine.length?
- mine.map(j=>jobCard(j,'earnings')).join(''):
- '<div class="card">No gig activity yet.</div>';
-
- const allDone=jobs.filter(j=>j.status==='completed');
- const allPending=jobs.filter(j=>['claimed','submitted'].includes(j.status));
- el('platformStats').innerHTML=
- stat('Completed Gigs',allDone.length)+
- stat('Estimated GigLink Fees',money(sum(allDone,'fee')))+
- stat('Pending Gigs',allPending.length)+
- stat('Potential Fees',money(sum(allPending,'fee')))+
- stat('Completed Job Value',money(sum(allDone,'gross')))+
- stat('Worker Earnings',money(sum(allDone,'worker')))
-}
-
-function helpAnswer(q){
- const t=q.toLowerCase();
- if(/sign|signature|approve/.test(t))
-  return 'After a worker submits the job with BEFORE and AFTER photos and a time record, the customer opens My Gigs and selects REVIEW, SIGN & APPROVE. The customer must draw a signature.';
- if(/photo|picture|before|after/.test(t))
-  return 'Workers add BEFORE photos before clocking in. After clocking out, they add AFTER photos and submit the work.';
- if(/clock|time|hour/.test(t))
-  return 'Open My Gigs, upload a BEFORE photo, and tap CLOCK IN. Tap CLOCK OUT when finished. Multiple sessions can be recorded.';
- if(/fee|15%|earn|pay|money/.test(t))
-  return 'GigLink deducts 15% from worker earnings. For a $200 job, the estimated GigLink fee is $30 and worker earnings are $170. No real payments are processed.';
- if(/verify|license|identity/.test(t))
-  return 'Workers can save an ID document preference. This does not verify their identity.';
- if(/post|customer/.test(t))
-  return 'Customers can post jobs and approve submitted work with a drawn signature.';
- if(/claim|worker|find/.test(t))
-  return 'Workers can find and claim available gigs, take photos, clock in and out, and submit work.';
- return 'Ask me about photos, time tracking, customer signatures, earnings, or identity verification.'
-}
-function quickAsk(q){
- const userBubble=document.createElement('div');
- userBubble.className='bubble human';
- userBubble.textContent=q;
- el('chat').appendChild(userBubble);
- const botBubble=document.createElement('div');
- botBubble.className='bubble';
- botBubble.textContent=helpAnswer(q);
- el('chat').appendChild(botBubble);
- el('chat').scrollTop=el('chat').scrollHeight
-}
-function ask(){
- const q=el('question').value.trim();
- if(!q)return;
- quickAsk(q);
- el('question').value=''
-}
-el('question').addEventListener('keydown',e=>{
- if(e.key==='Enter'){e.preventDefault();ask()}
-});
-
-for(const id of ['accountService','jobCategory']){
- categories.forEach(c=>el(id).add(new Option(c,c)))
-}
-el('categoryFilter').add(new Option('All Categories','All'));
-categories.forEach(c=>el('categoryFilter').add(new Option(c,c)));
-
-setInterval(()=>{
- document.querySelectorAll('[data-clock]').forEach(node=>{
-  const j=jobs.find(x=>x.id===node.dataset.clock);
-  if(j)node.textContent=duration(workTime(j))
- })
-},1000);
-
+function response(q){let t=q.toLowerCase();if(/sign|signature|approve/.test(t))return 'After the worker clocks out
+and submits BEFORE and AFTER photos, the customer opens My Gigs, reviews the job, and taps REVIEW, SIGN & APPROVE.
+The customer must draw a signature before the job can be marked completed. This is a local demo, not verified
+e-signature.';if(/photo|picture|before|after/.test(t))return 'Open My Gigs. Add BEFORE photos before clocking in.
+After work, clock out, add AFTER photos, then submit for customer approval. Photos are stored only on this
+device.';if(/clock|time|hour/.test(t))return 'Workers must take a BEFORE photo before CLOCK IN. Tap CLOCK OUT when
+done. The app tracks elapsed time, including multiple sessions.';if(/fee|15%|earn|pay|money/.test(t))return
+'GigLink deducts a 15% fee from worker earnings. A $200 gig shows $30 estimated platform revenue and $170
+estimated worker earnings. No real payments are processed.';if(/verify|license|identity/.test(t))return 'Verify ID
+only saves a document preference. It does not verify identity. Never upload real ID documents in this prototype.';
+if(/post|customer/.test(t))return 'Customers can post gigs and approve submitted work after reviewing before and
+after photos and time records.';if(/claim|worker|find/.test(t))return 'Workers can find and claim available gigs.
+Open My Gigs to take photos, clock in/out, and submit work.';return 'Ask me about before/after photos, time clock,
+gigs, earnings, or verification.'}
+function quick(q){let b=document.createElement('div');b.className='bubble mine';b.textContent=q;
+$('chat').appendChild(b);let a=document.createElement('div');a.className='bubble';a.textContent=response(q);
+$('chat').appendChild(a);$('chat').scrollTop=$('chat').scrollHeight}
+function ask(){let q=$('question').value.trim();if(q){quick(q);$('question').value=
+''}}$('question').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ask()}});
+for(let key of ['service','category'])categories.forEach(c=>$(key).add(new Option(c,c)));$('filter').add(new
+Option('All Categories','All'));categories.forEach(c=>$('filter').add(new Option(c,c)));
+setInterval(()=>document.querySelectorAll('[data-clock]').forEach(el=>{let j=jobs.find(x=>x.id===el.dataset.clock);
+if(j)el.textContent=elapsed(timeTotal(j))}),1000);
 if(me())loginAs(session);
-</script>
-</body>
-</html>
+</script></body></html>
