@@ -1213,4 +1213,409 @@ render();
 </script>
 <!-- END GIGLINK STEP 14B -->
 
+<!-- GIGLINK STEP 14A — PROFESSIONAL DESIGN UPGRADE -->
+<style>
+:root{
+  --gl-blue:#1769e8;
+  --gl-navy:#0a1932;
+  --gl-ink:#142744;
+  --gl-border:#dbe5f2;
+  --gl-shadow:0 9px 30px rgba(15,43,79,.09);
+}
+html{scroll-behavior:smooth}
+body{
+  background:#f5f8fc;
+  color:var(--gl-ink);
+  line-height:1.5;
+}
+body,button,input,textarea,select{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+#startup.hero{
+  background:radial-gradient(circle at 82% 12%,#2366bf 0,transparent 37%),
+  linear-gradient(145deg,#07152c,#123c78);
+  position:relative;
+  overflow:hidden;
+}
+#startup.hero:before{
+  content:"";
+  position:absolute;
+  width:340px;
+  height:340px;
+  border:1px solid #ffffff25;
+  border-radius:50%;
+  top:-130px;
+  right:-140px;
+  box-shadow:0 0 0 70px #ffffff08,0 0 0 140px #ffffff05;
+  pointer-events:none;
+}
+#startup.hero h1{
+  font-size:clamp(48px,12vw,76px);
+  letter-spacing:-3px;
+  margin:0;
+}
+#startup.hero>p:first-of-type{
+  font-size:20px;
+  max-width:340px;
+}
+#startup.hero button{
+  background:#fff;
+  color:#103b75;
+  border-radius:14px;
+  min-height:52px;
+  font-weight:800;
+  box-shadow:0 6px 22px #0002;
+}
+#startup.hero button+button{
+  background:transparent;
+  color:#fff;
+  border:1px solid #ffffff88;
+}
+#app>header{
+  background:linear-gradient(115deg,#0b1d3b,#164e92);
+  padding:19px 14px 16px;
+}
+#app>header h1{
+  margin:0;
+  font-size:30px;
+  letter-spacing:-.9px;
+}
+#app>header p{
+  margin:4px 0;
+  font-size:13px;
+  color:#dcecff;
+}
+#app>header button{
+  background:#ffffff1a;
+  border:1px solid #ffffff55;
+  font-size:13px;
+  padding:8px 14px;
+}
+#app>nav{
+  position:sticky;
+  top:0;
+  z-index:12;
+  background:#fff;
+  border-bottom:1px solid var(--gl-border);
+  box-shadow:0 5px 15px #0d295012;
+  display:flex;
+  flex-wrap:nowrap;
+  justify-content:flex-start;
+  gap:6px;
+  overflow-x:auto;
+  overscroll-behavior-x:contain;
+  scrollbar-width:thin;
+  padding:10px 12px;
+}
+#app>nav button{
+  flex:0 0 auto;
+  background:#f0f5fd;
+  color:#23456f;
+  border:1px solid transparent;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:700;
+  white-space:nowrap;
+  margin:0;
+  padding:10px 13px;
+}
+#app>nav button.gl-active{
+  background:#1769e8;
+  color:#fff;
+  box-shadow:0 4px 10px #1769e833;
+}
+#app>main{
+  max-width:1080px;
+  padding:16px 14px 48px;
+}
+h2{letter-spacing:-.5px}
+#app .card,#authScreen .card{
+  border:1px solid var(--gl-border);
+  box-shadow:var(--gl-shadow);
+  border-radius:18px;
+}
+#app .card.job{
+  border-left:5px solid #1769e8;
+}
+#app .card.job h3{
+  font-size:20px;
+  margin:0 0 8px;
+}
+#app .card.job p{overflow-wrap:anywhere}
+#app button:not(#app>nav button),
+#authScreen button{
+  border-radius:11px;
+  font-weight:700;
+  min-height:43px;
+}
+#app input:focus,
+#app select:focus,
+#app textarea:focus{
+  outline:3px solid #1769e833;
+  border-color:#1769e8;
+}
+#app input,#app select,#app textarea{
+  background:#fff;
+  border-color:#cddbeb;
+}
+#app .stats{
+  grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+  gap:12px;
+}
+#app .stat{
+  border:1px solid #d8e7fc;
+  background:linear-gradient(160deg,#f1f7ff,#e6f0ff);
+  padding:18px;
+  border-radius:14px;
+  text-align:left;
+}
+#app .stat strong{
+  font-size:25px;
+  color:#124a98;
+}
+#app .money{
+  background:#f0f6ff;
+  border:1px solid #dceaff;
+}
+#app .controls{border:1px solid #d7e6fa}
+#app .warning{border:1px solid #f3d99c}
+#app .external-action{background:#137a4a}
+.gl-kicker{
+  display:inline-block;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:#2166c5;
+  background:#eaf2ff;
+  padding:6px 11px;
+  border-radius:99px;
+}
+.gl-shortcuts{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:16px 0;
+}
+.gl-shortcut{
+  border:1px solid #d7e4f5!important;
+  background:#fff!important;
+  color:#163d72!important;
+  text-align:left!important;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:16px 13px!important;
+  margin:0!important;
+  box-shadow:0 5px 14px #102b4b0d;
+  min-height:65px!important;
+}
+.gl-shortcut span:first-child{font-size:23px}
+.gl-shortcut span:last-child{
+  font-size:14px;
+  font-weight:800;
+}
+#dashboard>.card{
+  background:linear-gradient(145deg,#fff,#f7faff);
+}
+#dashboard #welcome{
+  font-size:clamp(23px,5vw,32px);
+  margin-bottom:5px;
+}
+.gl-search{
+  border:1px solid #cddbeb;
+  background:#fff;
+  border-radius:12px;
+  padding:12px 14px;
+  width:100%;
+  margin:8px 0 12px;
+  font-size:16px;
+}
+.gl-results{
+  font-size:13px;
+  color:#61758e;
+  margin:0 0 10px;
+}
+@media(min-width:700px){
+  .gl-shortcuts{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+  #browseList,#externalList,#workerList{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+    align-items:start;
+  }
+  #browseList>.card,
+  #externalList>.card,
+  #workerList>.card{margin:0}
+}
+@media(max-width:420px){
+  #app>header h1{font-size:27px}
+  #app .card{padding:14px}
+  .gl-shortcut{padding:12px 9px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+}
+@media print{
+  #app>nav,.gl-shortcuts,.gl-search{
+    display:none!important;
+  }
+}
+</style>
+
+<script>
+/* Step 14A: Keep all original Step 13 data and handlers. */
+(function(){
+'use strict';
+
+const byId=id=>document.getElementById(id);
+
+const dashboard=byId('dashboard');
+if(dashboard){
+  const card=dashboard.querySelector('.card');
+
+  if(card&&!byId('gl-shortcuts')){
+    const kicker=document.createElement('div');
+    kicker.className='gl-kicker';
+    kicker.textContent='YOUR GIGLINK WORKSPACE';
+    card.insertBefore(kicker,card.firstChild);
+
+    const shortcuts=document.createElement('div');
+    shortcuts.id='gl-shortcuts';
+    shortcuts.className='gl-shortcuts';
+
+    const items=[
+      ['🔎','Find Gigs','browse'],
+      ['🌐','Outside Gigs','external'],
+      ['🤝','Service Requests','requests'],
+      ['📅','My Schedule','schedule']
+    ];
+
+    items.forEach(([emoji,label,page])=>{
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='gl-shortcut';
+
+      const icon=document.createElement('span');
+      icon.textContent=emoji;
+
+      const name=document.createElement('span');
+      name.textContent=label;
+
+      button.append(icon,name);
+      button.addEventListener('click',()=>{
+        if(typeof window.show==='function'){
+          window.show(page);
+        }
+      });
+
+      shortcuts.appendChild(button);
+    });
+
+    const stats=byId('dashboardStats');
+    if(stats){
+      stats.insertAdjacentElement('afterend',shortcuts);
+    }else{
+      card.appendChild(shortcuts);
+    }
+  }
+}
+
+const app=byId('app');
+const nav=app?.querySelector('nav');
+
+if(nav){
+  const buttons=Array.from(nav.querySelectorAll('button'));
+
+  function updateActiveNav(){
+    const pages=Array.from(
+      app.querySelectorAll('main>section[id]')
+    );
+
+    const visible=pages.find(
+      section=>!section.classList.contains('hidden')
+    )?.id;
+
+    buttons.forEach(button=>{
+      const code=button.getAttribute('onclick')||'';
+      const match=code.match(
+        /show\(['"]([^'"]+)['"]\)/
+      );
+
+      button.classList.toggle(
+        'gl-active',
+        !!match&&match[1]===visible
+      );
+    });
+  }
+
+  nav.addEventListener('click',()=>{
+    queueMicrotask(updateActiveNav);
+  });
+
+  document.addEventListener('click',event=>{
+    if(event.target.closest('.gl-shortcut')){
+      queueMicrotask(updateActiveNav);
+    }
+  });
+
+  updateActiveNav();
+}
+
+const browse=byId('browse');
+const category=byId('categoryFilter');
+const list=byId('browseList');
+
+if(browse&&category&&list&&!byId('gl-job-search')){
+  const search=document.createElement('input');
+  search.id='gl-job-search';
+  search.className='gl-search';
+  search.type='search';
+  search.placeholder='Search job title, city or service';
+  search.setAttribute('aria-label','Search available gigs');
+
+  category.insertAdjacentElement('afterend',search);
+
+  const count=document.createElement('p');
+  count.className='gl-results';
+  count.id='gl-results';
+  search.insertAdjacentElement('afterend',count);
+
+  function filterCards(){
+    const query=search.value.toLowerCase().trim();
+    let shown=0;
+
+    Array.from(list.children).forEach(card=>{
+      const matches=!query||
+        card.textContent.toLowerCase().includes(query);
+
+      card.style.display=matches?'':'none';
+      if(matches)shown++;
+    });
+
+    count.textContent=shown+
+      ' listing'+(shown===1?'':'s')+' shown';
+  }
+
+  search.addEventListener('input',filterCards);
+
+  const observer=new MutationObserver(filterCards);
+  observer.observe(list,{childList:true});
+
+  filterCards();
+}
+
+const version=app?.querySelector(
+  'header p[style*="font-size:12px"]'
+);
+
+if(version){
+  version.textContent=
+    'STEP 14A • PROFESSIONAL DESIGN';
+}
+})();
+</script>
+
 </body></html>
