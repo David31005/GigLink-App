@@ -38,13 +38,18 @@ textarea{min-height:90px}
 .role.selected{border-color:#1685ff;background:#ebf4ff}
 .notice{padding:10px;text-align:center;color:#176b37;font-weight:bold}
 .warn{background:#fff4dd;border-radius:10px;padding:12px;color:#765100}
+.breakdown{background:#edf5ff;border-radius:12px;padding:14px;margin:12px 0}
+.line{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #d3e1f0}
+.line:last-child{border-bottom:0;font-weight:bold}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:#e8f1ff;padding:15px;border-radius:12px;text-align:center}
+.stat strong{display:block;font-size:23px;color:#1455a3}
 .chat{height:280px;overflow:auto;border:1px solid #d2deeb;border-radius:12px;padding:12px;background:#f8fbff}
 .bubble{padding:11px;border-radius:12px;margin:9px 0;max-width:90%;white-space:pre-wrap}
 .bot{background:#e4efff}
 .human{background:#d9f5e7;margin-left:auto}
 .chatbar{display:flex;gap:6px;margin-top:9px}
 .chatbar input{flex:1;min-width:0}
-.chatbar button{flex-shrink:0}
 footer{background:#101b32;color:#d7e5f5;text-align:center;padding:26px;line-height:1.8}
 footer small{color:#b3c4d9}
 </style>
@@ -63,8 +68,7 @@ footer small{color:#b3c4d9}
 
 <section id="auth" class="hidden">
 <header><h1>🔗 GigLink</h1><p>Customer & Worker Accounts</p></header>
-<main>
-<div class="card">
+<main><div class="card">
 <button class="btn outline" onclick="backToStart()">← Back</button>
 <div id="signupPanel">
 <h2>Create Demo Account</h2>
@@ -72,7 +76,7 @@ footer small{color:#b3c4d9}
 <b>🏠 Customer</b><p>Post jobs and track work</p>
 </div>
 <div class="role" id="workerRole" onclick="selectRole('worker')">
-<b>🧰 Worker</b><p>Find and claim jobs</p>
+<b>🧰 Worker</b><p>Find jobs and track earnings</p>
 </div>
 <form id="signupForm">
 <label>Display Name</label>
@@ -85,7 +89,7 @@ footer small{color:#b3c4d9}
 <label>Primary Service</label>
 <select id="signupService"></select>
 </div>
-<p class="warn">Prototype only. Use fictional information. No real authentication or identity checks yet.</p>
+<p class="warn">Prototype only. Use fictional information. No secure authentication yet.</p>
 <button class="btn">CREATE DEMO ACCOUNT</button>
 </form>
 </div>
@@ -94,10 +98,9 @@ footer small{color:#b3c4d9}
 <label>Choose Saved Profile</label>
 <select id="loginAccount"></select>
 <button class="btn" onclick="signIn()">SIGN IN</button>
-<p><button class="btn outline" onclick="openAuth('signup')">Create account</button></p>
+<p><button class="btn outline" onclick="openAuth('signup')">Create Account</button></p>
 </div>
-</div>
-</main>
+</div></main>
 </section>
 
 <div id="app" class="hidden">
@@ -113,9 +116,11 @@ footer small{color:#b3c4d9}
 <button id="postNav" onclick="show('post')">Post Gig</button>
 <button onclick="show('browse')">Find Gigs</button>
 <button onclick="show('mine')">My Gigs</button>
-<button onclick="show('verification')" id="verifyNav">Verify ID</button>
+<button onclick="show('earnings')">💰 Earnings</button>
+<button id="verifyNav" onclick="show('verification')">Verify ID</button>
 <button onclick="show('profile')">Profile</button>
 <button onclick="show('assistant')">🤖 Help</button>
+<button onclick="show('revenue')">Platform Demo</button>
 </nav>
 
 <div id="notice" class="notice" role="status"></div>
@@ -126,9 +131,18 @@ footer small{color:#b3c4d9}
 <h2 id="welcomeTitle"></h2>
 <p id="welcomeText"></p>
 <p id="verifySummary"></p>
-<p><b>Available gigs:</b> <span id="statAvailable">0</span> | <b>My gigs:</b> <span id="statMine">0</span></p>
+<div class="stats">
+<div class="stat"><strong id="statAvailable">0</strong>Available Gigs</div>
+<div class="stat"><strong id="statMine">0</strong>My Gigs</div>
+</div>
 <button class="btn" id="mainAction"></button>
 <button class="btn outline" onclick="show('assistant')">Ask GigLink Assistant</button>
+</div>
+<div class="card">
+<h2>GigLink Service Fee</h2>
+<p>GigLink retains <b>15%</b> of the job price.</p>
+<p>Workers receive <b>85%</b> before any applicable additional costs.</p>
+<p class="muted">All amounts are estimates. No actual payments are processed.</p>
 </div>
 </section>
 
@@ -144,8 +158,11 @@ footer small{color:#b3c4d9}
 <input id="jobLocation" required maxlength="100">
 <label>Job Date</label>
 <input id="jobDate" type="date" required>
-<label>Budget ($)</label>
-<input id="jobBudget" type="number" min="1" step=".01" required>
+<label>Job Budget ($)</label>
+<input id="jobBudget" type="number" min="1" step=".01" required oninput="previewFee()">
+<div class="breakdown" id="feePreview">
+Enter a budget to see the payment breakdown.
+</div>
 <label>Description</label>
 <textarea id="jobDescription" maxlength="2000" required></textarea>
 <button class="btn">POST GIG</button>
@@ -167,20 +184,38 @@ footer small{color:#b3c4d9}
 <div id="myJobs"></div>
 </section>
 
+<section id="earnings" class="hidden">
+<div class="card">
+<h2>💰 Earnings Dashboard</h2>
+<p class="muted">Estimated totals for the signed-in demo account.</p>
+<div class="stats" id="earningsStats"></div>
+</div>
+<div id="earningsList"></div>
+</section>
+
+<section id="revenue" class="hidden">
+<div class="card">
+<h2>GigLink Platform Revenue Demo</h2>
+<p class="warn">This is a public demo screen, not a secure admin dashboard. These figures are estimates, not collected revenue.</p>
+<div class="stats" id="platformStats"></div>
+<p class="muted">The 15% fee is counted as estimated platform revenue only after a gig is marked completed.</p>
+</div>
+</section>
+
 <section id="verification" class="hidden">
 <div class="card">
 <h2>🛡️ Worker Identity Verification</h2>
-<p class="warn"><b>Demo only:</b> Do not upload or enter real ID images, license numbers, birthdates, or document details. This page does not verify identity.</p>
-<p><b>Current status:</b> <span id="verifyStatus">Not started</span></p>
-<label>Document you would use with a secure verification provider</label>
+<p class="warn">Do not upload or enter real ID images, license numbers, birthdates, or document details. This demo does not verify identity.</p>
+<p><b>Current status:</b> <span id="verifyStatus">Not verified</span></p>
+<label>Document type for future secure verification</label>
 <select id="documentType">
 <option value="">Select document type</option>
 <option>Driver's License</option>
 <option>State ID</option>
 <option>Passport</option>
 </select>
-<button class="btn" onclick="recordVerificationIntent()">SAVE VERIFICATION PREFERENCE</button>
-<p class="muted">When a secure provider is integrated, the worker will be redirected to its protected verification flow. Only successful provider-confirmed checks will earn a Verified badge.</p>
+<button class="btn" onclick="recordVerificationIntent()">SAVE PREFERENCE</button>
+<p class="muted">Real identity verification requires a secure verification provider.</p>
 </div>
 </section>
 
@@ -188,26 +223,24 @@ footer small{color:#b3c4d9}
 <div class="card">
 <h2>My Profile</h2>
 <div id="profileInfo"></div>
-<p class="muted">Demo profile saved on this browser only.</p>
+<p class="muted">Saved locally in this browser only.</p>
 </div>
 </section>
 
 <section id="assistant" class="hidden">
 <div class="card">
 <h2>🤖 GigLink Help Assistant</h2>
-<p class="muted">Interactive guided help. Not connected to a generative AI model yet.</p>
+<p class="muted">Guided help assistant with built-in answers, not live generative AI.</p>
 <div id="chat" class="chat" aria-live="polite">
-<div class="bubble bot">Hi! I'm the GigLink Help Assistant. Ask how to post a job, find gigs, claim a gig, or verify your identity.</div>
+<div class="bubble bot">Welcome to GigLink! Ask about jobs, worker earnings, the 15% service fee, or identity verification.</div>
 </div>
 <div class="chatbar">
 <input id="chatInput" placeholder="Ask a question..." aria-label="Ask assistant">
 <button class="btn" onclick="sendChat()">Send</button>
 </div>
-<p>
-<button class="btn outline" onclick="quickAsk('How do I post a gig?')">Post a gig</button>
-<button class="btn outline" onclick="quickAsk('How do I claim a gig?')">Claim gigs</button>
-<button class="btn outline" onclick="quickAsk('How does ID verification work?')">Verify ID</button>
-</p>
+<button class="btn outline" onclick="quickAsk('How much does GigLink charge?')">Service Fee</button>
+<button class="btn outline" onclick="quickAsk('How do workers get paid?')">Payments</button>
+<button class="btn outline" onclick="quickAsk('How do I verify ID?')">Verify ID</button>
 </div>
 </section>
 
@@ -222,9 +255,11 @@ footer small{color:#b3c4d9}
 </div>
 
 <script>
+const FEE=0.15;
 const JOB_KEY='giglink_jobs_v1';
 const USER_KEY='giglink_demo_users_v1';
 const SESSION_KEY='giglink_demo_session_v1';
+
 const categories=[
 'Residential Cleaning','Commercial Cleaning',
 'Lawn Care','Moving','Handyman','Painting',
@@ -240,34 +275,44 @@ let jobs=read(JOB_KEY,[]);
 let users=read(USER_KEY,[]);
 let currentId=read(SESSION_KEY,null);
 let selectedRole='customer';
-
 if(!Array.isArray(jobs))jobs=[];
 if(!Array.isArray(users))users=[];
 
-function saveJobs(){
- localStorage.setItem(JOB_KEY,JSON.stringify(jobs))
-}
-function saveUsers(){
- localStorage.setItem(USER_KEY,JSON.stringify(users))
-}
+function saveJobs(){localStorage.setItem(JOB_KEY,JSON.stringify(jobs))}
+function saveUsers(){localStorage.setItem(USER_KEY,JSON.stringify(users))}
 function uid(){
- return Date.now().toString(36)+
- Math.random().toString(36).slice(2,10)
+ return Date.now().toString(36)+Math.random().toString(36).slice(2,10)
 }
 function safe(v){
  return String(v??'').replace(/[&<>"']/g,c=>({
- '&':'&amp;',
- '<':'&lt;',
- '>':'&gt;',
- '"':'&quot;',
- "'":'&#39;'
+ '&':'&amp;','<':'&lt;','>':'&gt;',
+ '"':'&quot;',"'":'&#39;'
  }[c]))
 }
-function user(){
- return users.find(u=>u.id===currentId)||null
+function user(){return users.find(u=>u.id===currentId)||null}
+function notice(t){document.getElementById('notice').textContent=t}
+function cents(v){
+ const n=Number(v);
+ return Number.isFinite(n)&&n>0?Math.round((n+Number.EPSILON)*100):0
 }
-function notice(t){
- document.getElementById('notice').textContent=t
+function split(v){
+ const gross=cents(v);
+ const fee=Math.round(gross*FEE);
+ return {gross,fee,worker:gross-fee}
+}
+function money(c){return '$'+(c/100).toFixed(2)}
+function breakdown(v){
+ const p=split(v);
+ return '<div class="breakdown">'+
+ '<div class="line"><span>Customer job price</span><b>'+money(p.gross)+'</b></div>'+
+ '<div class="line"><span>GigLink fee (15%)</span><b>'+money(p.fee)+'</b></div>'+
+ '<div class="line"><span>Worker earnings (85%)</span><b>'+money(p.worker)+'</b></div>'+
+ '</div>'
+}
+function previewFee(){
+ const v=document.getElementById('jobBudget').value;
+ document.getElementById('feePreview').innerHTML=
+ Number(v)>0?breakdown(v):'Enter a budget to see the payment breakdown.'
 }
 function backToStart(){
  document.getElementById('auth').classList.add('hidden');
@@ -278,34 +323,23 @@ function openAuth(mode){
  document.getElementById('startup').classList.add('hidden');
  document.getElementById('app').classList.add('hidden');
  document.getElementById('auth').classList.remove('hidden');
- document.getElementById('signupPanel')
- .classList.toggle('hidden',mode!=='signup');
- document.getElementById('loginPanel')
- .classList.toggle('hidden',mode!=='login');
+ document.getElementById('signupPanel').classList.toggle('hidden',mode!=='signup');
+ document.getElementById('loginPanel').classList.toggle('hidden',mode!=='login');
  populateLogin()
 }
 function selectRole(r){
  selectedRole=r;
- document.getElementById('customerRole')
- .classList.toggle('selected',r==='customer');
- document.getElementById('workerRole')
- .classList.toggle('selected',r==='worker');
- document.getElementById('workerFields')
- .classList.toggle('hidden',r!=='worker')
+ document.getElementById('customerRole').classList.toggle('selected',r==='customer');
+ document.getElementById('workerRole').classList.toggle('selected',r==='worker');
+ document.getElementById('workerFields').classList.toggle('hidden',r!=='worker')
 }
 function populateLogin(){
  const s=document.getElementById('loginAccount');
  s.innerHTML='';
- if(!users.length){
-  s.add(new Option('No demo accounts',''))
- }else{
-  users.forEach(u=>s.add(
-   new Option(u.name+' ('+u.role+')',u.id)
-  ))
- }
+ if(!users.length)s.add(new Option('No demo accounts',''));
+ else users.forEach(u=>s.add(new Option(u.name+' ('+u.role+')',u.id)))
 }
-document.getElementById('signupForm')
-.addEventListener('submit',e=>{
+document.getElementById('signupForm').addEventListener('submit',e=>{
  e.preventDefault();
  const name=document.getElementById('signupName').value.trim();
  const email=document.getElementById('signupEmail').value.trim().toLowerCase();
@@ -316,10 +350,8 @@ document.getElementById('signupForm')
   return
  }
  const u={
-  id:uid(),name,email,city,
-  role:selectedRole,
-  service:selectedRole==='worker'?
-   document.getElementById('signupService').value:'',
+  id:uid(),name,email,city,role:selectedRole,
+  service:selectedRole==='worker'?document.getElementById('signupService').value:'',
   verificationStatus:'not_started',
   documentPreference:''
  };
@@ -353,22 +385,14 @@ function logout(){
 function updateAccount(){
  const u=user();
  if(!u)return;
- document.getElementById('accountHeader').textContent=
- u.name+' • '+u.role;
- document.getElementById('postNav')
- .classList.toggle('hidden',u.role!=='customer');
- document.getElementById('verifyNav')
- .classList.toggle('hidden',u.role!=='worker');
- document.getElementById('welcomeTitle').textContent=
- 'Welcome, '+u.name+'!';
+ document.getElementById('accountHeader').textContent=u.name+' • '+u.role;
+ document.getElementById('postNav').classList.toggle('hidden',u.role!=='customer');
+ document.getElementById('verifyNav').classList.toggle('hidden',u.role!=='worker');
+ document.getElementById('welcomeTitle').textContent='Welcome, '+u.name+'!';
  document.getElementById('welcomeText').textContent=
- u.role==='customer'?
- 'Post a job and track its progress.':
- 'Find work and manage your gigs.';
+ u.role==='customer'?'Post a job and track its progress.':'Find work and track your estimated earnings.';
  document.getElementById('verifySummary').textContent=
- u.role==='worker'?'Identity verification: '+
- (u.verificationStatus==='preference_saved'?
- 'Preference saved — not verified':'Not verified'):'';
+ u.role==='worker'?'Identity: Not verified':'';
  const a=document.getElementById('mainAction');
  a.textContent=u.role==='customer'?'POST A GIG':'FIND GIGS';
  a.onclick=()=>show(u.role==='customer'?'post':'browse');
@@ -381,21 +405,20 @@ function updateAccount(){
  (u.role==='worker'?'<p><b>Identity:</b> Not verified</p>':'');
  document.getElementById('verifyStatus').textContent=
  u.verificationStatus==='preference_saved'?
- 'Preference saved — not verified':
- 'Not started — not verified';
- document.getElementById('documentType').value=
- u.documentPreference||''
+ 'Preference saved — not verified':'Not verified';
+ document.getElementById('documentType').value=u.documentPreference||''
 }
 function show(p){
  const u=user();
  if(!u)return;
  if(p==='post'&&u.role!=='customer')p='home';
  if(p==='verification'&&u.role!=='worker')p='home';
- ['home','post','browse','mine','verification',
- 'profile','assistant'].forEach(s=>
+ ['home','post','browse','mine','earnings','revenue',
+ 'verification','profile','assistant'].forEach(s=>
  document.getElementById(s).classList.toggle('hidden',s!==p));
  if(p==='post'){
-  document.getElementById('jobLocation').value=u.city
+  document.getElementById('jobLocation').value=u.city;
+  previewFee()
  }
  notice('');
  render();
@@ -405,18 +428,14 @@ function recordVerificationIntent(){
  const u=user();
  if(!u||u.role!=='worker')return;
  const type=document.getElementById('documentType').value;
- if(!type){
-  alert('Select a document type.');
-  return
- }
+ if(!type)return alert('Select a document type.');
  u.documentPreference=type;
  u.verificationStatus='preference_saved';
  saveUsers();
  updateAccount();
- notice('Document preference saved. Identity is NOT verified.')
+ notice('Preference saved. Identity is NOT verified.')
 }
-document.getElementById('gigForm')
-.addEventListener('submit',e=>{
+document.getElementById('gigForm').addEventListener('submit',e=>{
  e.preventDefault();
  const u=user();
  if(!u||u.role!=='customer')return;
@@ -434,19 +453,19 @@ document.getElementById('gigForm')
  jobs.push({
   id:uid(),ownerId:u.id,poster:u.name,
   title,category,location,date,budget,description,
-  status:'available',claimedBy:'',workerId:null
+  status:'available',claimedBy:'',workerId:null,
+  platformFeeRate:FEE
  });
  saveJobs();
  e.target.reset();
  show('mine');
- notice('Gig posted!')
+ notice('Gig posted with a 15% platform fee!')
 });
 function claimJob(id){
  const u=user();
  const j=jobs.find(x=>x.id===id);
- if(!u||u.role!=='worker'||!j||
- j.status!=='available')return;
- if(!confirm('Claim this gig in the demo?'))return;
+ if(!u||u.role!=='worker'||!j||j.status!=='available')return;
+ if(!confirm('Claim this demo gig? Your estimated earnings are '+money(split(j.budget).worker)+'.'))return;
  j.status='claimed';
  j.workerId=u.id;
  j.claimedBy=u.name;
@@ -457,26 +476,21 @@ function claimJob(id){
 function completeJob(id){
  const u=user();
  const j=jobs.find(x=>x.id===id);
- if(!u||!j||j.ownerId!==u.id||
- j.status!=='claimed')return;
- if(!confirm('Mark completed?'))return;
+ if(!u||!j||j.ownerId!==u.id||j.status!=='claimed')return;
+ if(!confirm('Mark this gig completed? This records estimated earnings only.'))return;
  j.status='completed';
  saveJobs();
  render();
- notice('Gig completed!')
+ notice('Gig completed! Earnings recorded as estimates.')
 }
 function card(j,mode){
  const u=user();
  let actions='';
- if(mode==='browse'&&u.role==='worker'&&
- j.status==='available'){
-  actions='<button class="btn" onclick="claimJob(\''+
-  safe(j.id)+'\')">CLAIM GIG</button>'
+ if(mode==='browse'&&u.role==='worker'&&j.status==='available'){
+  actions='<button class="btn" onclick="claimJob(\''+safe(j.id)+'\')">CLAIM GIG</button>'
  }
- if(mode==='mine'&&u.role==='customer'&&
- j.ownerId===u.id&&j.status==='claimed'){
-  actions='<button class="btn" onclick="completeJob(\''+
-  safe(j.id)+'\')">MARK COMPLETED</button>'
+ if(mode==='mine'&&u.role==='customer'&&j.ownerId===u.id&&j.status==='claimed'){
+  actions='<button class="btn" onclick="completeJob(\''+safe(j.id)+'\')">MARK COMPLETED</button>'
  }
  return '<div class="card job">'+
  '<span class="tag">'+safe(j.category)+'</span>'+
@@ -485,10 +499,49 @@ function card(j,mode){
  '<p>📅 '+safe(j.date)+'</p>'+
  '<p>Posted by: '+safe(j.poster)+'</p>'+
  '<p>'+safe(j.description)+'</p>'+
- '<p class="price">$'+Number(j.budget||0).toFixed(2)+'</p>'+
- '<p>Status: '+safe(j.status)+'</p>'+
+ '<p><b>Status:</b> '+safe(j.status)+'</p>'+
  (j.claimedBy?'<p>Worker: '+safe(j.claimedBy)+'</p>':'')+
- actions+'</div>'
+ breakdown(j.budget)+actions+'</div>'
+}
+function stat(label,value){
+ return '<div class="stat"><strong>'+value+'</strong>'+label+'</div>'
+}
+function renderEarnings(){
+ const u=user();
+ if(!u)return;
+ const mine=jobs.filter(j=>u.role==='customer'?j.ownerId===u.id:j.workerId===u.id);
+ const completed=mine.filter(j=>j.status==='completed');
+ const claimed=mine.filter(j=>j.status==='claimed');
+ const sum=(list,key)=>list.reduce((a,j)=>a+split(j.budget)[key],0);
+ const box=document.getElementById('earningsStats');
+ if(u.role==='worker'){
+  box.innerHTML=
+  stat('Completed Gigs',completed.length)+
+  stat('Estimated Earned',money(sum(completed,'worker')))+
+  stat('Claimed Gigs',claimed.length)+
+  stat('Potential Earnings',money(sum(claimed,'worker')));
+ }else{
+  box.innerHTML=
+  stat('Completed Jobs',completed.length)+
+  stat('Job Value Completed',money(sum(completed,'gross')))+
+  stat('Claimed Jobs',claimed.length)+
+  stat('Job Value Pending',money(sum(claimed,'gross')));
+ }
+ document.getElementById('earningsList').innerHTML=
+ mine.length?mine.map(j=>card(j,'earnings')).join(''):
+ '<div class="card">No gig activity yet.</div>'
+}
+function renderPlatform(){
+ const completed=jobs.filter(j=>j.status==='completed');
+ const claimed=jobs.filter(j=>j.status==='claimed');
+ const sum=(list,key)=>list.reduce((a,j)=>a+split(j.budget)[key],0);
+ document.getElementById('platformStats').innerHTML=
+ stat('Completed Gigs',completed.length)+
+ stat('Estimated Platform Fees',money(sum(completed,'fee')))+
+ stat('Pending Gigs',claimed.length)+
+ stat('Potential Future Fees',money(sum(claimed,'fee')))+
+ stat('Completed Job Value',money(sum(completed,'gross')))+
+ stat('Worker Earnings Estimated',money(sum(completed,'worker')))
 }
 function render(){
  const u=user();
@@ -499,16 +552,16 @@ function render(){
  const mine=jobs.filter(j=>
  u.role==='customer'?j.ownerId===u.id:j.workerId===u.id);
  document.getElementById('availableJobs').innerHTML=
- available.length?
- available.map(j=>card(j,'browse')).join(''):
+ available.length?available.map(j=>card(j,'browse')).join(''):
  '<div class="card">No available gigs yet.</div>';
  document.getElementById('myJobs').innerHTML=
- mine.length?
- mine.map(j=>card(j,'mine')).join(''):
+ mine.length?mine.map(j=>card(j,'mine')).join(''):
  '<div class="card">No gigs yet.</div>';
  document.getElementById('statAvailable').textContent=
  jobs.filter(j=>j.status==='available').length;
- document.getElementById('statMine').textContent=mine.length
+ document.getElementById('statMine').textContent=mine.length;
+ renderEarnings();
+ renderPlatform()
 }
 function addBubble(t,who){
  const b=document.createElement('div');
@@ -520,22 +573,19 @@ function addBubble(t,who){
 }
 function reply(q){
  const t=q.toLowerCase();
- if(/verify|license|passport|identity|\bid\b/.test(t)){
-  return 'Workers can open Verify ID and select a document type. This is only a preference form. Do not upload real documents. Actual verification will require a secure provider, and no worker is verified in this demo.'
- }
- if(/post|customer|hire/.test(t)){
-  return 'Sign in as a customer, select Post Gig, fill in the job title, category, location, date, budget, and description, then tap Post Gig.'
- }
- if(/claim|find|worker|job/.test(t)){
-  return 'Sign in as a worker, open Find Gigs, filter by category, and tap Claim Gig. These are demo gigs stored only in this browser.'
- }
- if(/pay|payment|money/.test(t)){
-  return 'Payments are not available in this prototype. Do not send money or payment information through GigLink yet.'
- }
- if(/account|sign|login/.test(t)){
-  return 'Use Create Account for a local demo profile. Sign Out returns to the startup screen; Sign In lets you select an existing local profile. This is not secure authentication.'
- }
- return 'I can help with posting gigs, finding work, claiming jobs, demo accounts, ID verification, and payments. Try asking about one of those topics.'
+ if(/fee|percent|commission|charge|15%/.test(t))
+  return 'GigLink charges a 15% platform fee deducted from worker earnings. For a $200 job, GigLink earns an estimated $30 and the worker receives an estimated $170 before other costs.';
+ if(/pay|payment|money|earn/.test(t))
+  return 'Open Earnings to see estimated completed and pending gig amounts. No actual payment processing or payouts are enabled yet.';
+ if(/verify|license|passport|identity|\bid\b/.test(t))
+  return 'Workers can open Verify ID to save a document preference. This does not verify identity. Never upload actual ID documents here.';
+ if(/post|customer|hire/.test(t))
+  return 'Sign in as a customer, select Post Gig, enter the job details and budget, review the 15% fee breakdown, and submit.';
+ if(/claim|find|worker|job/.test(t))
+  return 'Sign in as a worker, open Find Gigs, and tap Claim Gig. You will see your estimated earnings after the 15% fee.';
+ if(/account|sign|login/.test(t))
+  return 'Create a local demo account or use Sign In to select a saved profile. These are not secure online accounts.';
+ return 'I can help with posting gigs, claiming jobs, earnings, the 15% fee, accounts, and ID verification.'
 }
 function sendChat(){
  const i=document.getElementById('chatInput');
@@ -549,12 +599,8 @@ function quickAsk(q){
  addBubble(q,'human');
  addBubble(reply(q),'bot')
 }
-document.getElementById('chatInput')
-.addEventListener('keydown',e=>{
- if(e.key==='Enter'){
-  e.preventDefault();
-  sendChat()
- }
+document.getElementById('chatInput').addEventListener('keydown',e=>{
+ if(e.key==='Enter'){e.preventDefault();sendChat()}
 });
 for(const id of ['signupService','jobCategory']){
  const s=document.getElementById(id);
