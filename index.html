@@ -5,270 +5,732 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101b32">
-<title>GigLink | Diamond Shine Service LLC</title>
+<title>GigLink | Post It. Claim It. Get It Done.</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f2f6fc;color:#17243a}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#f3f6fb;
+ color:#182940;
+}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
-#startup{min-height:100dvh;background:linear-gradient(145deg,#091327,#174c88);color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
-.logo{font-size:65px;background:#1685ff;border-radius:26px;width:110px;height:110px;display:grid;place-items:center}
-#startup h1{font-size:52px;margin:20px 0 5px}
-#startup p{color:#d0e3ff}
-.btn{border:0;border-radius:10px;background:#1685ff;color:white;padding:13px 18px;font-weight:bold;margin:5px}
-.secondary{background:#304b70}
-.danger{background:#b83445}
-header{background:#101b32;color:white;text-align:center;padding:22px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.hero{
+ min-height:100dvh;
+ background:linear-gradient(145deg,#091326,#164780);
+ color:white;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ align-items:center;
+ text-align:center;
+ padding:25px;
+}
+.logo{
+ width:100px;
+ height:100px;
+ border-radius:27px;
+ background:#1685ff;
+ display:grid;
+ place-items:center;
+ font-size:58px;
+ box-shadow:0 10px 35px #0005;
+}
+.hero h1{
+ font-size:52px;
+ margin:18px 0 5px;
+}
+.hero p{color:#d1e2ff}
+.btn{
+ border:0;
+ border-radius:11px;
+ padding:13px 18px;
+ background:#1685ff;
+ color:white;
+ font-weight:bold;
+ margin:5px 3px;
+}
+.btn.secondary{background:#294a72}
+.btn.danger{background:#b43c4b}
+.btn.outline{
+ background:white;
+ color:#1858a5;
+ border:1px solid #b9cce7;
+}
+.hero .btn{
+ width:90%;
+ max-width:330px;
+}
+header{
+ background:#101b32;
+ color:white;
+ text-align:center;
+ padding:20px;
+}
 header h1{margin:0}
-header p{color:#c3d8f6}
-nav{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;background:#183254;padding:12px}
-nav button{background:#305684;color:white;border:0;border-radius:8px;padding:11px}
-main{max-width:850px;margin:auto;padding:16px;min-height:60vh}
-.card{background:white;padding:20px;margin:15px 0;border-radius:14px;box-shadow:0 3px 14px #10233a15}
-h2{color:#16345e}
-label{display:block;font-weight:bold;margin:15px 0 6px}
-input,select,textarea{width:100%;padding:13px;border:1px solid #c3cfdd;border-radius:9px;background:white;color:#17243a}
+header p{color:#c8dcf5}
+nav{
+ background:#183453;
+ display:flex;
+ flex-wrap:wrap;
+ justify-content:center;
+ gap:7px;
+ padding:12px;
+}
+nav button{
+ background:#315b8b;
+ border:0;
+ color:white;
+ border-radius:8px;
+ padding:11px;
+}
+main{
+ max-width:850px;
+ margin:auto;
+ padding:16px;
+ min-height:65vh;
+}
+.card{
+ background:white;
+ border-radius:15px;
+ padding:20px;
+ margin:14px 0;
+ box-shadow:0 3px 15px #0a274019;
+}
+h2{color:#153a68}
+label{
+ display:block;
+ font-weight:bold;
+ margin:14px 0 6px;
+}
+input,select,textarea{
+ width:100%;
+ border:1px solid #bdccdf;
+ border-radius:9px;
+ padding:13px;
+ background:white;
+ color:#182940;
+}
 textarea{min-height:100px}
+.muted{color:#64788e}
+.notice{
+ color:#176b38;
+ font-weight:bold;
+ text-align:center;
+ padding:10px;
+}
 .job{border-left:5px solid #1685ff}
-.price{font-size:25px;color:#11783d;font-weight:bold}
-.tag{display:inline-block;background:#e6f0ff;color:#165ca9;border-radius:20px;padding:6px 10px;font-size:12px}
-.muted{color:#66788e}
-.stat{background:#eaf2ff;padding:15px;margin:10px 0;border-radius:10px}
-#notice{text-align:center;color:#176b37;font-weight:bold;padding:10px}
-footer{background:#101b32;color:#d5e3f5;text-align:center;padding:28px 16px;line-height:1.7}
-footer small{color:#a7bdd8}
+.price{
+ color:#117b41;
+ font-size:25px;
+ font-weight:bold;
+}
+.tag{
+ display:inline-block;
+ border-radius:20px;
+ padding:6px 11px;
+ background:#e4efff;
+ color:#155baf;
+ font-size:12px;
+ margin:4px 0;
+}
+.stats{
+ display:grid;
+ grid-template-columns:repeat(2,1fr);
+ gap:10px;
+}
+.stat{
+ padding:17px;
+ border-radius:12px;
+ background:#e8f1ff;
+ text-align:center;
+}
+.stat strong{
+ display:block;
+ font-size:27px;
+ color:#1455a3;
+}
+.role{
+ padding:18px;
+ border:2px solid #d1dfef;
+ border-radius:13px;
+ margin:12px 0;
+ cursor:pointer;
+ background:white;
+}
+.role.selected{
+ border-color:#1685ff;
+ background:#eaf3ff;
+}
+.role h3{margin:0 0 6px}
+.role p{margin:0;color:#667b92}
+.account-banner{
+ background:#e5f0ff;
+ padding:14px;
+ border-radius:11px;
+ margin:12px 0;
+}
+footer{
+ background:#101b32;
+ color:#d6e4f6;
+ text-align:center;
+ padding:25px 15px;
+ line-height:1.8;
+}
+footer small{color:#a9bdd8}
 </style>
 </head>
 <body>
 
-<div id="startup">
+<!-- STARTUP -->
+<section id="startup" class="hero">
  <div class="logo">🔗</div>
  <h1>GigLink</h1>
  <p>Post It. Claim It. Get It Done.</p>
  <p>Your All-in-One Job Marketplace</p>
- <button class="btn" onclick="enterApp()">GET STARTED</button>
- <p style="font-size:12px;margin-top:35px">
+ <button class="btn" onclick="openAuth('signup')">
+ CREATE ACCOUNT
+ </button>
+ <button class="btn secondary" onclick="openAuth('login')">
+ SIGN IN
+ </button>
+ <p style="font-size:12px;margin-top:30px">
  © 2026 Diamond Shine Service LLC
  </p>
-</div>
+</section>
 
+<!-- AUTHENTICATION DEMO -->
+<section id="auth" class="hidden">
+ <header>
+  <h1>🔗 GigLink</h1>
+  <p>Welcome to your marketplace</p>
+ </header>
+
+ <main>
+  <div class="card">
+   <button class="btn outline" onclick="backToStart()">
+    ← Back
+   </button>
+
+   <div id="signupPanel">
+    <h2>Create Your Account</h2>
+    <p class="muted">
+     Choose how you want to use GigLink.
+    </p>
+
+    <div id="customerRole" class="role selected"
+     onclick="selectRole('customer')">
+     <h3>🏠 I'm a Customer</h3>
+     <p>I want to post jobs and hire workers.</p>
+    </div>
+
+    <div id="workerRole" class="role"
+     onclick="selectRole('worker')">
+     <h3>🧰 I'm a Worker</h3>
+     <p>I want to find jobs and earn money.</p>
+    </div>
+
+    <form id="signupForm">
+     <label>Display Name</label>
+     <input id="signupName" required maxlength="60"
+      placeholder="Example: Demo Customer">
+
+     <label>Demo Email</label>
+     <input id="signupEmail" type="email" required
+      placeholder="example@example.com">
+
+     <label>City and State</label>
+     <input id="signupCity" required maxlength="100"
+      placeholder="Example: Warner Robins, GA">
+
+     <div id="workerFields" class="hidden">
+      <label>Primary Service</label>
+      <select id="signupService">
+       <option>Residential Cleaning</option>
+       <option>Commercial Cleaning</option>
+       <option>Lawn Care</option>
+       <option>Moving</option>
+       <option>Handyman</option>
+       <option>Painting</option>
+       <option>Furniture Assembly</option>
+       <option>Delivery</option>
+       <option>Junk Removal</option>
+       <option>Pet Care</option>
+       <option>Other Services</option>
+      </select>
+     </div>
+
+     <p class="muted">
+      Demo only. No password or identity verification.
+      Use fictional information.
+     </p>
+
+     <button class="btn" type="submit">
+      CREATE DEMO ACCOUNT
+     </button>
+    </form>
+   </div>
+
+   <div id="loginPanel" class="hidden">
+    <h2>Sign In</h2>
+    <p class="muted">
+     Select a demo profile saved on this device.
+    </p>
+
+    <form id="loginForm">
+     <label>Choose Account</label>
+     <select id="loginAccount" required></select>
+     <button class="btn" type="submit">
+      SIGN IN
+     </button>
+    </form>
+
+    <p>
+     Don't have an account?
+     <button class="btn outline" onclick="openAuth('signup')">
+      Sign Up
+     </button>
+    </p>
+   </div>
+  </div>
+ </main>
+</section>
+
+<!-- MAIN APPLICATION -->
 <div id="app" class="hidden">
-<header>
- <h1>🔗 GigLink</h1>
- <p>Post It. Claim It. Get It Done.</p>
-</header>
+ <header>
+  <h1>🔗 GigLink</h1>
+  <p>Post It. Claim It. Get It Done.</p>
+  <div id="accountHeader"></div>
+  <button class="btn secondary" onclick="logout()">
+   Sign Out
+  </button>
+ </header>
 
-<nav>
- <button onclick="show('home')">Home</button>
- <button onclick="show('post')">Post a Gig</button>
- <button onclick="show('browse')">Find Gigs</button>
- <button onclick="show('mine')">My Gigs</button>
- <button onclick="show('admin')">Admin Demo</button>
-</nav>
+ <nav>
+  <button onclick="show('home')">Dashboard</button>
+  <button id="postNav" onclick="show('post')">Post a Gig</button>
+  <button onclick="show('browse')">Find Gigs</button>
+  <button onclick="show('mine')">My Gigs</button>
+  <button onclick="show('profile')">My Profile</button>
+ </nav>
 
-<div id="notice" role="status"></div>
+ <div id="notice" class="notice" role="status"></div>
 
-<main>
-<section id="home">
- <div class="card">
-  <h2>Welcome to GigLink</h2>
-  <p>Need a job done? Post it on GigLink. Looking for work? Find and claim gigs in your area.</p>
-  <button class="btn" onclick="show('post')">POST A GIG</button>
-  <button class="btn secondary" onclick="show('browse')">FIND GIGS</button>
- </div>
- <div class="card">
-  <h2>Popular Categories</h2>
-  <p>🏠 Residential Cleaning</p>
-  <p>🏢 Commercial Cleaning</p>
-  <p>🌿 Lawn Care</p>
-  <p>🚚 Moving</p>
-  <p>🔧 Handyman</p>
-  <p>🎨 Painting</p>
-  <p>🪑 Furniture Assembly</p>
-  <p>📦 Delivery</p>
-  <p>🗑️ Junk Removal</p>
-  <p>🐕 Pet Care</p>
-  <p>💼 Other Services</p>
- </div>
-</section>
+ <main>
+  <!-- DASHBOARD -->
+  <section id="home">
+   <div class="card">
+    <h2 id="welcomeTitle">Welcome!</h2>
+    <p id="welcomeText"></p>
+    <div class="stats">
+     <div class="stat">
+      <strong id="statAvailable">0</strong>
+      Available Gigs
+     </div>
+     <div class="stat">
+      <strong id="statMine">0</strong>
+      My Gigs
+     </div>
+    </div>
+    <div style="margin-top:18px">
+     <button id="mainAction" class="btn"></button>
+    </div>
+   </div>
 
-<section id="post" class="hidden">
- <div class="card">
-  <h2>Post a New Gig</h2>
-  <form id="gigForm">
-   <label>Your Name</label>
-   <input id="poster" required maxlength="80">
-   <label>Job Title</label>
-   <input id="title" required maxlength="120" placeholder="Example: Clean my house">
-   <label>Job Category</label>
-   <select id="category">
-    <option>Residential Cleaning</option>
-    <option>Commercial Cleaning</option>
-    <option>Lawn Care</option>
-    <option>Moving</option>
-    <option>Handyman</option>
-    <option>Painting</option>
-    <option>Furniture Assembly</option>
-    <option>Delivery</option>
-    <option>Junk Removal</option>
-    <option>Pet Care</option>
-    <option>Other Services</option>
-   </select>
-   <label>City and State</label>
-   <input id="location" required placeholder="Example: Warner Robins, GA">
-   <label>Job Date</label>
-   <input id="date" type="date" required>
-   <label>Job Budget ($)</label>
-   <input id="budget" type="number" min="1" step=".01" required>
-   <label>Job Description</label>
-   <textarea id="description" required maxlength="2000"></textarea>
-   <button class="btn" type="submit">POST GIG</button>
-  </form>
- </div>
-</section>
+   <div class="card">
+    <h2>GigLink Services</h2>
+    <p>🏠 Residential Cleaning</p>
+    <p>🏢 Commercial Cleaning</p>
+    <p>🌿 Lawn Care</p>
+    <p>🚚 Moving</p>
+    <p>🔧 Handyman</p>
+    <p>🎨 Painting</p>
+    <p>🪑 Furniture Assembly</p>
+    <p>📦 Delivery</p>
+    <p>🗑️ Junk Removal</p>
+    <p>🐕 Pet Care</p>
+    <p>💼 Other Services</p>
+   </div>
+  </section>
 
-<section id="browse" class="hidden">
- <h2>Available Gigs</h2>
- <div class="card">
-  <label>Filter by Category</label>
-  <select id="filter" onchange="render()">
-   <option value="All">All Categories</option>
-   <option>Residential Cleaning</option>
-   <option>Commercial Cleaning</option>
-   <option>Lawn Care</option>
-   <option>Moving</option>
-   <option>Handyman</option>
-   <option>Painting</option>
-   <option>Furniture Assembly</option>
-   <option>Delivery</option>
-   <option>Junk Removal</option>
-   <option>Pet Care</option>
-   <option>Other Services</option>
-  </select>
- </div>
- <div id="availableJobs"></div>
-</section>
+  <!-- POST JOB -->
+  <section id="post" class="hidden">
+   <div class="card">
+    <h2>Post a Gig</h2>
+    <p class="muted">
+     Describe the work you need completed.
+    </p>
+    <form id="gigForm">
+     <label>Job Title</label>
+     <input id="jobTitle" required maxlength="120"
+      placeholder="Example: House cleaning">
 
-<section id="mine" class="hidden">
- <h2>My Gigs</h2>
- <p class="muted">Jobs saved in this browser.</p>
- <div id="myJobs"></div>
-</section>
+     <label>Category</label>
+     <select id="jobCategory">
+      <option>Residential Cleaning</option>
+      <option>Commercial Cleaning</option>
+      <option>Lawn Care</option>
+      <option>Moving</option>
+      <option>Handyman</option>
+      <option>Painting</option>
+      <option>Furniture Assembly</option>
+      <option>Delivery</option>
+      <option>Junk Removal</option>
+      <option>Pet Care</option>
+      <option>Other Services</option>
+     </select>
 
-<section id="admin" class="hidden">
- <div class="card">
-  <h2>GigLink Admin Demo</h2>
-  <p class="muted">Demo only. No secure admin authentication is enabled.</p>
-  <div class="stat" id="totalJobs"></div>
-  <div class="stat" id="openJobs"></div>
-  <div class="stat" id="claimedJobs"></div>
-  <div class="stat" id="completedJobs"></div>
- </div>
- <div id="adminJobs"></div>
-</section>
-</main>
+     <label>City and State</label>
+     <input id="jobLocation" required maxlength="100">
 
-<footer>
- <strong>🔗 GigLink™</strong>
- <div>Post It. Claim It. Get It Done.</div>
- <p>© 2026 Diamond Shine Service LLC.<br>All Rights Reserved.</p>
- <small>Owned and Operated by Diamond Shine Service LLC</small>
- <div><small>GigLink Marketplace Prototype</small></div>
-</footer>
+     <label>Job Date</label>
+     <input id="jobDate" type="date" required>
+
+     <label>Budget ($)</label>
+     <input id="jobBudget" type="number"
+      min="1" step=".01" required>
+
+     <label>Description</label>
+     <textarea id="jobDescription" required
+      maxlength="2000"></textarea>
+
+     <button class="btn" type="submit">
+      POST GIG
+     </button>
+    </form>
+   </div>
+  </section>
+
+  <!-- FIND JOBS -->
+  <section id="browse" class="hidden">
+   <h2>Find Available Gigs</h2>
+   <div class="card">
+    <label>Category</label>
+    <select id="filter" onchange="render()">
+     <option value="All">All Categories</option>
+     <option>Residential Cleaning</option>
+     <option>Commercial Cleaning</option>
+     <option>Lawn Care</option>
+     <option>Moving</option>
+     <option>Handyman</option>
+     <option>Painting</option>
+     <option>Furniture Assembly</option>
+     <option>Delivery</option>
+     <option>Junk Removal</option>
+     <option>Pet Care</option>
+     <option>Other Services</option>
+    </select>
+   </div>
+   <div id="availableJobs"></div>
+  </section>
+
+  <!-- MY JOBS -->
+  <section id="mine" class="hidden">
+   <h2>My Gigs</h2>
+   <div id="myJobs"></div>
+  </section>
+
+  <!-- PROFILE -->
+  <section id="profile" class="hidden">
+   <div class="card">
+    <h2>My Profile</h2>
+    <div id="profileInfo"></div>
+    <p class="muted">
+     This profile is saved only in this browser.
+    </p>
+   </div>
+  </section>
+ </main>
+
+ <footer>
+  <strong>🔗 GigLink™</strong>
+  <div>Post It. Claim It. Get It Done.</div>
+  <p>
+   © 2026 Diamond Shine Service LLC.<br>
+   All Rights Reserved.
+  </p>
+  <small>
+   Owned and Operated by Diamond Shine Service LLC
+  </small>
+  <div><small>GigLink Marketplace Prototype</small></div>
+ </footer>
 </div>
 
 <script>
-const KEY="giglink_jobs_v1";
-function load(){
+const JOB_KEY="giglink_jobs_v1";
+const USER_KEY="giglink_demo_users_v1";
+const SESSION_KEY="giglink_demo_session_v1";
+
+function read(key,fallback){
  try{
-  const data=JSON.parse(localStorage.getItem(KEY));
-  return Array.isArray(data)?data:[];
- }catch(e){return []}
+  const result=JSON.parse(localStorage.getItem(key));
+  return result??fallback;
+ }catch(e){
+  return fallback;
+ }
 }
-let jobs=load();
-function save(){localStorage.setItem(KEY,JSON.stringify(jobs))}
-function newId(){
- return Date.now().toString(36)+Math.random().toString(36).slice(2);
+let jobs=read(JOB_KEY,[]);
+let users=read(USER_KEY,[]);
+let currentId=read(SESSION_KEY,null);
+let selectedRole="customer";
+
+if(!Array.isArray(jobs))jobs=[];
+if(!Array.isArray(users))users=[];
+
+function saveJobs(){
+ localStorage.setItem(JOB_KEY,JSON.stringify(jobs));
+}
+function saveUsers(){
+ localStorage.setItem(USER_KEY,JSON.stringify(users));
+}
+function uid(){
+ return Date.now().toString(36)+
+ Math.random().toString(36).slice(2,10);
 }
 function safe(value){
  return String(value??"").replace(/[&<>"']/g,c=>({
- "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  '"':"&quot;",
+  "'":"&#39;"
  })[c]);
 }
-function notice(message){
- document.getElementById("notice").textContent=message;
+function currentUser(){
+ return users.find(u=>u.id===currentId)||null;
 }
-function enterApp(){
+function notice(text){
+ document.getElementById("notice").textContent=text;
+}
+function backToStart(){
+ document.getElementById("auth").classList.add("hidden");
+ document.getElementById("app").classList.add("hidden");
+ document.getElementById("startup").classList.remove("hidden");
+}
+function openAuth(mode){
  document.getElementById("startup").classList.add("hidden");
+ document.getElementById("app").classList.add("hidden");
+ document.getElementById("auth").classList.remove("hidden");
+ document.getElementById("signupPanel")
+  .classList.toggle("hidden",mode!=="signup");
+ document.getElementById("loginPanel")
+  .classList.toggle("hidden",mode!=="login");
+ populateLogin();
+ window.scrollTo(0,0);
+}
+function selectRole(role){
+ selectedRole=role;
+ document.getElementById("customerRole")
+  .classList.toggle("selected",role==="customer");
+ document.getElementById("workerRole")
+  .classList.toggle("selected",role==="worker");
+ document.getElementById("workerFields")
+  .classList.toggle("hidden",role!=="worker");
+}
+function populateLogin(){
+ const select=document.getElementById("loginAccount");
+ select.innerHTML="";
+ if(users.length===0){
+  const option=document.createElement("option");
+  option.value="";
+  option.textContent="No demo accounts yet";
+  select.appendChild(option);
+ }else{
+  users.forEach(u=>{
+   const option=document.createElement("option");
+   option.value=u.id;
+   option.textContent=u.name+" ("+u.role+")";
+   select.appendChild(option);
+  });
+ }
+}
+document.getElementById("signupForm")
+.addEventListener("submit",function(e){
+ e.preventDefault();
+ const name=document.getElementById("signupName").value.trim();
+ const email=document.getElementById("signupEmail").value.trim().toLowerCase();
+ const city=document.getElementById("signupCity").value.trim();
+ const service=document.getElementById("signupService").value;
+
+ if(!name||!email||!city)return;
+
+ if(users.some(u=>u.email===email)){
+  alert("This demo email already has a profile. Use Sign In.");
+  return;
+ }
+
+ const user={
+  id:uid(),
+  name,email,city,
+  role:selectedRole,
+  service:selectedRole==="worker"?service:""
+ };
+ users.push(user);
+ saveUsers();
+ this.reset();
+ loginAs(user.id);
+});
+document.getElementById("loginForm")
+.addEventListener("submit",function(e){
+ e.preventDefault();
+ const id=document.getElementById("loginAccount").value;
+ if(!users.some(u=>u.id===id)){
+  alert("Create a demo account first.");
+  return;
+ }
+ loginAs(id);
+});
+function loginAs(id){
+ currentId=id;
+ localStorage.setItem(SESSION_KEY,JSON.stringify(id));
+ document.getElementById("startup").classList.add("hidden");
+ document.getElementById("auth").classList.add("hidden");
  document.getElementById("app").classList.remove("hidden");
+ updateAccount();
  show("home");
 }
+function logout(){
+ currentId=null;
+ localStorage.removeItem(SESSION_KEY);
+ backToStart();
+}
+function updateAccount(){
+ const u=currentUser();
+ if(!u)return;
+
+ document.getElementById("accountHeader").textContent=
+  u.name+" • "+(u.role==="customer"?"Customer":"Worker");
+
+ document.getElementById("postNav")
+  .classList.toggle("hidden",u.role!=="customer");
+
+ document.getElementById("welcomeTitle").textContent=
+  "Welcome, "+u.name+"!";
+
+ document.getElementById("welcomeText").textContent=
+  u.role==="customer"
+  ?"Post a job and track its progress."
+  :"Browse jobs and claim gigs that match your skills.";
+
+ const action=document.getElementById("mainAction");
+ if(u.role==="customer"){
+  action.textContent="POST A GIG";
+  action.onclick=()=>show("post");
+ }else{
+  action.textContent="FIND GIGS";
+  action.onclick=()=>show("browse");
+ }
+
+ document.getElementById("profileInfo").innerHTML=`
+  <p><b>Name:</b> ${safe(u.name)}</p>
+  <p><b>Demo Email:</b> ${safe(u.email)}</p>
+  <p><b>Location:</b> ${safe(u.city)}</p>
+  <p><b>Account Type:</b> ${safe(u.role)}</p>
+  ${u.service?
+   `<p><b>Service:</b> ${safe(u.service)}</p>`:""}
+ `;
+}
 function show(page){
- ["home","post","browse","mine","admin"].forEach(p=>{
-  document.getElementById(p).classList.toggle("hidden",p!==page);
+ const u=currentUser();
+ if(!u)return;
+ if(page==="post"&&u.role!=="customer"){
+  page="home";
+ }
+ ["home","post","browse","mine","profile"].forEach(p=>{
+  document.getElementById(p)
+   .classList.toggle("hidden",p!==page);
  });
+ if(page==="post"){
+  document.getElementById("jobLocation").value=u.city;
+ }
  notice("");
  render();
  window.scrollTo(0,0);
 }
-document.getElementById("gigForm").addEventListener("submit",function(e){
+document.getElementById("gigForm")
+.addEventListener("submit",function(e){
  e.preventDefault();
- const poster=document.getElementById("poster").value.trim();
- const title=document.getElementById("title").value.trim();
- const category=document.getElementById("category").value;
- const location=document.getElementById("location").value.trim();
- const date=document.getElementById("date").value;
- const budget=Number(document.getElementById("budget").value);
- const description=document.getElementById("description").value.trim();
- if(!poster||!title||!location||!date||!description||
+ const u=currentUser();
+ if(!u||u.role!=="customer")return;
+
+ const title=document.getElementById("jobTitle").value.trim();
+ const category=document.getElementById("jobCategory").value;
+ const location=document.getElementById("jobLocation").value.trim();
+ const date=document.getElementById("jobDate").value;
+ const budget=Number(document.getElementById("jobBudget").value);
+ const description=document.getElementById("jobDescription").value.trim();
+
+ if(!title||!location||!date||!description||
  !Number.isFinite(budget)||budget<=0){
-  notice("Please complete all fields correctly.");
+  alert("Please complete all job details.");
   return;
  }
+
  jobs.push({
-  id:newId(),poster,title,category,location,date,budget,
-  description,status:"available",claimedBy:""
+  id:uid(),
+  ownerId:u.id,
+  poster:u.name,
+  title,category,location,date,budget,description,
+  status:"available",
+  claimedBy:"",
+  workerId:null
  });
- save();
+ saveJobs();
  this.reset();
- show("browse");
- notice("Your gig was posted successfully!");
+ show("mine");
+ notice("Gig posted successfully!");
 });
 function claimJob(id){
+ const u=currentUser();
+ if(!u||u.role!=="worker")return;
  const job=jobs.find(j=>j.id===id);
  if(!job||job.status!=="available")return;
- const worker=prompt("Enter your name to claim this gig:");
- if(!worker||!worker.trim())return;
- job.claimedBy=worker.trim();
+
+ if(!confirm("Claim this gig?"))return;
+
  job.status="claimed";
- save();render();
- notice("Gig claimed successfully!");
+ job.claimedBy=u.name;
+ job.workerId=u.id;
+ saveJobs();
+ show("mine");
+ notice("You claimed this gig!");
 }
 function completeJob(id){
+ const u=currentUser();
  const job=jobs.find(j=>j.id===id);
- if(!job||job.status!=="claimed")return;
+ if(!u||!job||job.status!=="claimed")return;
+
+ if(job.ownerId!==u.id)return;
+
+ if(!confirm("Mark this job completed?"))return;
  job.status="completed";
- save();render();
+ saveJobs();
+ render();
  notice("Gig marked completed.");
 }
-function deleteJob(id){
- if(!confirm("Delete this gig?"))return;
- jobs=jobs.filter(j=>j.id!==id);
- save();render();
- notice("Gig deleted.");
-}
 function jobCard(job,mode){
+ const u=currentUser();
  let actions="";
- if(mode==="browse"){
-  actions=`<button class="btn" onclick="claimJob('${job.id}')">CLAIM GIG</button>`;
+
+ if(mode==="browse"&&u.role==="worker"&&
+ job.status==="available"){
+  actions=`<button class="btn"
+   onclick="claimJob('${safe(job.id)}')">
+   CLAIM GIG
+   </button>`;
  }
- if(mode==="admin"){
-  if(job.status==="claimed"){
-   actions+=`<button class="btn" onclick="completeJob('${job.id}')">MARK COMPLETED</button>`;
-  }
-  actions+=`<button class="btn danger" onclick="deleteJob('${job.id}')">DELETE</button>`;
+ if(mode==="mine"&&u.role==="customer"&&
+ job.ownerId===u.id&&job.status==="claimed"){
+  actions=`<button class="btn"
+   onclick="completeJob('${safe(job.id)}')">
+   MARK COMPLETED
+   </button>`;
  }
+
  return `<div class="card job">
   <span class="tag">${safe(job.category)}</span>
   <h3>${safe(job.title)}</h3>
@@ -277,33 +739,47 @@ function jobCard(job,mode){
   <p>Posted by: ${safe(job.poster)}</p>
   <p>${safe(job.description)}</p>
   <p class="price">$${Number(job.budget).toFixed(2)}</p>
-  <p>Status: ${safe(job.status)}</p>
-  ${job.claimedBy?`<p>Claimed by: ${safe(job.claimedBy)}</p>`:""}
+  <p><b>Status:</b> ${safe(job.status)}</p>
+  ${job.claimedBy?
+   `<p>Worker: ${safe(job.claimedBy)}</p>`:""}
   ${actions}
  </div>`;
 }
 function render(){
+ const u=currentUser();
+ if(!u)return;
+
  const filter=document.getElementById("filter").value;
- const available=jobs.filter(j=>j.status==="available"&&
- (filter==="All"||j.category===filter));
+ const available=jobs.filter(j=>
+  j.status==="available"&&
+  (filter==="All"||j.category===filter)
+ );
+
+ const mine=jobs.filter(j=>
+  u.role==="customer"
+  ?j.ownerId===u.id
+  :j.workerId===u.id
+ );
+
  document.getElementById("availableJobs").innerHTML=
-  available.length?available.map(j=>jobCard(j,"browse")).join(""):
-  '<div class="card">No available gigs yet.</div>';
+  available.length
+  ?available.map(j=>jobCard(j,"browse")).join("")
+  :'<div class="card">No available gigs yet.</div>';
+
  document.getElementById("myJobs").innerHTML=
-  jobs.length?jobs.map(j=>jobCard(j,"mine")).join(""):
-  '<div class="card">No gigs yet.</div>';
- document.getElementById("adminJobs").innerHTML=
-  jobs.length?jobs.map(j=>jobCard(j,"admin")).join(""):
-  '<div class="card">No jobs posted.</div>';
- document.getElementById("totalJobs").textContent="Total Gigs: "+jobs.length;
- document.getElementById("openJobs").textContent=
-  "Available: "+jobs.filter(j=>j.status==="available").length;
- document.getElementById("claimedJobs").textContent=
-  "Claimed: "+jobs.filter(j=>j.status==="claimed").length;
- document.getElementById("completedJobs").textContent=
-  "Completed: "+jobs.filter(j=>j.status==="completed").length;
+  mine.length
+  ?mine.map(j=>jobCard(j,"mine")).join("")
+  :'<div class="card">You have no gigs yet.</div>';
+
+ document.getElementById("statAvailable").textContent=
+  jobs.filter(j=>j.status==="available").length;
+
+ document.getElementById("statMine").textContent=
+  mine.length;
 }
-render();
+if(currentUser()){
+ loginAs(currentId);
+}
 </script>
 </body>
 </html>
