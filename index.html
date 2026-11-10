@@ -9857,319 +9857,32 @@ setTimeout(()=>load(),900);
 </script>
 <!-- END GIGLINK STEP 5K-T -->
 
-<!-- GIGLINK STEP 5K-T: COLLAPSIBLE COMPLETED GIGS -->
+
+<!-- GIGLINK MY GIGS CLEANUP -->
 <style>
-.gl5kt-completed-toggle{
-  display:block;
-  width:100%;
-  background:#112b50!important;
-  color:#ffffff!important;
-  border:1px solid #278bff!important;
-  border-radius:12px!important;
-  padding:15px!important;
-  margin:12px 0!important;
-  text-align:left!important;
-  font-weight:700!important;
+/* Remove old completed-gig toggle buttons */
+.gl5kt-completed-toggle,
+#giglinkSingleCompletedToggle,
+.completed-toggle,
+[data-completed-toggle] {
+  display: none !important;
 }
-.gl5kt-completed-toggle:focus-visible{
-  outline:3px solid #55c9ff;
+
+/* Collapsible worker controls */
+.giglink-work-toggle {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  margin: 12px 0;
+  border: 2px solid #287cff;
+  border-radius: 12px;
+  background: #192d50;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: left;
+  cursor: pointer;
 }
-.gl5kt-completed-list{
-  display:grid;
-  gap:12px;
-}
-.gl5kt-completed-list[hidden]{
-  display:none!important;
-}
-</style>
-
-<script>
-(function(){
-  "use strict";
-
-  const MY_GIGS_ID="gl5kb-mine";
-  const root=document.getElementById(MY_GIGS_ID);
-
-  if(!root)return;
-
-  let expanded=false;
-  const groups=new Map();
-
-  function isCompleted(card){
-    const status=card.querySelector(
-      "[data-status],.status,.gig-status,.job-status"
-    );
-
-    if(status){
-      const value=(
-        status.dataset.status||status.textContent||""
-      ).trim().toLowerCase();
-
-      if(/\bcompleted\b/.test(value))return true;
-    }
-
-    const text=card.textContent||"";
-
-    return /(?:status\s*:\s*completed|status\s+completed|✓\s*completed|✅\s*completed)/i.test(text);
-  }
-
-  function getCards(container){
-    return [...container.children].filter(child=>{
-      if(child.classList.contains("gl5kt-completed-toggle"))return false;
-      if(child.classList.contains("gl5kt-completed-list"))return false;
-
-      return child.matches(
-        ".gl5kg-card,.gl5kb-card,.gig-card,.job-card,.card"
-      );
-    });
-  }
-
-  function setup(container){
-    if(!container || groups.has(container))return;
-
-    const toggle=document.createElement("button");
-    toggle.type="button";
-    toggle.className="gl5kt-completed-toggle";
-    toggle.setAttribute("aria-expanded","false");
-
-    const list=document.createElement("div");
-    list.className="gl5kt-completed-list";
-    list.hidden=true;
-
-    toggle.addEventListener("click",()=>{
-      expanded=!expanded;
-      update();
-    });
-
-    container.append(toggle,list);
-    groups.set(container,{toggle,list});
-  }
-
-  function update(){
-    let total=0;
-
-    for(const [container,group] of groups){
-      const cards=getCards(container);
-
-      cards.forEach(card=>{
-        if(isCompleted(card)){
-          group.list.append(card);
-        }
-      });
-
-      const completed=[...group.list.children];
-      total+=completed.length;
-
-      group.toggle.hidden=completed.length===0;
-      group.list.hidden=!expanded;
-
-      group.toggle.setAttribute(
-        "aria-expanded",String(expanded)
-      );
-
-      group.toggle.textContent=expanded
-        ? "▼ Hide Completed Gigs ("+completed.length+")"
-        : "▶ Show Completed Gigs ("+completed.length+")";
-    }
-
-    return total;
-  }
-
-  function initialize(){
-    const containers=[
-      root.querySelector("#gl5kg-mine-list"),
-      root.querySelector("#gl5kb-mine-list"),
-      root.querySelector("[data-my-gigs-list]")
-    ].filter(Boolean);
-
-    if(!containers.length){
-      const candidates=[...root.querySelectorAll("div")]
-        .filter(node=>getCards(node).length>0);
-
-      if(candidates.length){
-        containers.push(candidates[candidates.length-1]);
-      }
-    }
-
-    containers.forEach(setup);
-    update();
-  }
-
-  let timer;
-
-  const observer=new MutationObserver(()=>{
-    clearTimeout(timer);
-    timer=setTimeout(()=>{
-      observer.disconnect();
-      initialize();
-      observer.observe(root,{
-        childList:true,
-        subtree:true
-      });
-    },200);
-  });
-
-  initialize();
-
-  observer.observe(root,{
-    childList:true,
-    subtree:true
-  });
-
-  console.log("GigLink completed gig minimizer loaded.");
-})();
-</script>
-<!-- END GIGLINK STEP 5K-T -->
-
-<!-- GIGLINK: SINGLE COMPLETED GIGS TOGGLE FIX -->
-<style>
-  #giglinkSingleCompletedToggle {
-    display: block;
-    width: 100%;
-    padding: 18px;
-    margin: 15px 0;
-    border: 2px solid #287cff;
-    border-radius: 14px;
-    background: #192d50;
-    color: white;
-    font-size: 17px;
-    font-weight: bold;
-    text-align: left;
-    cursor: pointer;
-  }
-</style>
-
-<script>
-(function () {
-  "use strict";
-
-  let completedVisible = false;
-
-  function fixCompletedGigs() {
-    const mine = document.getElementById("mineList");
-    if (!mine) return;
-
-    const buttons = Array.from(
-      mine.querySelectorAll("button, summary")
-    ).filter(button =>
-      /(?:show|hide)\s+completed\s+gigs/i.test(
-        button.textContent || ""
-      )
-    );
-
-    // Remove duplicate toggle buttons.
-    buttons.forEach(button => {
-      const wrapper = button.closest(
-        "[data-completed-toggle], .completed-toggle"
-      );
-
-      if (wrapper && mine.contains(wrapper)) {
-        wrapper.remove();
-      } else {
-        button.remove();
-      }
-    });
-
-    // Find completed gig cards.
-    const cards = Array.from(
-      mine.querySelectorAll(".card.job")
-    );
-
-    const completed = cards.filter(card => {
-      const paragraphs = Array.from(
-        card.querySelectorAll("p")
-      );
-
-      return paragraphs.some(p =>
-        /^Status:\s*completed$/i.test(
-          p.textContent.trim()
-        )
-      );
-    });
-
-    completed.forEach(card => {
-      card.style.display =
-        completedVisible ? "" : "none";
-    });
-
-    // Keep only one toggle.
-    const old = document.getElementById(
-      "giglinkSingleCompletedToggle"
-    );
-    if (old) old.remove();
-
-    if (!completed.length) return;
-
-    const toggle = document.createElement("button");
-    toggle.id = "giglinkSingleCompletedToggle";
-    toggle.type = "button";
-
-    toggle.textContent =
-      (completedVisible ? "▼ Hide" : "▶ Show") +
-      " Completed Gigs (" + completed.length + ")";
-
-    toggle.onclick = function () {
-      completedVisible = !completedVisible;
-      fixCompletedGigs();
-    };
-
-    mine.prepend(toggle);
-  }
-
-  // Watch for My Gigs being refreshed.
-  const mine = document.getElementById("mineList");
-
-  if (mine) {
-    let updating = false;
-
-    const observer = new MutationObserver(() => {
-      if (updating) return;
-
-      updating = true;
-      observer.disconnect();
-
-      fixCompletedGigs();
-
-      observer.observe(mine, {
-        childList: true,
-        subtree: true
-      });
-
-      updating = false;
-    });
-
-    observer.observe(mine, {
-      childList: true,
-      subtree: true
-    });
-
-    fixCompletedGigs();
-  }
-})();
-</script>
-<!-- END GIGLINK FIX -->
-
-<!-- GIGLINK COLLAPSIBLE WORKER JOB CONTROLS -->
-<style>
-  .giglink-job-controls-toggle {
-    display: block;
-    width: 100%;
-    padding: 16px;
-    margin: 12px 0;
-    background: #192d50;
-    color: white;
-    border: 2px solid #287cff;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: bold;
-    text-align: left;
-    cursor: pointer;
-  }
-
-  .giglink-job-controls-toggle:focus-visible {
-    outline: 3px solid #64b5ff;
-    outline-offset: 3px;
-  }
 </style>
 
 <script>
@@ -10179,19 +9892,43 @@ setTimeout(()=>load(),900);
   const mine = document.getElementById("mineList");
   if (!mine) return;
 
-  const expandedJobs = new Set();
+  const expanded = new Set();
   let updating = false;
 
-  function updateJobControls() {
-    const cards = mine.querySelectorAll(".card.job");
+  function cleanMyGigs() {
+    // Remove remaining completed toggle buttons.
+    mine.querySelectorAll(
+      ".gl5kt-completed-toggle," +
+      "#giglinkSingleCompletedToggle," +
+      ".completed-toggle," +
+      "[data-completed-toggle]"
+    ).forEach(el => el.remove());
 
-    cards.forEach((card, index) => {
+    mine.querySelectorAll("button,summary").forEach(el => {
+      if (/^(?:[▼▶▾▸]\s*)?(show|hide)\s+completed\s+gigs/i
+        .test(el.textContent.trim())) {
+        el.remove();
+      }
+    });
+
+    // Restore completed gigs hidden by old code.
+    mine.querySelectorAll(
+      ".gl5kt-completed-list"
+    ).forEach(list => {
+      while (list.firstChild) {
+        list.parentNode.insertBefore(
+          list.firstChild, list
+        );
+      }
+      list.remove();
+    });
+
+    // Make worker controls collapsible.
+    mine.querySelectorAll(".card.job").forEach(card => {
       const heading = Array.from(
         card.querySelectorAll("h3")
       ).find(h =>
-        h.textContent.trim().includes(
-          "WORKER JOB CONTROLS"
-        )
+        h.textContent.includes("WORKER JOB CONTROLS")
       );
 
       if (!heading) return;
@@ -10199,70 +9936,61 @@ setTimeout(()=>load(),900);
       const controls = heading.closest(".controls");
       if (!controls) return;
 
-      const jobId = (
+      const jobKey =
         controls.querySelector('input[type="file"]')?.id ||
-        card.querySelector("[data-clock]")?.dataset.clock ||
-        "job-" + index
-      );
+        "job-" + Array.from(
+          mine.querySelectorAll(".card.job")
+        ).indexOf(card);
 
-      let toggle = controls.previousElementSibling;
+      let button = controls.previousElementSibling;
 
-      if (
-        !toggle ||
-        !toggle.classList.contains(
-          "giglink-job-controls-toggle"
-        )
-      ) {
-        toggle = document.createElement("button");
-        toggle.type = "button";
-        toggle.className =
-          "giglink-job-controls-toggle";
-
-        controls.before(toggle);
+      if (!button ||
+          !button.classList.contains("giglink-work-toggle")) {
+        button = document.createElement("button");
+        button.type = "button";
+        button.className = "giglink-work-toggle";
+        controls.before(button);
       }
 
-      const expanded = expandedJobs.has(jobId);
+      const isOpen = expanded.has(jobKey);
 
-      controls.style.display = expanded ? "" : "none";
+      controls.style.display = isOpen ? "" : "none";
 
-      toggle.textContent = expanded
-        ? "▼ Hide Job Controls"
-        : "▶ Show Job Controls";
+      button.textContent = isOpen
+        ? "▼ Hide Job Work Controls"
+        : "▶ Show Job Work Controls";
 
-      toggle.setAttribute(
+      button.setAttribute(
         "aria-expanded",
-        String(expanded)
+        String(isOpen)
       );
 
-      toggle.onclick = function () {
-        if (expandedJobs.has(jobId)) {
-          expandedJobs.delete(jobId);
+      button.onclick = function () {
+        if (expanded.has(jobKey)) {
+          expanded.delete(jobKey);
         } else {
-          expandedJobs.add(jobId);
+          expanded.add(jobKey);
         }
-
-        updateJobControls();
+        cleanMyGigs();
       };
     });
   }
 
   const observer = new MutationObserver(() => {
     if (updating) return;
-
     updating = true;
     observer.disconnect();
 
-    updateJobControls();
+    cleanMyGigs();
 
     observer.observe(mine, {
       childList: true,
       subtree: true
     });
-
     updating = false;
   });
 
-  updateJobControls();
+  cleanMyGigs();
 
   observer.observe(mine, {
     childList: true,
@@ -10270,74 +9998,7 @@ setTimeout(()=>load(),900);
   });
 })();
 </script>
-<!-- END GIGLINK JOB CONTROLS FIX -->
+<!-- END GIGLINK MY GIGS CLEANUP -->
 
-<!-- GIGLINK REMOVE COMPLETED GIGS TOGGLES -->
-<style>
-  #giglinkSingleCompletedToggle,
-  .completed-toggle,
-  [data-completed-toggle] {
-    display: none !important;
-  }
-</style>
-
-<script>
-(function () {
-  "use strict";
-
-  function removeCompletedToggles() {
-    const mine = document.getElementById("mineList");
-    if (!mine) return;
-
-    // Remove all completed gig toggle buttons.
-    mine.querySelectorAll(
-      "#giglinkSingleCompletedToggle, " +
-      ".completed-toggle, " +
-      "[data-completed-toggle]"
-    ).forEach(el => el.remove());
-
-    mine.querySelectorAll("button, summary").forEach(el => {
-      if (/^(?:▼|▶|▾|▸)?\s*(?:show|hide)\s+completed\s+gigs\s*\(\d+\)/i
-          .test(el.textContent.trim())) {
-        el.remove();
-      }
-    });
-
-    // Make completed job cards visible again.
-    mine.querySelectorAll(".card.job").forEach(card => {
-      card.style.display = "";
-      card.hidden = false;
-    });
-  }
-
-  const mine = document.getElementById("mineList");
-  if (!mine) return;
-
-  let busy = false;
-
-  const observer = new MutationObserver(() => {
-    if (busy) return;
-    busy = true;
-    observer.disconnect();
-
-    removeCompletedToggles();
-
-    observer.observe(mine, {
-      childList: true,
-      subtree: true
-    });
-
-    busy = false;
-  });
-
-  removeCompletedToggles();
-
-  observer.observe(mine, {
-    childList: true,
-    subtree: true
-  });
-})();
-</script>
-<!-- END COMPLETED GIGS TOGGLE REMOVAL -->
 
 </body></html>
