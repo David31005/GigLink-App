@@ -8122,9 +8122,15 @@ page = aliases[page] || page;
 // Send Explore and Post Gig to the real marketplace.
 const requestedPage = page;
 
-if (page === "browse" || page === "post") {
+
+if (
+  page === "browse" ||
+  page === "post" ||
+  page === "mine"
+) {
   page = "marketplace";
 }
+
 
 // Remember which real marketplace tab to open.
 window.GigLinkRequestedMarketplaceTab =
