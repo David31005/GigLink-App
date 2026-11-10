@@ -2435,4 +2435,229 @@ render();
 </script>
 <!-- END GIGLINK STEP 14E -->
 
+<!-- GIGLINK STEP 5G: REAL AUTH TEST -->
+<style>
+#glAuthTest {
+  background:#fff;
+  color:#192e48;
+  padding:18px;
+  margin:16px auto;
+  max-width:520px;
+  border:2px solid #147af3;
+  border-radius:16px;
+  font:16px Arial,sans-serif;
+}
+#glAuthTest input {
+  display:block;
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border:1px solid #aaa;
+  border-radius:8px;
+}
+#glAuthTest button {
+  margin:5px;
+  padding:12px;
+  border-radius:8px;
+  background:#147af3;
+  color:white;
+  border:0;
+}
+#glAuthMessage {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  padding:10px;
+  background:#eef4ff;
+  border-radius:8px;
+}
+</style>
+
+<section id="glAuthTest">
+  <h2>GigLink — Real Account Test</h2>
+  <p>
+    Supabase authentication testing only.
+    Your existing GigLink demo login is unchanged.
+  </p>
+
+  <input id="glAuthEmail"
+    type="email"
+    autocomplete="email"
+    placeholder="Email address">
+
+  <input id="glAuthPassword"
+    type="password"
+    autocomplete="new-password"
+    placeholder="Password (minimum 8 characters)">
+
+  <button type="button" id="glAuthSignup">
+    Create Real Account
+  </button>
+
+  <button type="button" id="glAuthLogin">
+    Real Login
+  </button>
+
+  <button type="button" id="glAuthLogout">
+    Real Logout
+  </button>
+
+  <button type="button" id="glAuthCheck">
+    Check Session
+  </button>
+
+  <p id="glAuthMessage" role="status">
+    Ready to connect.
+  </p>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  const URL =
+    "YOUR_SUPABASE_PROJECT_URL";
+
+  const KEY =
+    "YOUR_PUBLISHABLE_KEY";
+
+  const SITE =
+    "https://david31005.github.io/GigLink-App/";
+
+  const message =
+    document.getElementById("glAuthMessage");
+
+  const email =
+    document.getElementById("glAuthEmail");
+
+  const password =
+    document.getElementById("glAuthPassword");
+
+  function show(text) {
+    message.textContent = text;
+  }
+
+  if (
+    URL.includes("YOUR_") ||
+    KEY.includes("YOUR_")
+  ) {
+    show("Add your Supabase URL and publishable key.");
+    return;
+  }
+
+  if (!window.supabase) {
+    show("Supabase library did not load.");
+    return;
+  }
+
+  const client =
+    window.supabase.createClient(URL, KEY);
+
+  function credentials() {
+    const e = email.value.trim();
+    const p = password.value;
+
+    if (!e || !e.includes("@")) {
+      throw new Error("Enter a valid email address.");
+    }
+
+    if (p.length < 8) {
+      throw new Error(
+        "Password must have at least 8 characters."
+      );
+    }
+
+    return { email:e, password:p };
+  }
+
+  async function run(action) {
+    try {
+      show("Please wait...");
+      await action();
+    } catch (err) {
+      show("Error: " + err.message);
+    }
+  }
+
+  document.getElementById(
+    "glAuthSignup"
+  ).onclick = () => run(async () => {
+    const values = credentials();
+
+    const { error } =
+      await client.auth.signUp({
+        ...values,
+        options: {
+          emailRedirectTo:SITE
+        }
+      });
+
+    if (error) throw error;
+
+    show(
+      "Signup request submitted. Check your email " +
+      "for a confirmation link if required."
+    );
+  });
+
+  document.getElementById(
+    "glAuthLogin"
+  ).onclick = () => run(async () => {
+    const values = credentials();
+
+    const { data, error } =
+      await client.auth.signInWithPassword(values);
+
+    if (error) throw error;
+
+    show(
+      "Real login successful!\n" +
+      "User ID: " + data.user.id
+    );
+  });
+
+  document.getElementById(
+    "glAuthLogout"
+  ).onclick = () => run(async () => {
+    const { error } =
+      await client.auth.signOut();
+
+    if (error) throw error;
+
+    show("Real Supabase session signed out.");
+  });
+
+  document.getElementById(
+    "glAuthCheck"
+  ).onclick = () => run(async () => {
+    const { data, error } =
+      await client.auth.getUser();
+
+    if (error || !data.user) {
+      show("No active Supabase account.");
+      return;
+    }
+
+    show(
+      "Signed in as: " + data.user.email
+    );
+  });
+
+  client.auth.onAuthStateChange(
+    (event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        show(
+          "Supabase account connected: " +
+          session.user.email
+        );
+      }
+    }
+  );
+
+  show("Supabase authentication ready.");
+})();
+</script>
+<!-- END GIGLINK STEP 5G -->
+
 </body></html>
