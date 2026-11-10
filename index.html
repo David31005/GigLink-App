@@ -3013,4 +3013,487 @@ render();
 
 <!-- END GIGLINK STEP 5I -->
 
+<!-- ==========================================
+ GIGLINK STEP 5J-B
+ REAL WORKER APPLICATION
+ Diamond Shine Service LLC
+ Paste immediately before </body>
+========================================== -->
+
+<style>
+#gl5jb {
+  max-width:540px;
+  margin:18px auto;
+  padding:20px;
+  background:#ffffff;
+  color:#19304a;
+  border:2px solid #1386d4;
+  border-radius:16px;
+  font:16px Arial,sans-serif;
+  box-sizing:border-box;
+}
+#gl5jb * {
+  box-sizing:border-box;
+}
+#gl5jb h2 {
+  margin:0 0 12px;
+  font-size:24px;
+}
+#gl5jb label {
+  display:block;
+  font-weight:bold;
+  margin-top:14px;
+}
+#gl5jb input,
+#gl5jb select,
+#gl5jb textarea {
+  width:100%;
+  padding:12px;
+  margin-top:6px;
+  border:1px solid #abb9c9;
+  border-radius:9px;
+  background:white;
+  color:#19304a;
+  font:16px Arial,sans-serif;
+}
+#gl5jb textarea {
+  min-height:105px;
+  resize:vertical;
+}
+#gl5jb .actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:18px;
+}
+#gl5jb button {
+  padding:12px 15px;
+  border:0;
+  border-radius:9px;
+  background:#0879d1;
+  color:white;
+  font-weight:bold;
+  font-size:15px;
+}
+#gl5jb button:disabled {
+  opacity:.5;
+}
+#gl5jb-status {
+  margin-top:15px;
+  padding:13px;
+  border-radius:9px;
+  background:#eaf3ff;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+#gl5jb .note {
+  font-size:13px;
+  color:#53677b;
+  line-height:1.5;
+}
+</style>
+
+<section id="gl5jb">
+  <h2>GigLink — Become a Worker</h2>
+
+  <p class="note">
+    Apply to offer services through GigLink.
+    You must sign in with your real Supabase
+    account before applying.
+  </p>
+
+  <label for="gl5jb-name">Full Name</label>
+  <input
+    id="gl5jb-name"
+    type="text"
+    maxlength="100"
+    autocomplete="name"
+    placeholder="Your full name">
+
+  <label for="gl5jb-city">
+    City / Service Location
+  </label>
+  <input
+    id="gl5jb-city"
+    type="text"
+    maxlength="120"
+    placeholder="Example: Warner Robins, GA">
+
+  <label for="gl5jb-service">
+    Primary Service
+  </label>
+  <select id="gl5jb-service">
+    <option value="">Select service</option>
+    <option value="Cleaning">Cleaning</option>
+    <option value="Lawn Care">Lawn Care</option>
+    <option value="Moving">Moving</option>
+    <option value="Handyman">Handyman</option>
+    <option value="Delivery">Delivery</option>
+    <option value="Transportation">
+      Transportation
+    </option>
+    <option value="Event Staffing">
+      Event Staffing
+    </option>
+    <option value="Technology">Technology</option>
+    <option value="Administrative">
+      Administrative
+    </option>
+    <option value="Other">Other</option>
+  </select>
+
+  <label for="gl5jb-experience">
+    Experience / Qualifications
+  </label>
+  <textarea
+    id="gl5jb-experience"
+    maxlength="1500"
+    placeholder="Describe the work you can perform">
+  </textarea>
+
+  <div class="actions">
+    <button type="button" id="gl5jb-submit">
+      Submit Application
+    </button>
+
+    <button type="button" id="gl5jb-check">
+      Check Application Status
+    </button>
+
+    <button type="button" id="gl5jb-profile">
+      Fill From My Profile
+    </button>
+  </div>
+
+  <div id="gl5jb-status" role="status">
+    Ready. Sign in to submit an application.
+  </div>
+
+  <p class="note">
+    Submitting an application does not
+    automatically approve you as a worker.
+    Approval and identity verification
+    will be handled separately.
+  </p>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  const URL =
+    "https://mhpqclzullhvxasllbdh.supabase.co";
+
+  // Use your existing PUBLIC publishable key.
+  // Never use a secret or service_role key.
+  const KEY =
+    "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+  const section =
+    document.getElementById("gl5jb");
+
+  const status =
+    document.getElementById("gl5jb-status");
+
+  const name =
+    document.getElementById("gl5jb-name");
+
+  const city =
+    document.getElementById("gl5jb-city");
+
+  const service =
+    document.getElementById("gl5jb-service");
+
+  const experience =
+    document.getElementById("gl5jb-experience");
+
+  const buttons = [
+    "gl5jb-submit",
+    "gl5jb-check",
+    "gl5jb-profile"
+  ].map(id => document.getElementById(id));
+
+  let busy = false;
+
+  function show(message) {
+    status.textContent = message;
+  }
+
+  function setBusy(value) {
+    busy = value;
+    buttons.forEach(button => {
+      button.disabled = value;
+    });
+  }
+
+  if (KEY.includes("PASTE_YOUR_")) {
+    show(
+      "Setup required: add your Supabase " +
+      "publishable key to Step 5J-B."
+    );
+    return;
+  }
+
+  if (
+    !window.supabase ||
+    !window.supabase.createClient
+  ) {
+    show(
+      "Supabase library unavailable. " +
+      "Check Step 5G first."
+    );
+    return;
+  }
+
+  // Uses the same Supabase project and
+  // default browser auth storage as Step 5G.
+  const client = window.supabase.createClient(
+    URL,
+    KEY,
+    {
+      auth: {
+        persistSession:true,
+        autoRefreshToken:true,
+        detectSessionInUrl:false
+      }
+    }
+  );
+
+  async function currentUser() {
+    const { data, error } =
+      await client.auth.getUser();
+
+    if (error || !data.user) {
+      throw new Error(
+        "Please use Real Login first."
+      );
+    }
+
+    return data.user;
+  }
+
+  async function findApplication(userId) {
+    const { data, error } = await client
+      .from("giglink_worker_applications")
+      .select(
+        "id,status,submitted_at,reviewed_at"
+      )
+      .eq("user_id",userId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    return data;
+  }
+
+  function formatApplication(app) {
+    if (!app) {
+      return "No worker application found.";
+    }
+
+    const label =
+      app.status === "approved"
+        ? "APPROVED"
+        : app.status === "rejected"
+        ? "REJECTED"
+        : "PENDING REVIEW";
+
+    let message =
+      "Application status: " + label +
+      "\nSubmitted: " +
+      new Date(app.submitted_at).toLocaleString();
+
+    if (app.reviewed_at) {
+      message +=
+        "\nReviewed: " +
+        new Date(app.reviewed_at).toLocaleString();
+    }
+
+    if (app.status === "pending") {
+      message +=
+        "\nYour application is awaiting review.";
+    }
+
+    if (app.status === "approved") {
+      message +=
+        "\nApproval recorded. Worker access " +
+        "will be enabled by a separate " +
+        "secure onboarding process.";
+    }
+
+    return message;
+  }
+
+  async function checkStatus() {
+    const user = await currentUser();
+
+    const app = await findApplication(user.id);
+
+    show(formatApplication(app));
+  }
+
+  async function fillFromProfile() {
+    const user = await currentUser();
+
+    const { data, error } = await client
+      .from("giglink_profiles")
+      .select("full_name,city,service,bio")
+      .eq("id",user.id)
+      .single();
+
+    if (error) throw error;
+
+    name.value = data.full_name || "";
+    city.value = data.city || "";
+    experience.value = data.bio || "";
+
+    const optionExists = Array.from(
+      service.options
+    ).some(option => {
+      return option.value === data.service;
+    });
+
+    service.value = optionExists
+      ? data.service
+      : "";
+
+    show(
+      "Profile information loaded. " +
+      "Review it before submitting."
+    );
+  }
+
+  async function submitApplication() {
+    const user = await currentUser();
+
+    const existing =
+      await findApplication(user.id);
+
+    if (existing) {
+      show(
+        "You already have an application.\n\n" +
+        formatApplication(existing)
+      );
+      return;
+    }
+
+    const fullName = name.value.trim();
+    const location = city.value.trim();
+    const category = service.value;
+    const details = experience.value.trim();
+
+    if (
+      fullName.length < 2 ||
+      fullName.length > 100
+    ) {
+      throw new Error(
+        "Enter a full name (2–100 characters)."
+      );
+    }
+
+    if (
+      location.length < 2 ||
+      location.length > 120
+    ) {
+      throw new Error(
+        "Enter your city or service location."
+      );
+    }
+
+    if (!category) {
+      throw new Error(
+        "Please select your service."
+      );
+    }
+
+    const { data:profile, error:profileError } =
+      await client
+        .from("giglink_profiles")
+        .select("role")
+        .eq("id",user.id)
+        .single();
+
+    if (profileError) throw profileError;
+
+    if (profile.role !== "customer") {
+      throw new Error(
+        "Only customer accounts can submit " +
+        "a new worker application."
+      );
+    }
+
+    const { error } = await client
+      .from("giglink_worker_applications")
+      .insert({
+        user_id:user.id,
+        full_name:fullName,
+        city:location,
+        service:category,
+        experience:details,
+        status:"pending"
+      });
+
+    if (error) {
+      if (error.code === "23505") {
+        show(
+          "An application already exists. " +
+          "Tap Check Application Status."
+        );
+        return;
+      }
+      throw error;
+    }
+
+    show(
+      "Application submitted successfully!\n" +
+      "Status: PENDING REVIEW\n" +
+      "Your application is saved in Supabase."
+    );
+  }
+
+  async function run(action) {
+    if (busy) return;
+
+    setBusy(true);
+    show("Please wait...");
+
+    try {
+      await action();
+    } catch (error) {
+      show(
+        "Error: " +
+        (error.message || "Unknown error")
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  document.getElementById(
+    "gl5jb-submit"
+  ).addEventListener("click", () => {
+    run(submitApplication);
+  });
+
+  document.getElementById(
+    "gl5jb-check"
+  ).addEventListener("click", () => {
+    run(checkStatus);
+  });
+
+  document.getElementById(
+    "gl5jb-profile"
+  ).addEventListener("click", () => {
+    run(fillFromProfile);
+  });
+
+  show(
+    "Worker application ready. " +
+    "Sign in, then apply or check status."
+  );
+})();
+</script>
+
+<!-- END GIGLINK STEP 5J-B -->
+
 </body></html>
