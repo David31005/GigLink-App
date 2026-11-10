@@ -5620,4 +5620,184 @@ render();
 
 <!-- END GIGLINK STEP 5K-C2 -->
 
+<!-- GIGLINK STEP 5K-C2: CUSTOMER GIG CANCELLATION -->
+<section id="gl5kc2" style="padding:20px;margin:20px auto;max-width:650px;background:#101827;color:white;border:1px solid #334155;border-radius:16px;font-family:Arial,sans-serif">
+  <h2>Customer Gig Management</h2>
+  <p>Manage your real Supabase gigs.</p>
+  <button id="gl5kc2-load" type="button" style="padding:12px;background:#2563eb;color:white;border:0;border-radius:8px">
+    Load My Posted Gigs
+  </button>
+  <p id="gl5kc2-status" role="status"></p>
+  <div id="gl5kc2-list"></div>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  const URL = "https://mhpqclzullhvxasllbdh.supabase.co";
+  const KEY = "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+  const root = document.getElementById("gl5kc2");
+  const status = document.getElementById("gl5kc2-status");
+  const list = document.getElementById("gl5kc2-list");
+  const loadButton = document.getElementById("gl5kc2-load");
+
+  function message(text) {
+    status.textContent = text;
+  }
+
+  if (!window.supabase || !window.supabase.createClient) {
+    message("Supabase library not found. Load the existing Supabase script first.");
+    return;
+  }
+
+  if (KEY === "PASTE_YOUR_PUBLISHABLE_KEY_HERE") {
+    message("Add your Supabase publishable key to Step 5K-C2.");
+    return;
+  }
+
+  const db = window.supabase.createClient(URL, KEY);
+
+  function make(tag, text) {
+    const element = document.createElement(tag);
+    if (text !== undefined) element.textContent = text;
+    return element;
+  }
+
+  function notifyExistingMarketplace() {
+    ["gl5kb-refreshmine", "gl5kb-refresh"].forEach(function (id) {
+      const button = document.getElementById(id);
+      if (button) button.click();
+    });
+  }
+
+  async function loadGigs() {
+    loadButton.disabled = true;
+    list.replaceChildren();
+    message("Loading your posted gigs...");
+
+    try {
+      const sessionResult = await db.auth.getUser();
+      if (sessionResult.error) throw sessionResult.error;
+
+      const user = sessionResult.data.user;
+      if (!user) {
+        message("Please sign in using your real Supabase customer account.");
+        return;
+      }
+
+      const profileResult = await db
+        .from("giglink_profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profileResult.error) throw profileResult.error;
+
+      if (profileResult.data.role !== "customer") {
+        message("Customer Gig Management is available to customer accounts only.");
+        return;
+      }
+
+      const result = await db
+        .from("giglink_jobs")
+        .select("id,title,category,location,budget,status,worker_id,created_at")
+        .eq("customer_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (result.error) throw result.error;
+
+      const jobs = result.data || [];
+
+      if (!jobs.length) {
+        message("You have not posted any real gigs yet.");
+        return;
+      }
+
+      message("Found " + jobs.length + " posted gig(s).");
+
+      jobs.forEach(function (job) {
+        const card = make("div");
+        card.style.cssText =
+          "padding:14px;margin:12px 0;background:#1e293b;border-radius:10px;border:1px solid #475569";
+
+        const title = make("h3", job.title || "Untitled Gig");
+        const detail = make(
+          "p",
+          (job.category || "General") +
+          " | " + (job.location || "Location not set") +
+          " | $" + Number(job.budget || 0).toFixed(2)
+        );
+
+        const state = make("p", "Status: " + (job.status || "Unknown"));
+
+        card.append(title, detail, state);
+
+        if (job.status === "available" && !job.worker_id) {
+          const cancel = make("button", "Cancel This Gig");
+          cancel.type = "button";
+          cancel.style.cssText =
+            "padding:11px;background:#b91c1c;color:white;border:0;border-radius:8px";
+
+          cancel.addEventListener("click", async function () {
+            if (!window.confirm(
+              "Cancel this gig? Workers will no longer be able to claim it."
+            )) return;
+
+            cancel.disabled = true;
+            cancel.textContent = "Cancelling...";
+            message("Submitting cancellation...");
+
+            try {
+              const response = await db.rpc("giglink_cancel_job", {
+                p_job_id: job.id
+              });
+
+              if (response.error) throw response.error;
+
+              if (!response.data || response.data.success !== true) {
+                throw new Error("Cancellation was not confirmed.");
+              }
+
+              message("Gig cancelled successfully.");
+              notifyExistingMarketplace();
+              await loadGigs();
+            } catch (error) {
+              message("Cancellation failed: " + error.message);
+              cancel.disabled = false;
+              cancel.textContent = "Cancel This Gig";
+            }
+          });
+
+          card.appendChild(cancel);
+        } else if (job.status === "cancelled") {
+          card.appendChild(make("p", "This gig has been cancelled."));
+        } else if (job.worker_id) {
+          card.appendChild(make("p", "This gig has been claimed and cannot be cancelled here."));
+        }
+
+        list.appendChild(card);
+      });
+
+    } catch (error) {
+      message("Error: " + error.message);
+    } finally {
+      loadButton.disabled = false;
+    }
+  }
+
+  loadButton.addEventListener("click", loadGigs);
+
+  db.auth.onAuthStateChange(function () {
+    list.replaceChildren();
+    message("Account changed. Tap Load My Posted Gigs.");
+  });
+
+  message("Ready. Sign in as a customer and load your gigs.");
+})();
+</script>
+<!-- END GIGLINK STEP 5K-C2 -->
+  
 </body></html>
