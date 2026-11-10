@@ -9053,4 +9053,106 @@ body.glk-locked {
 
 <!-- END GIGLINK STEP 5K-K -->
 
+<!-- GIGLINK MY GIGS NAVIGATION FIX -->
+<style>
+#gl5kb h3,
+#gl5kb .card h3 {
+  color: #142a4b !important;
+}
+
+#gl5kg-nav button.active {
+  background: #244b73 !important;
+  color: #58c8ff !important;
+}
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  const nav = document.getElementById("gl5kg-nav");
+
+  if (!nav) return;
+
+  function highlight(tab) {
+    nav.querySelectorAll("[data-gl5kg-go]")
+      .forEach(function (button) {
+        const selected =
+          button.dataset.gl5kgGo === tab;
+
+        button.classList.toggle("active", selected);
+
+        if (selected) {
+          button.setAttribute("aria-current", "page");
+        } else {
+          button.removeAttribute("aria-current");
+        }
+      });
+  }
+
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest(
+      "[data-gl5kg-go], [data-gl5kb-tab]"
+    );
+
+    if (!button) return;
+
+    const destination =
+      button.dataset.gl5kbTab ||
+      button.dataset.gl5kgGo;
+
+    if (destination === "mine") {
+      window.GigLinkRequestedMarketplaceTab = "mine";
+      highlight("mine");
+    }
+
+    if (destination === "browse") {
+      window.GigLinkRequestedMarketplaceTab = "browse";
+      highlight("browse");
+    }
+
+    if (destination === "post") {
+      window.GigLinkRequestedMarketplaceTab = "post";
+      highlight("browse");
+    }
+
+    if (destination === "home") {
+      highlight("home");
+    }
+
+    if (destination === "wallet") {
+      highlight("wallet");
+    }
+
+    if (destination === "more") {
+      highlight("more");
+    }
+  }, true);
+
+  const originalOpen = window.GigLinkOpenScreen;
+
+  if (typeof originalOpen === "function") {
+    window.GigLinkOpenScreen = function (page) {
+      const result = originalOpen(page);
+
+      if (page === "marketplace") {
+        highlight(
+          window.GigLinkRequestedMarketplaceTab === "mine"
+            ? "mine"
+            : "browse"
+        );
+      } else if (
+        ["home", "wallet", "more", "mine", "browse"]
+          .includes(page)
+      ) {
+        highlight(page);
+      }
+
+      return result;
+    };
+  }
+})();
+</script>
+<!-- END GIGLINK NAVIGATION FIX -->
+
 </body></html>
