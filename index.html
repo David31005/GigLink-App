@@ -6948,4 +6948,294 @@ say('Ready. Tap Load My Earnings & Receipts.');
 </script>
 <!-- END GIGLINK STEP 5K-E -->
 
+<!-- GigLink Step 5K-E: Payment Tracking -->
+<style>
+#gl5ke-payments {
+  max-width:920px;
+  margin:20px auto;
+  padding:16px;
+  background:#111a2e;
+  color:white;
+  border-radius:16px;
+  font:16px Arial,sans-serif;
+}
+#gl5ke-payments button {
+  padding:13px 18px;
+  border:0;
+  border-radius:9px;
+  background:#3778f6;
+  color:white;
+  font-weight:bold;
+}
+#gl5ke-payments .pay-card {
+  background:#202d43;
+  border:1px solid #49576e;
+  border-radius:12px;
+  margin:12px 0;
+  padding:15px;
+}
+#gl5ke-payments .pay-row {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin:10px 0;
+  flex-wrap:wrap;
+}
+#gl5ke-payments .pay-muted {
+  color:#c3cede;
+}
+</style>
+
+<section id="gl5ke-payments">
+  <h2>GigLink Payment & Payout Status</h2>
+
+  <p class="pay-muted">
+    Completed work does not mean payment has occurred.
+    Only verified payment records are marked paid.
+  </p>
+
+  <button type="button" id="gl5ke-pay-load">
+    Refresh Payment Status
+  </button>
+
+  <p id="gl5ke-pay-status" role="status">
+    Ready.
+  </p>
+
+  <div id="gl5ke-pay-list"></div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<script>
+(function(){
+'use strict';
+
+const URL =
+'https://mhpqclzullhvxasllbdh.supabase.co';
+
+const KEY =
+'sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA';
+
+const $ = id => document.getElementById(id);
+
+const btn = $('gl5ke-pay-load');
+const status = $('gl5ke-pay-status');
+const list = $('gl5ke-pay-list');
+
+const fmt = n =>
+  new Intl.NumberFormat('en-US',{
+    style:'currency',
+    currency:'USD'
+  }).format(Number(n || 0)/100);
+
+function element(tag,txt,cls){
+  const e=document.createElement(tag);
+  if(txt!==undefined)e.textContent=txt;
+  if(cls)e.className=cls;
+  return e;
+}
+
+function row(card,k,v){
+  const r=element('div',undefined,'pay-row');
+  r.append(
+    element('span',k),
+    element('strong',v)
+  );
+  card.append(r);
+}
+
+async function load(){
+
+  btn.disabled=true;
+  list.replaceChildren();
+  status.textContent='Loading payment records...';
+
+  try{
+
+    if(!window.supabase?.createClient){
+      throw Error('Supabase library not loaded.');
+    }
+
+    const db=window.supabase.createClient(URL,KEY);
+
+    const {
+      data:{user},
+      error:authErr
+    }=await db.auth.getUser();
+
+    if(authErr)throw authErr;
+
+    if(!user){
+      throw Error(
+        'Sign in to your real Supabase account first.'
+      );
+    }
+
+    const {
+      data:profile,
+      error:profileErr
+    }=await db
+      .from('giglink_profiles')
+      .select('role')
+      .eq('id',user.id)
+      .single();
+
+    if(profileErr)throw profileErr;
+
+    if(!['customer','worker'].includes(profile.role)){
+      throw Error('Customer or worker account required.');
+    }
+
+    const field=profile.role==='worker'
+      ?'worker_id'
+      :'customer_id';
+
+    const {
+      data:jobs,
+      error:jobsErr
+    }=await db
+      .from('giglink_jobs')
+      .select('id,title,budget,status')
+      .eq(field,user.id)
+      .eq('status','completed')
+      .limit(100);
+
+    if(jobsErr)throw jobsErr;
+
+    const {
+      data:records,
+      error:recordsErr
+    }=await db
+      .from('giglink_payment_tracking')
+      .select(
+        'job_id,gross_cents,fee_cents,'+
+        'worker_cents,payment_status,'+
+        'payout_status,payment_verified_at,'+
+        'payout_verified_at'
+      )
+      .eq(field,user.id)
+      .limit(100);
+
+    if(recordsErr)throw recordsErr;
+
+    const byId=new Map(
+      (records||[]).map(r=>[r.job_id,r])
+    );
+
+    let paidGross=0;
+    let verifiedFees=0;
+    let paidWorkers=0;
+
+    for(const j of jobs||[]){
+
+      const r=byId.get(j.id);
+      const card=element('div',undefined,'pay-card');
+
+      card.append(element('h3',j.title||'Gig'));
+
+      row(card,'Gig completed','Yes');
+
+      if(!r){
+
+        row(card,
+          'Customer payment',
+          'Unverified — no payment record'
+        );
+
+        row(card,
+          'Worker payout',
+          'Unverified — no payout record'
+        );
+
+      }else{
+
+        const paymentVerified=
+          r.payment_status==='paid' &&
+          !!r.payment_verified_at;
+
+        const payoutVerified=
+          r.payout_status==='paid' &&
+          !!r.payout_verified_at;
+
+        row(
+          card,
+          'Customer payment',
+          paymentVerified
+            ?'Paid — provider verified'
+            :r.payment_status+' (not confirmed paid)'
+        );
+
+        row(
+          card,
+          'Worker payout',
+          payoutVerified
+            ?'Paid — provider verified'
+            :r.payout_status+' (not confirmed paid)'
+        );
+
+        row(card,'Gig amount',fmt(r.gross_cents));
+        row(card,'GigLink fee (15%)',fmt(r.fee_cents));
+        row(card,'Worker share (85%)',fmt(r.worker_cents));
+
+        if(paymentVerified){
+          paidGross+=Number(r.gross_cents);
+          verifiedFees+=Number(r.fee_cents);
+        }
+
+        if(payoutVerified){
+          paidWorkers+=Number(r.worker_cents);
+        }
+      }
+
+      list.append(card);
+    }
+
+    const totals=element(
+      'div',undefined,'pay-card'
+    );
+
+    totals.append(element('h3','Verified Totals'));
+
+    row(
+      totals,
+      'Verified customer payments',
+      fmt(paidGross)
+    );
+
+    row(
+      totals,
+      'Fees associated with verified payments',
+      fmt(verifiedFees)
+    );
+
+    row(
+      totals,
+      'Verified worker payouts',
+      fmt(paidWorkers)
+    );
+
+    list.prepend(totals);
+
+    status.textContent=
+      'Loaded '+(jobs||[]).length+
+      ' completed gig(s). Payment status is read-only.';
+
+  }catch(e){
+
+    status.textContent='Error: '+e.message;
+
+  }finally{
+
+    btn.disabled=false;
+
+  }
+}
+
+btn.addEventListener('click',load);
+
+})();
+</script>
+<!-- END GIGLINK STEP 5K-E -->
+
 </body></html>
