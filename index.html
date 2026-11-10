@@ -8008,8 +8008,17 @@ function activeTab(page) {
   if (page === "home" || page === "dashboard")
     tab = "home";
 
-  if (page === "browse" || page === "marketplace")
-    tab = "browse";
+  
+if (page === "browse") {
+  tab = "browse";
+}
+
+if (page === "marketplace") {
+  tab = window.GigLinkRequestedMarketplaceTab === "mine"
+    ? "mine"
+    : "browse";
+}
+;
 
   if (["mine","customergigs","progress"].includes(page))
     tab = "mine";
