@@ -10272,4 +10272,72 @@ setTimeout(()=>load(),900);
 </script>
 <!-- END GIGLINK JOB CONTROLS FIX -->
 
+<!-- GIGLINK REMOVE COMPLETED GIGS TOGGLES -->
+<style>
+  #giglinkSingleCompletedToggle,
+  .completed-toggle,
+  [data-completed-toggle] {
+    display: none !important;
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  function removeCompletedToggles() {
+    const mine = document.getElementById("mineList");
+    if (!mine) return;
+
+    // Remove all completed gig toggle buttons.
+    mine.querySelectorAll(
+      "#giglinkSingleCompletedToggle, " +
+      ".completed-toggle, " +
+      "[data-completed-toggle]"
+    ).forEach(el => el.remove());
+
+    mine.querySelectorAll("button, summary").forEach(el => {
+      if (/^(?:▼|▶|▾|▸)?\s*(?:show|hide)\s+completed\s+gigs\s*\(\d+\)/i
+          .test(el.textContent.trim())) {
+        el.remove();
+      }
+    });
+
+    // Make completed job cards visible again.
+    mine.querySelectorAll(".card.job").forEach(card => {
+      card.style.display = "";
+      card.hidden = false;
+    });
+  }
+
+  const mine = document.getElementById("mineList");
+  if (!mine) return;
+
+  let busy = false;
+
+  const observer = new MutationObserver(() => {
+    if (busy) return;
+    busy = true;
+    observer.disconnect();
+
+    removeCompletedToggles();
+
+    observer.observe(mine, {
+      childList: true,
+      subtree: true
+    });
+
+    busy = false;
+  });
+
+  removeCompletedToggles();
+
+  observer.observe(mine, {
+    childList: true,
+    subtree: true
+  });
+})();
+</script>
+<!-- END COMPLETED GIGS TOGGLE REMOVAL -->
+
 </body></html>
