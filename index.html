@@ -8062,15 +8062,22 @@ feature.classList.add("glh-show");
 feature.hidden = false;
 
 // Open real available gigs when Explore is selected.
+
 if (page === "marketplace") {
-  const browseButton = feature.querySelector(
-    '[data-gl5kb-tab="browse"]'
+  const tab =
+    window.GigLinkRequestedMarketplaceTab === "post"
+      ? "post"
+      : "browse";
+
+  const tabButton = feature.querySelector(
+    '[data-gl5kb-tab="' + tab + '"]'
   );
 
-  if (browseButton) {
-    browseButton.click();
+  if (tabButton) {
+    tabButton.click();
   }
 }
+
 
     } else {
       alert("This feature was not found in your current code.");
