@@ -7238,4 +7238,310 @@ btn.addEventListener('click',load);
 </script>
 <!-- END GIGLINK STEP 5K-E -->
 
+<!-- GIGLINK STEP 5K-F SECURE PAY UI -->
+
+<style>
+#glSecurePay {
+  background:#101a2d;
+  color:#fff;
+  padding:20px;
+  margin:20px auto;
+  max-width:920px;
+  border-radius:16px;
+  font-family:Arial,sans-serif;
+}
+#glSecurePay .glPayCard {
+  background:#202e45;
+  border:1px solid #465670;
+  border-radius:12px;
+  padding:16px;
+  margin:14px 0;
+}
+#glSecurePay button {
+  display:block;
+  width:100%;
+  padding:15px;
+  background:#3478f6;
+  color:white;
+  border:0;
+  border-radius:10px;
+  font-weight:bold;
+  font-size:16px;
+}
+#glSecurePay button:disabled {
+  opacity:.5;
+}
+#glSecurePay .glPayRow {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin:12px 0;
+}
+#glSecurePay .glPayNote {
+  color:#c8d4e5;
+  line-height:1.5;
+}
+</style>
+
+<section id="glSecurePay">
+  <h2>🔒 GigLink Secure Pay</h2>
+
+  <p class="glPayNote">
+    Customers pay upfront through a secure
+    payment provider. Worker transfers become
+    eligible 24 hours after customer approval,
+    provided no dispute or refund is pending.
+  </p>
+
+  <div class="glPayCard">
+    <h3>Payment Protection</h3>
+
+    <p>1. Customer pays upfront.</p>
+    <p>2. Stripe confirms payment.</p>
+    <p>3. Worker completes the gig.</p>
+    <p>4. Customer signs and approves.</p>
+    <p>5. GigLink waits 24 hours.</p>
+    <p>6. Eligible worker transfer is requested.</p>
+  </div>
+
+  <div id="glSecurePayJobs"></div>
+
+  <button id="glSecurePayRefresh"
+          type="button">
+    REFRESH SECURE PAY
+  </button>
+
+  <p id="glSecurePayMessage"
+     role="status"></p>
+</section>
+
+<script>
+(function(){
+'use strict';
+
+const PROJECT_URL =
+  'https://mhpqclzullhvxasllbdh.supabase.co';
+
+const PUBLIC_KEY =
+  'sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA';
+
+const $ = id => document.getElementById(id);
+
+const money = cents =>
+  new Intl.NumberFormat('en-US',{
+    style:'currency',
+    currency:'USD'
+  }).format(Number(cents || 0)/100);
+
+const db = window.supabase?.createClient(
+  PROJECT_URL,
+  PUBLIC_KEY
+);
+
+const jobsBox = $('glSecurePayJobs');
+const message = $('glSecurePayMessage');
+
+function node(tag,text){
+  const n=document.createElement(tag);
+  if(text!==undefined)n.textContent=text;
+  return n;
+}
+
+async function refreshSecurePay(){
+
+  jobsBox.replaceChildren();
+
+  if(!db){
+    message.textContent =
+      'Supabase is unavailable.';
+    return;
+  }
+
+  message.textContent =
+    'Loading payment information...';
+
+  try{
+
+    const auth=await db.auth.getUser();
+
+    if(auth.error)throw auth.error;
+
+    const user=auth.data.user;
+
+    if(!user){
+      throw Error('Sign in to GigLink first.');
+    }
+
+    const result=await db
+      .from('giglink_jobs')
+      .select(
+        'id,title,budget,status,customer_id'
+      )
+      .eq('customer_id',user.id)
+      .limit(50);
+
+    if(result.error)throw result.error;
+
+    const jobs=result.data || [];
+
+    for(const job of jobs){
+
+      const card=node('div');
+      card.className='glPayCard';
+
+      card.append(node('h3',job.title));
+
+      const amount=Math.round(
+        Number(job.budget)*100
+      );
+
+      const fee=Math.round(amount*.15);
+
+      card.append(node(
+        'p','Gig amount: '+money(amount)
+      ));
+
+      card.append(node(
+        'p','GigLink fee: '+money(fee)
+      ));
+
+      card.append(node(
+        'p','Worker share: '+money(amount-fee)
+      ));
+
+      const payment=await db
+        .from('giglink_payment_tracking')
+        .select(
+          'payment_status,payout_status,'+
+          'release_after,dispute_open'
+        )
+        .eq('job_id',job.id)
+        .maybeSingle();
+
+      if(payment.error)throw payment.error;
+
+      const p=payment.data;
+
+      card.append(node(
+        'p',
+        'Payment: '+
+        (p?.payment_status || 'Not started')
+      ));
+
+      card.append(node(
+        'p',
+        'Worker payout: '+
+        (p?.payout_status || 'Not scheduled')
+      ));
+
+      if(p?.release_after){
+        card.append(node(
+          'p',
+          'Earliest transfer eligibility: '+
+          new Date(p.release_after).toLocaleString()
+        ));
+      }
+
+      const button=node(
+        'button','PAY FOR GIG'
+      );
+
+      button.type='button';
+
+      const alreadyPaid =
+        p?.payment_status === 'paid';
+
+      const eligibleJob =
+        ['claimed','in_progress'].includes(
+          job.status
+        );
+
+      button.disabled =
+        alreadyPaid || !eligibleJob;
+
+      if(alreadyPaid){
+        button.textContent='PAYMENT VERIFIED';
+      }else if(!eligibleJob){
+        button.textContent=
+          'PAYMENT NOT AVAILABLE';
+      }
+
+      button.onclick=async()=>{
+
+        button.disabled=true;
+        message.textContent=
+          'Preparing secure checkout...';
+
+        try{
+
+          const session=await db.auth.getSession();
+
+          const token=
+            session.data.session?.access_token;
+
+          if(!token){
+            throw Error('Sign in again.');
+          }
+
+          const response=await fetch(
+            PROJECT_URL+
+            '/functions/v1/giglink-checkout',
+            {
+              method:'POST',
+              headers:{
+                'Content-Type':'application/json',
+                'Authorization':'Bearer '+token,
+                'apikey':PUBLIC_KEY
+              },
+              body:JSON.stringify({
+                job_id:job.id
+              })
+            }
+          );
+
+          const data=await response.json();
+
+          if(!response.ok){
+            throw Error(
+              data.error || 'Checkout unavailable'
+            );
+          }
+
+          if(!data.url ||
+             !data.url.startsWith(
+               'https://checkout.stripe.com/'
+             )){
+            throw Error(
+              'Invalid checkout destination.'
+            );
+          }
+
+          window.location.assign(data.url);
+
+        }catch(e){
+          message.textContent=e.message;
+          button.disabled=false;
+        }
+      };
+
+      card.append(button);
+      jobsBox.append(card);
+    }
+
+    message.textContent=
+      'Loaded '+jobs.length+' customer gigs.';
+
+  }catch(e){
+    message.textContent='Error: '+e.message;
+  }
+}
+
+$('glSecurePayRefresh')
+  .addEventListener('click',refreshSecurePay);
+
+})();
+</script>
+
+<!-- END GIGLINK STEP 5K-F UI -->
+
 </body></html>
