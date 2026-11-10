@@ -8117,4 +8117,387 @@ window.GigLinkOpenScreen = openScreen;
 </script>
 <!-- END GIGLINK STEP 5K-H -->
 
+<!-- =======================================
+ GIGLINK STEP 5K-J
+ NAVY + ELECTRIC BLUE THEME
+ VISUAL UPGRADE ONLY
+======================================= -->
+
+<style id="giglink-5kj-theme">
+
+:root {
+  --gl-navy:#0c1933;
+  --gl-navy2:#142a4b;
+  --gl-navy3:#1c385d;
+  --gl-electric:#19b9f4;
+  --gl-electric2:#38caff;
+  --gl-white:#ffffff;
+  --gl-muted:#b8d2ef;
+  --gl-border:#2b4b70;
+}
+
+/* GLOBAL APP COLORS */
+
+html {
+  color-scheme:dark;
+}
+
+body {
+  background:var(--gl-navy)!important;
+  color:var(--gl-white)!important;
+}
+
+body.glh-app,
+#app,
+#gl5kg-home,
+#gl5kg-wallet,
+#gl5kg-more {
+  background:var(--gl-navy)!important;
+  color:var(--gl-white)!important;
+}
+
+/* HEADERS */
+
+header,
+#app > header,
+#glh-header {
+  background:var(--gl-navy2)!important;
+  color:white!important;
+  border-color:var(--gl-border)!important;
+}
+
+h1,h2,h3,h4,
+#glh-title,
+#gl5kg-home h3,
+#gl5kg-wallet h2,
+#gl5kg-more h2,
+#glh-tools h3 {
+  color:var(--gl-white)!important;
+}
+
+/* CARDS AND PANELS */
+
+.card,
+.panel,
+.stat,
+.controls,
+.money,
+#gl5kg-home .tile,
+#gl5kg-wallet .walletcard,
+#gl5kg-home .hint,
+#glh-grid button,
+#gl5kg-more button {
+  background:var(--gl-navy2)!important;
+  color:var(--gl-white)!important;
+  border:1px solid var(--gl-border)!important;
+  box-shadow:0 4px 18px rgba(0,0,0,.15);
+}
+
+.card h2,
+.card h3,
+.panel h2,
+.panel h3,
+#gl5kg-home .tile strong {
+  color:var(--gl-white)!important;
+}
+
+.muted,
+.small,
+#gl5kg-home .tile small,
+#gl5kg-wallet .walletcard p {
+  color:var(--gl-muted)!important;
+}
+
+/* BUTTONS */
+
+button,
+.btn,
+input[type="submit"] {
+  background:var(--gl-electric)!important;
+  color:#07182d!important;
+  border:1px solid transparent!important;
+  border-radius:12px!important;
+  font-weight:700!important;
+}
+
+button:disabled {
+  opacity:.45!important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline:3px solid var(--gl-electric2)!important;
+  outline-offset:2px;
+}
+
+/* FORM FIELDS */
+
+input,
+select,
+textarea {
+  background:#102441!important;
+  color:#fff!important;
+  border:1px solid #3b5c83!important;
+  border-radius:11px!important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color:#9bb8d8!important;
+}
+
+label {
+  color:#dcecff!important;
+}
+
+a {
+  color:var(--gl-electric2);
+}
+
+/* ORIGINAL NAVIGATION */
+
+nav {
+  background:var(--gl-navy2)!important;
+}
+
+/* HOME HERO */
+
+#gl5kg-home .hero {
+  background:linear-gradient(
+    140deg,
+    #102443,
+    #174a79
+  )!important;
+
+  border:1px solid #32668f!important;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+#gl5kg-home .hero h2,
+#gl5kg-home .hero p {
+  color:#fff!important;
+}
+
+#gl5kg-home .hero button {
+  background:var(--gl-electric)!important;
+  color:#07182d!important;
+}
+
+/* BOTTOM NAVIGATION */
+
+#gl5kg-nav {
+  background:#10213d!important;
+  border-top:1px solid var(--gl-border)!important;
+  box-shadow:0 -5px 25px rgba(0,0,0,.2);
+}
+
+#gl5kg-nav button {
+  background:transparent!important;
+  color:#a9c4e2!important;
+  border:0!important;
+}
+
+#gl5kg-nav button.active {
+  background:#174b72!important;
+  color:var(--gl-electric2)!important;
+}
+
+/* MORE MENU */
+
+#gl5kg-more {
+  background:var(--gl-navy)!important;
+}
+
+#gl5kg-more button,
+#glh-grid button {
+  color:white!important;
+  text-align:left!important;
+}
+
+/* WALLET */
+
+#gl5kg-wallet {
+  background:var(--gl-navy)!important;
+}
+
+#gl5kg-wallet .walletcard button {
+  background:var(--gl-electric)!important;
+  color:#07182d!important;
+}
+
+/* MESSAGES AND STATUS */
+
+.message,
+.chat {
+  background:#193657!important;
+  color:white!important;
+}
+
+.message.mine {
+  background:#164b72!important;
+}
+
+.warning {
+  background:#46391e!important;
+  color:#ffe6a5!important;
+}
+
+#notice {
+  color:#64e4b1!important;
+}
+
+/* JOB TRACKING */
+
+.job {
+  border-left:5px solid var(--gl-electric)!important;
+}
+
+.step {
+  background:#29415e!important;
+  color:white!important;
+}
+
+.step.current {
+  background:#12638c!important;
+  color:white!important;
+}
+
+.step.done {
+  background:#135b48!important;
+  color:#a9ffe1!important;
+}
+
+/* MODALS */
+
+.modal {
+  background:rgba(2,10,23,.85)!important;
+}
+
+.dialog {
+  background:var(--gl-navy2)!important;
+  color:white!important;
+}
+
+#signatureCanvas {
+  background:white!important;
+}
+
+/* SECURE PAY AND PAYMENT TRACKING */
+
+#glSecurePay,
+#gl5ke-payments {
+  background:var(--gl-navy)!important;
+  color:white!important;
+}
+
+#glSecurePay .glPayCard,
+#gl5ke-payments .card {
+  background:var(--gl-navy2)!important;
+  color:white!important;
+  border-color:var(--gl-border)!important;
+}
+
+/* ORIGINAL STARTUP SCREEN */
+
+#startup {
+  background:linear-gradient(
+    155deg,
+    #081529,
+    #143b65
+  )!important;
+  color:white!important;
+}
+
+/* STEP 5K-I WELCOME SCREEN */
+
+#gli-welcome {
+  background:linear-gradient(
+    160deg,
+    #081529 0%,
+    #102b4e 55%,
+    #164c79 100%
+  )!important;
+  color:white!important;
+}
+
+#gli-welcome .gli-logo {
+  background:linear-gradient(
+    135deg,
+    #19b9f4,
+    #76e0ff
+  )!important;
+  color:#07182d!important;
+  box-shadow:0 15px 40px rgba(0,0,0,.3);
+}
+
+#gli-welcome h1 {
+  color:#fff!important;
+}
+
+#gli-welcome .gli-tagline {
+  color:#b8d2ef!important;
+}
+
+#gli-enter {
+  background:var(--gl-electric)!important;
+  color:#07182d!important;
+  border-radius:16px!important;
+  box-shadow:0 10px 28px
+    rgba(25,185,244,.25)!important;
+}
+
+#gli-welcome .gli-footer {
+  color:#a9c4e2!important;
+}
+
+/* STEP 5K-H TOP BAR */
+
+#glh-header {
+  background:#10213d!important;
+}
+
+#glh-header button {
+  background:#1c456a!important;
+  color:#9be7ff!important;
+}
+
+/* MOBILE OPTIMIZATION */
+
+@media(max-width:600px) {
+
+  .card,
+  .panel {
+    border-radius:16px!important;
+  }
+
+  #gl5kg-home,
+  #gl5kg-wallet,
+  #gl5kg-more {
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+
+  button {
+    min-height:44px;
+  }
+
+}
+
+</style>
+
+<script>
+/* Step 5K-J is styling only.
+   No Supabase clients, payment records,
+   accounts, or gig data are changed. */
+
+console.log(
+  "GigLink Step 5K-J Navy & Electric Blue loaded"
+);
+</script>
+
+<!-- END GIGLINK STEP 5K-J -->
+
 </body></html>
