@@ -8500,4 +8500,505 @@ console.log(
 
 <!-- END GIGLINK STEP 5K-J -->
 
+<!-- GIGLINK STEP 5K-K: REAL LOGIN ENTRY FLOW -->
+
+<style>
+#glk-gate {
+  position:fixed;
+  inset:0;
+  z-index:2147483646;
+  background:linear-gradient(155deg,#071529,#12365e);
+  color:white;
+  font-family:Arial,sans-serif;
+  overflow-y:auto;
+  padding:24px;
+  padding-top:max(24px,env(safe-area-inset-top));
+  padding-bottom:max(24px,env(safe-area-inset-bottom));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+#glk-gate[hidden] {
+  display:none!important;
+}
+
+#glk-gate * {
+  box-sizing:border-box;
+}
+
+#glk-gate .glk-box {
+  width:100%;
+  max-width:420px;
+  text-align:center;
+}
+
+#glk-gate .glk-logo {
+  width:96px;
+  height:96px;
+  margin:0 auto 22px;
+  border-radius:26px;
+  background:#19b9f4;
+  color:#07182d;
+  font-size:55px;
+  font-weight:900;
+  display:grid;
+  place-items:center;
+  box-shadow:0 15px 35px #0005;
+}
+
+#glk-gate h1 {
+  font-size:45px!important;
+  color:white!important;
+  margin:0 0 12px!important;
+}
+
+#glk-gate h2 {
+  color:white!important;
+  font-size:27px!important;
+}
+
+#glk-gate p {
+  color:#b8d2ef;
+  line-height:1.6;
+}
+
+#glk-gate button {
+  width:100%;
+  margin:9px 0;
+  padding:17px;
+  min-height:52px;
+  border:0;
+  border-radius:14px;
+  background:#19b9f4!important;
+  color:#07182d!important;
+  font-size:16px;
+  font-weight:800;
+}
+
+#glk-gate button.secondary {
+  background:#1d3c61!important;
+  color:white!important;
+  border:1px solid #4c7399!important;
+}
+
+#glk-gate input {
+  width:100%;
+  padding:15px;
+  margin:8px 0;
+  background:#102441!important;
+  border:1px solid #4a6c92!important;
+  border-radius:12px;
+  color:white!important;
+  font-size:16px;
+}
+
+#glk-gate .glk-status {
+  min-height:24px;
+  color:#a9eaff;
+  font-size:14px;
+  white-space:pre-wrap;
+}
+
+#glk-gate .glk-footer {
+  margin-top:32px;
+  font-size:12px;
+  color:#9bb8d8;
+}
+
+#glk-gate .glk-hidden {
+  display:none!important;
+}
+
+/* Keep older startup and demo login out of the
+   real account flow. */
+body.glk-real-mode #startup,
+body.glk-real-mode #authScreen {
+  display:none!important;
+}
+
+/* The older app has a separate demo session.
+   Do not display that demo app unless it is
+   deliberately opened through its own logic. */
+body.glk-real-mode #app.hidden {
+  display:none!important;
+}
+
+body.glk-locked #gl5kg-nav,
+body.glk-locked #glh-header {
+  display:none!important;
+}
+
+/* Prevent the old dashboard from showing
+   behind the login overlay. */
+body.glk-locked {
+  overflow:hidden!important;
+}
+</style>
+
+<div id="glk-gate" role="region"
+     aria-label="GigLink account entry">
+
+  <div class="glk-box">
+
+    <div id="glk-welcome">
+      <div class="glk-logo">G</div>
+
+      <h1>GigLink</h1>
+
+      <p>
+        Post It. Claim It. Get It Done.
+      </p>
+
+      <p>
+        Your Marketplace for Every Gig.
+      </p>
+
+      <button type="button" id="glk-enter">
+        ENTER GIGLINK
+      </button>
+
+      <div class="glk-footer">
+        © 2026 Diamond Shine Service LLC
+        <p>All Rights Reserved</p>
+      </div>
+    </div>
+
+    <div id="glk-account" class="glk-hidden">
+
+      <div class="glk-logo">G</div>
+
+      <h2>Welcome to GigLink</h2>
+
+      <p>
+        Sign in or create your account
+        to continue.
+      </p>
+
+      <button type="button" id="glk-signin-choice">
+        SIGN IN
+      </button>
+
+      <button type="button"
+              id="glk-signup-choice"
+              class="secondary">
+        CREATE ACCOUNT
+      </button>
+
+      <button type="button"
+              id="glk-back-welcome"
+              class="secondary">
+        ← BACK
+      </button>
+    </div>
+
+    <form id="glk-form" class="glk-hidden">
+
+      <h2 id="glk-form-title">Sign In</h2>
+
+      <label for="glk-email">Email Address</label>
+      <input id="glk-email"
+             type="email"
+             autocomplete="email"
+             placeholder="Enter your email"
+             required>
+
+      <label for="glk-password">Password</label>
+      <input id="glk-password"
+             type="password"
+             autocomplete="current-password"
+             minlength="8"
+             placeholder="Enter your password"
+             required>
+
+      <button type="submit" id="glk-submit">
+        SIGN IN
+      </button>
+
+      <button type="button"
+              id="glk-back-account"
+              class="secondary">
+        ← BACK
+      </button>
+
+      <p id="glk-message"
+         class="glk-status"
+         role="status"></p>
+
+    </form>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+
+  const gate = $("glk-gate");
+  const welcome = $("glk-welcome");
+  const account = $("glk-account");
+  const form = $("glk-form");
+  const message = $("glk-message");
+
+  const SUPABASE_URL =
+    "https://mhpqclzullhvxasllbdh.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+  let client = null;
+  let mode = "login";
+  let authenticated = false;
+
+  document.body.classList.add(
+    "glk-real-mode",
+    "glk-locked"
+  );
+
+  function view(name) {
+    welcome.classList.toggle(
+      "glk-hidden",name !== "welcome"
+    );
+    account.classList.toggle(
+      "glk-hidden",name !== "account"
+    );
+    form.classList.toggle(
+      "glk-hidden",name !== "form"
+    );
+    message.textContent = "";
+  }
+
+  function openForm(nextMode) {
+    mode = nextMode;
+
+    $("glk-form-title").textContent =
+      mode === "signup"
+        ? "Create Account"
+        : "Sign In";
+
+    $("glk-submit").textContent =
+      mode === "signup"
+        ? "CREATE ACCOUNT"
+        : "SIGN IN";
+
+    $("glk-password").autocomplete =
+      mode === "signup"
+        ? "new-password"
+        : "current-password";
+
+    view("form");
+  }
+
+  function enterApp() {
+    authenticated = true;
+    gate.hidden = true;
+
+    document.body.classList.remove(
+      "glk-locked"
+    );
+
+    /* Hide any older welcome overlay. */
+    const oldWelcome = $("gli-welcome");
+    if (oldWelcome) {
+      oldWelcome.style.display = "none";
+    }
+
+    if (
+      typeof window.GigLinkOpenScreen ===
+      "function"
+    ) {
+      window.GigLinkOpenScreen("home");
+    }
+
+    const nav = $("gl5kg-nav");
+    if (nav) nav.hidden = false;
+
+    window.scrollTo(0,0);
+  }
+
+  function showGate() {
+    authenticated = false;
+    gate.hidden = false;
+
+    document.body.classList.add(
+      "glk-locked"
+    );
+
+    view("welcome");
+    window.scrollTo(0,0);
+  }
+
+  $("glk-enter").onclick = () => {
+    view("account");
+  };
+
+  $("glk-back-welcome").onclick = () => {
+    view("welcome");
+  };
+
+  $("glk-signin-choice").onclick = () => {
+    openForm("login");
+  };
+
+  $("glk-signup-choice").onclick = () => {
+    openForm("signup");
+  };
+
+  $("glk-back-account").onclick = () => {
+    view("account");
+  };
+
+  async function initialize() {
+    if (!window.supabase) {
+      message.textContent =
+        "Supabase is unavailable. Refresh the page.";
+      return;
+    }
+
+    client = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    const {data,error} =
+      await client.auth.getUser();
+
+    if (!error && data.user) {
+      enterApp();
+    }
+
+    client.auth.onAuthStateChange(
+      (event,session) => {
+        if (event === "SIGNED_OUT") {
+          showGate();
+        }
+
+        if (
+          event === "SIGNED_IN" &&
+          session?.user
+        ) {
+          enterApp();
+        }
+      }
+    );
+  }
+
+  form.addEventListener(
+    "submit",
+    async function(event) {
+      event.preventDefault();
+
+      if (!client) {
+        message.textContent =
+          "Supabase is not connected.";
+        return;
+      }
+
+      const email =
+        $("glk-email").value.trim();
+
+      const password =
+        $("glk-password").value;
+
+      const submit = $("glk-submit");
+      submit.disabled = true;
+
+      message.textContent = "Please wait...";
+
+      try {
+        let result;
+
+        if (mode === "signup") {
+          result = await client.auth.signUp({
+            email,
+            password,
+            options:{
+              emailRedirectTo:
+                window.location.origin +
+                window.location.pathname
+            }
+          });
+        } else {
+          result =
+            await client.auth.signInWithPassword({
+              email,
+              password
+            });
+        }
+
+        if (result.error) {
+          throw result.error;
+        }
+
+        if (result.data.session) {
+          enterApp();
+        } else {
+          message.textContent =
+            "Account request submitted. " +
+            "Check your email for a confirmation " +
+            "link, then return and sign in.";
+        }
+
+      } catch(error) {
+        message.textContent =
+          "Error: " + error.message;
+      } finally {
+        submit.disabled = false;
+      }
+    }
+  );
+
+  /* Separate account sign-out button.
+     This uses the real Supabase session. */
+  const signout = document.createElement(
+    "button"
+  );
+
+  signout.type = "button";
+  signout.id = "glk-real-signout";
+  signout.textContent = "Sign Out of GigLink";
+
+  signout.style.cssText =
+    "display:block;width:100%;" +
+    "margin:16px 0;padding:15px;" +
+    "border-radius:12px;";
+
+  signout.addEventListener(
+    "click",
+    async function() {
+      if (!client) return;
+
+      if (!confirm("Sign out of GigLink?")) {
+        return;
+      }
+
+      const {error} =
+        await client.auth.signOut();
+
+      if (error) {
+        alert(error.message);
+      } else {
+        showGate();
+      }
+    }
+  );
+
+  const more = $("gl5kg-more");
+
+  if (more) {
+    more.appendChild(signout);
+  }
+
+  showGate();
+  initialize().catch(error => {
+    console.error("GigLink auth:",error);
+  });
+
+})();
+</script>
+
+<!-- END GIGLINK STEP 5K-K -->
+
 </body></html>
