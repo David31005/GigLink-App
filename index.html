@@ -6481,4 +6481,470 @@ say(
 </script>
 <!-- END GIGLINK STEP 5K-D2 -->
   
+<!-- GIGLINK STEP 5K-E: REAL EARNINGS & RECEIPTS -->
+<style>
+#gl5ke{
+  max-width:760px;
+  margin:24px auto;
+  padding:20px;
+  border-radius:16px;
+  background:#0f172a;
+  border:1px solid #334155;
+  color:#f8fafc;
+  font:15px/1.5 system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+}
+#gl5ke *{box-sizing:border-box}
+#gl5ke h2{margin:0 0 8px}
+#gl5ke button{
+  min-height:44px;
+  padding:11px 15px;
+  margin:6px 5px 6px 0;
+  border:0;
+  border-radius:9px;
+  background:#2563eb;
+  color:white;
+  font-weight:650;
+  cursor:pointer;
+}
+#gl5ke button:disabled{opacity:.5}
+#gl5ke .gl5ke-summary{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:15px 0;
+}
+#gl5ke .gl5ke-stat,
+#gl5ke .gl5ke-receipt{
+  padding:14px;
+  background:#1e293b;
+  border:1px solid #475569;
+  border-radius:12px;
+}
+#gl5ke .gl5ke-stat strong{
+  display:block;
+  font-size:23px;
+  overflow-wrap:anywhere;
+}
+#gl5ke .gl5ke-receipt{margin:12px 0}
+#gl5ke .gl5ke-muted{
+  color:#cbd5e1;
+  font-size:13px;
+}
+#gl5ke .gl5ke-row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin:7px 0;
+}
+#gl5ke .gl5ke-row span:last-child{
+  text-align:right;
+}
+#gl5ke .gl5ke-error{color:#fecaca}
+#gl5ke .gl5ke-success{color:#bbf7d0}
+@media(max-width:380px){
+  #gl5ke .gl5ke-summary{
+    grid-template-columns:1fr;
+  }
+}
+@media print{
+  body.gl5ke-printing > *{
+    display:none!important;
+  }
+  body.gl5ke-printing > #gl5ke{
+    display:block!important;
+    position:static!important;
+    background:white!important;
+    color:black!important;
+    border:0!important;
+    max-width:none!important;
+  }
+  body.gl5ke-printing #gl5ke *{
+    color:black!important;
+  }
+  body.gl5ke-printing #gl5ke button,
+  body.gl5ke-printing #gl5ke-status,
+  body.gl5ke-printing #gl5ke-summary{
+    display:none!important;
+  }
+  body.gl5ke-printing #gl5ke .gl5ke-receipt{
+    display:none!important;
+  }
+  body.gl5ke-printing #gl5ke .gl5ke-receipt.gl5ke-selected{
+    display:block!important;
+    border:1px solid #aaa!important;
+    background:white!important;
+  }
+}
+</style>
+
+<section id="gl5ke">
+  <h2>GigLink • Earnings & Receipts</h2>
+  <p class="gl5ke-muted">
+    Real completed gigs from Supabase.
+    Worker share: 85%. GigLink fee: 15%.
+  </p>
+
+  <button id="gl5ke-load" type="button">
+    Load My Earnings & Receipts
+  </button>
+
+  <p id="gl5ke-status" role="status"
+     aria-live="polite">
+    Ready to connect.
+  </p>
+
+  <div id="gl5ke-summary"></div>
+  <div id="gl5ke-receipts"></div>
+</section>
+
+<script>
+(function(){
+'use strict';
+
+const URL =
+  'https://mhpqclzullhvxasllbdh.supabase.co';
+
+const KEY =
+  'sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA';
+
+const root =
+  document.getElementById('gl5ke');
+
+const loadBtn =
+  document.getElementById('gl5ke-load');
+
+const status =
+  document.getElementById('gl5ke-status');
+
+const summary =
+  document.getElementById('gl5ke-summary');
+
+const receipts =
+  document.getElementById('gl5ke-receipts');
+
+function node(tag,text,cls){
+  const e=document.createElement(tag);
+  if(text!==undefined)e.textContent=text;
+  if(cls)e.className=cls;
+  return e;
+}
+
+function say(text,error){
+  status.textContent=text;
+  status.className=error
+    ? 'gl5ke-error'
+    : 'gl5ke-success';
+}
+
+function money(cents){
+  return new Intl.NumberFormat('en-US',{
+    style:'currency',
+    currency:'USD'
+  }).format(cents/100);
+}
+
+function dateText(value){
+  if(!value)return 'Not recorded';
+  const d=new Date(value);
+  return Number.isNaN(d.getTime())
+    ? 'Not recorded'
+    : d.toLocaleString();
+}
+
+function amountCents(value){
+  const n=Number(value);
+
+  if(!Number.isFinite(n)||n<0){
+    throw new Error('Invalid gig budget');
+  }
+
+  return Math.round(n*100);
+}
+
+function addRow(parent,label,value){
+  const row=node('div',undefined,'gl5ke-row');
+  row.append(
+    node('span',label),
+    node('span',value)
+  );
+  parent.appendChild(row);
+}
+
+function addStat(parent,label,value){
+  const stat=node('div',undefined,'gl5ke-stat');
+  stat.append(
+    node('div',label,'gl5ke-muted'),
+    node('strong',value)
+  );
+  parent.appendChild(stat);
+}
+
+function printReceipt(card){
+  const all=receipts.querySelectorAll(
+    '.gl5ke-receipt'
+  );
+
+  all.forEach(e=>{
+    e.classList.remove('gl5ke-selected');
+  });
+
+  card.classList.add('gl5ke-selected');
+  document.body.classList.add('gl5ke-printing');
+
+  const cleanup=()=>{
+    document.body.classList.remove(
+      'gl5ke-printing'
+    );
+    card.classList.remove('gl5ke-selected');
+    window.removeEventListener(
+      'afterprint',cleanup
+    );
+  };
+
+  window.addEventListener('afterprint',cleanup);
+
+  window.print();
+
+  // The print dialog triggers afterprint on
+  // supported browsers. If it does not, a
+  // refresh restores the normal page layout.
+}
+
+function renderReceipt(job,role){
+  const total=amountCents(job.budget);
+
+  // Round the platform fee to cents.
+  const fee=Math.round(total*0.15);
+  const worker=total-fee;
+
+  const card=node(
+    'article',undefined,'gl5ke-receipt'
+  );
+
+  card.appendChild(node(
+    'h3',
+    job.title||'Completed Gig'
+  ));
+
+  card.appendChild(node(
+    'p',
+    'GigLink Completion Receipt',
+    'gl5ke-muted'
+  ));
+
+  addRow(card,'Receipt reference',job.id);
+  addRow(card,'Status','Completed');
+  addRow(
+    card,
+    'Location',
+    job.location||'Not specified'
+  );
+
+  addRow(
+    card,
+    'Completed on',
+    dateText(job.customer_approved_at)
+  );
+
+  addRow(
+    card,
+    'Clocked in',
+    dateText(job.clock_in_at)
+  );
+
+  addRow(
+    card,
+    'Clocked out',
+    dateText(job.clock_out_at)
+  );
+
+  card.appendChild(node('hr'));
+
+  addRow(card,'Gig amount',money(total));
+  addRow(card,'GigLink fee (15%)',money(fee));
+  addRow(card,'Worker share (85%)',money(worker));
+
+  card.appendChild(node(
+    'p',
+    'Accounting estimate only. '+
+    'Payment and payout status not verified.',
+    'gl5ke-muted'
+  ));
+
+  if(role==='worker'){
+    card.appendChild(node(
+      'p',
+      'Your calculated worker earnings: '+
+      money(worker),
+      'gl5ke-success'
+    ));
+  }
+
+  const print=node(
+    'button','Print / Save Receipt'
+  );
+  print.type='button';
+
+  print.addEventListener('click',()=>{
+    printReceipt(card);
+  });
+
+  card.appendChild(print);
+  receipts.appendChild(card);
+}
+
+async function load(){
+  loadBtn.disabled=true;
+  summary.replaceChildren();
+  receipts.replaceChildren();
+  say('Loading completed gigs...');
+
+  try{
+    if(
+      !window.supabase ||
+      !window.supabase.createClient
+    ){
+      throw new Error(
+        'Supabase library not loaded'
+      );
+    }
+
+    if(
+      KEY==='PASTE_YOUR_PUBLISHABLE_KEY_HERE'
+    ){
+      throw new Error(
+        'Add your Supabase publishable key'
+      );
+    }
+
+    const db=window.supabase.createClient(
+      URL,KEY
+    );
+
+    const auth=await db.auth.getUser();
+
+    if(auth.error)throw auth.error;
+
+    const user=auth.data.user;
+
+    if(!user){
+      throw new Error(
+        'Sign in with your real Supabase account'
+      );
+    }
+
+    const profile=await db
+      .from('giglink_profiles')
+      .select('role')
+      .eq('id',user.id)
+      .single();
+
+    if(profile.error)throw profile.error;
+
+    const role=profile.data.role;
+
+    if(!['customer','worker'].includes(role)){
+      throw new Error(
+        'Customer or worker account required'
+      );
+    }
+
+    const column=role==='worker'
+      ? 'worker_id'
+      : 'customer_id';
+
+    const result=await db
+      .from('giglink_jobs')
+      .select(
+        'id,title,location,budget,status,'+
+        'clock_in_at,clock_out_at,'+
+        'customer_approved_at,created_at'
+      )
+      .eq(column,user.id)
+      .eq('status','completed')
+      .order('created_at',{
+        ascending:false
+      })
+      .limit(100);
+
+    if(result.error)throw result.error;
+
+    const jobs=result.data||[];
+
+    let totalCents=0;
+    let feeCents=0;
+    let workerCents=0;
+
+    for(const job of jobs){
+      const cents=amountCents(job.budget);
+      const fee=Math.round(cents*0.15);
+
+      totalCents+=cents;
+      feeCents+=fee;
+      workerCents+=cents-fee;
+    }
+
+    const grid=node(
+      'div',undefined,'gl5ke-summary'
+    );
+
+    addStat(
+      grid,'Completed gigs',String(jobs.length)
+    );
+
+    addStat(
+      grid,'Total gig value',money(totalCents)
+    );
+
+    addStat(
+      grid,'GigLink fee (15%)',money(feeCents)
+    );
+
+    addStat(
+      grid,'Worker share (85%)',money(workerCents)
+    );
+
+    summary.appendChild(grid);
+
+    summary.appendChild(node(
+      'p',
+      role==='worker'
+        ? 'These are your calculated earnings, not confirmed payouts.'
+        : 'These totals cover your completed gigs, not all GigLink transactions.',
+      'gl5ke-muted'
+    ));
+
+    if(!jobs.length){
+      say('No completed real gigs found.');
+      return;
+    }
+
+    jobs.forEach(job=>{
+      renderReceipt(job,role);
+    });
+
+    say(
+      'Loaded '+jobs.length+
+      ' completed gig receipt(s).'
+    );
+
+  }catch(error){
+    say(
+      'Error: '+error.message,
+      true
+    );
+  }finally{
+    loadBtn.disabled=false;
+  }
+}
+
+loadBtn.addEventListener('click',load);
+
+say('Ready. Tap Load My Earnings & Receipts.');
+
+})();
+</script>
+<!-- END GIGLINK STEP 5K-E -->
+
 </body></html>
