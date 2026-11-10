@@ -2660,4 +2660,357 @@ render();
 </script>
 <!-- END GIGLINK STEP 5G -->
 
+<!-- ==================================================
+ GIGLINK STEP 5I — REAL SUPABASE PROFILE EDITOR
+ Diamond Shine Service LLC
+ Add immediately before </body>
+================================================== -->
+
+<style>
+#gl5i {
+  max-width:540px;
+  margin:18px auto;
+  padding:20px;
+  background:#ffffff;
+  color:#19304a;
+  border:2px solid #16a0a0;
+  border-radius:16px;
+  font-family:Arial,sans-serif;
+  box-sizing:border-box;
+}
+#gl5i * {
+  box-sizing:border-box;
+}
+#gl5i h2 {
+  margin:0 0 10px;
+  font-size:23px;
+}
+#gl5i label {
+  display:block;
+  font-weight:bold;
+  margin-top:13px;
+}
+#gl5i input,
+#gl5i select,
+#gl5i textarea {
+  display:block;
+  width:100%;
+  padding:12px;
+  margin-top:6px;
+  border:1px solid #aab7c6;
+  border-radius:9px;
+  background:white;
+  color:#19304a;
+  font:16px Arial,sans-serif;
+}
+#gl5i textarea {
+  min-height:90px;
+  resize:vertical;
+}
+#gl5i .gl5i-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+  margin-top:16px;
+}
+#gl5i button {
+  padding:12px 15px;
+  background:#087f83;
+  color:white;
+  border:0;
+  border-radius:9px;
+  font-weight:bold;
+  font-size:15px;
+}
+#gl5i button:disabled {
+  opacity:.5;
+}
+#gl5i-status {
+  margin-top:14px;
+  padding:12px;
+  background:#eaf5f5;
+  border-radius:9px;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+#gl5i .gl5i-note {
+  font-size:13px;
+  color:#52677c;
+  line-height:1.5;
+}
+</style>
+
+<section id="gl5i">
+  <h2>GigLink — Real Profile Editor</h2>
+
+  <p class="gl5i-note">
+    This profile is saved securely in Supabase.
+    Sign in using the Real Account Test above
+    before loading or saving your profile.
+  </p>
+
+  <label for="gl5i-name">Full Name</label>
+  <input id="gl5i-name"
+    type="text"
+    maxlength="100"
+    autocomplete="name"
+    placeholder="Enter your full name">
+
+  <label for="gl5i-city">City / Location</label>
+  <input id="gl5i-city"
+    type="text"
+    maxlength="120"
+    placeholder="Example: Warner Robins, GA">
+
+  <label for="gl5i-service">Service Category</label>
+  <select id="gl5i-service">
+    <option value="">Select a service</option>
+    <option value="Cleaning">Cleaning</option>
+    <option value="Lawn Care">Lawn Care</option>
+    <option value="Moving">Moving</option>
+    <option value="Handyman">Handyman</option>
+    <option value="Delivery">Delivery</option>
+    <option value="Transportation">
+      Transportation
+    </option>
+    <option value="Event Staffing">
+      Event Staffing
+    </option>
+    <option value="Technology">Technology</option>
+    <option value="Administrative">
+      Administrative
+    </option>
+    <option value="Other">Other</option>
+  </select>
+
+  <label for="gl5i-bio">About Me / Experience</label>
+  <textarea id="gl5i-bio"
+    maxlength="1500"
+    placeholder="Describe your experience"></textarea>
+
+  <div class="gl5i-actions">
+    <button type="button" id="gl5i-load">
+      Load Profile
+    </button>
+
+    <button type="button" id="gl5i-save">
+      Save Profile
+    </button>
+
+    <button type="button" id="gl5i-clear">
+      Clear Form
+    </button>
+  </div>
+
+  <div id="gl5i-status" role="status">
+    Ready. Sign in to load your profile.
+  </div>
+
+  <p class="gl5i-note">
+    Your account role remains customer.
+    Worker verification and role approval
+    will be added in a later step.
+  </p>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  // Use the same project as GigLink Step 5G.
+  // Replace the key below with your PUBLIC
+  // Supabase publishable key only.
+
+  const SUPABASE_URL =
+    "https://mhpqclzullhvxasllbdh.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+  const status =
+    document.getElementById("gl5i-status");
+
+  const fields = {
+    name: document.getElementById("gl5i-name"),
+    city: document.getElementById("gl5i-city"),
+    service: document.getElementById("gl5i-service"),
+    bio: document.getElementById("gl5i-bio")
+  };
+
+  function show(message) {
+    status.textContent = message;
+  }
+
+  if (
+    SUPABASE_KEY.includes("PASTE_YOUR_")
+  ) {
+    show(
+      "Setup required: paste your Supabase " +
+      "publishable key into the Step 5I code."
+    );
+    return;
+  }
+
+  if (
+    !window.supabase ||
+    !window.supabase.createClient
+  ) {
+    show(
+      "Supabase library unavailable. " +
+      "Check that Step 5G loads first."
+    );
+    return;
+  }
+
+  // Supabase JS shares browser session storage
+  // between clients using the same project.
+
+  const client = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY,
+    {
+      auth: {
+        persistSession:true,
+        autoRefreshToken:true,
+        detectSessionInUrl:false
+      }
+    }
+  );
+
+  async function currentUser() {
+    const { data, error } =
+      await client.auth.getUser();
+
+    if (error || !data.user) {
+      throw new Error(
+        "Please sign in with Real Login first."
+      );
+    }
+
+    return data.user;
+  }
+
+  async function loadProfile() {
+    show("Loading your profile...");
+
+    const user = await currentUser();
+
+    const { data, error } =
+      await client
+        .from("giglink_profiles")
+        .select(
+          "full_name,city,service,bio,role"
+        )
+        .eq("id",user.id)
+        .single();
+
+    if (error) throw error;
+
+    fields.name.value = data.full_name || "";
+    fields.city.value = data.city || "";
+    fields.bio.value = data.bio || "";
+
+    const value = data.service || "";
+    const hasOption = Array.from(
+      fields.service.options
+    ).some(option => option.value === value);
+
+    if (hasOption) {
+      fields.service.value = value;
+    } else {
+      fields.service.value = "Other";
+    }
+
+    show(
+      "Profile loaded successfully!\n" +
+      "Account role: " + data.role
+    );
+  }
+
+  async function saveProfile() {
+    show("Saving profile to Supabase...");
+
+    const user = await currentUser();
+
+    const name = fields.name.value.trim();
+    const city = fields.city.value.trim();
+    const service = fields.service.value;
+    const bio = fields.bio.value.trim();
+
+    if (!name) {
+      throw new Error(
+        "Please enter your full name."
+      );
+    }
+
+    const { data, error } =
+      await client
+        .from("giglink_profiles")
+        .update({
+          full_name:name,
+          city:city,
+          service:service,
+          bio:bio
+        })
+        .eq("id",user.id)
+        .select("id")
+        .single();
+
+    if (error) throw error;
+
+    if (!data) {
+      throw new Error(
+        "Profile not found. Check Step 5H."
+      );
+    }
+
+    show(
+      "Profile saved successfully!\n" +
+      "Your changes are stored in Supabase."
+    );
+  }
+
+  async function execute(action) {
+    try {
+      await action();
+    } catch (error) {
+      show("Error: " + error.message);
+    }
+  }
+
+  document.getElementById(
+    "gl5i-load"
+  ).addEventListener("click", () => {
+    execute(loadProfile);
+  });
+
+  document.getElementById(
+    "gl5i-save"
+  ).addEventListener("click", () => {
+    execute(saveProfile);
+  });
+
+  document.getElementById(
+    "gl5i-clear"
+  ).addEventListener("click", () => {
+    fields.name.value = "";
+    fields.city.value = "";
+    fields.service.value = "";
+    fields.bio.value = "";
+
+    show(
+      "Form cleared. Your saved Supabase " +
+      "profile has not been deleted."
+    );
+  });
+
+  show(
+    "Profile editor ready. " +
+    "Tap Load Profile after signing in."
+  );
+})();
+</script>
+
+<!-- END GIGLINK STEP 5I -->
+
 </body></html>
