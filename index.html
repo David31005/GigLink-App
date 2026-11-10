@@ -10021,4 +10021,132 @@ setTimeout(()=>load(),900);
 </script>
 <!-- END GIGLINK STEP 5K-T -->
 
+<!-- GIGLINK: SINGLE COMPLETED GIGS TOGGLE FIX -->
+<style>
+  #giglinkSingleCompletedToggle {
+    display: block;
+    width: 100%;
+    padding: 18px;
+    margin: 15px 0;
+    border: 2px solid #287cff;
+    border-radius: 14px;
+    background: #192d50;
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+    text-align: left;
+    cursor: pointer;
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  let completedVisible = false;
+
+  function fixCompletedGigs() {
+    const mine = document.getElementById("mineList");
+    if (!mine) return;
+
+    const buttons = Array.from(
+      mine.querySelectorAll("button, summary")
+    ).filter(button =>
+      /(?:show|hide)\s+completed\s+gigs/i.test(
+        button.textContent || ""
+      )
+    );
+
+    // Remove duplicate toggle buttons.
+    buttons.forEach(button => {
+      const wrapper = button.closest(
+        "[data-completed-toggle], .completed-toggle"
+      );
+
+      if (wrapper && mine.contains(wrapper)) {
+        wrapper.remove();
+      } else {
+        button.remove();
+      }
+    });
+
+    // Find completed gig cards.
+    const cards = Array.from(
+      mine.querySelectorAll(".card.job")
+    );
+
+    const completed = cards.filter(card => {
+      const paragraphs = Array.from(
+        card.querySelectorAll("p")
+      );
+
+      return paragraphs.some(p =>
+        /^Status:\s*completed$/i.test(
+          p.textContent.trim()
+        )
+      );
+    });
+
+    completed.forEach(card => {
+      card.style.display =
+        completedVisible ? "" : "none";
+    });
+
+    // Keep only one toggle.
+    const old = document.getElementById(
+      "giglinkSingleCompletedToggle"
+    );
+    if (old) old.remove();
+
+    if (!completed.length) return;
+
+    const toggle = document.createElement("button");
+    toggle.id = "giglinkSingleCompletedToggle";
+    toggle.type = "button";
+
+    toggle.textContent =
+      (completedVisible ? "▼ Hide" : "▶ Show") +
+      " Completed Gigs (" + completed.length + ")";
+
+    toggle.onclick = function () {
+      completedVisible = !completedVisible;
+      fixCompletedGigs();
+    };
+
+    mine.prepend(toggle);
+  }
+
+  // Watch for My Gigs being refreshed.
+  const mine = document.getElementById("mineList");
+
+  if (mine) {
+    let updating = false;
+
+    const observer = new MutationObserver(() => {
+      if (updating) return;
+
+      updating = true;
+      observer.disconnect();
+
+      fixCompletedGigs();
+
+      observer.observe(mine, {
+        childList: true,
+        subtree: true
+      });
+
+      updating = false;
+    });
+
+    observer.observe(mine, {
+      childList: true,
+      subtree: true
+    });
+
+    fixCompletedGigs();
+  }
+})();
+</script>
+<!-- END GIGLINK FIX -->
+
 </body></html>
