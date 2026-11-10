@@ -8133,8 +8133,14 @@ if (
 
 
 // Remember which real marketplace tab to open.
-window.GigLinkRequestedMarketplaceTab =
-  requestedPage === "post" ? "post" : "browse";
+
+ window.GigLinkRequestedMarketplaceTab =
+  requestedPage === "post"
+    ? "post"
+    : requestedPage === "mine"
+      ? "mine"
+      : "browse";
+
 
 
   openScreen(page);
