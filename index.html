@@ -5109,4 +5109,515 @@ render();
 
 <!-- END GIGLINK STEP 5K-B -->
 
+<!-- ==========================================
+ GIGLINK STEP 5K-C2
+ REAL CUSTOMER GIG CANCELLATION
+ Diamond Shine Service LLC
+ Paste immediately before final </body>
+========================================== -->
+
+<style>
+#gl5kc2 {
+  max-width:750px;
+  margin:20px auto;
+  padding:20px;
+  background:#ffffff;
+  color:#183047;
+  border:2px solid #087f83;
+  border-radius:16px;
+  font:16px Arial,sans-serif;
+  box-sizing:border-box;
+}
+#gl5kc2 * {
+  box-sizing:border-box;
+}
+#gl5kc2 h2 {
+  margin:0 0 12px;
+  font-size:24px;
+}
+#gl5kc2 h3 {
+  margin:0 0 10px;
+}
+#gl5kc2 p {
+  line-height:1.5;
+}
+#gl5kc2 button {
+  padding:12px 15px;
+  margin:5px 5px 5px 0;
+  border:0;
+  border-radius:9px;
+  background:#087f83;
+  color:white;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
+}
+#gl5kc2 button:disabled {
+  opacity:.5;
+  cursor:default;
+}
+#gl5kc2 .gl5kc2-danger {
+  background:#b42332;
+}
+#gl5kc2 .gl5kc2-card {
+  padding:16px;
+  margin:12px 0;
+  border:1px solid #cbd8e2;
+  border-radius:12px;
+  background:#f5f9fc;
+  overflow-wrap:anywhere;
+}
+#gl5kc2 .gl5kc2-status {
+  display:inline-block;
+  padding:5px 9px;
+  border-radius:7px;
+  background:#e1ebf4;
+  font-size:13px;
+  font-weight:bold;
+}
+#gl5kc2-message {
+  margin:14px 0;
+  padding:13px;
+  background:#eaf5f5;
+  border-radius:9px;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+#gl5kc2 .gl5kc2-note {
+  font-size:13px;
+  color:#53677b;
+}
+#gl5kc2 [hidden] {
+  display:none !important;
+}
+</style>
+
+<section id="gl5kc2">
+  <h2>GigLink — Customer Gig Management</h2>
+
+  <p class="gl5kc2-note">
+    Manage real gigs saved in Supabase.
+    Only your own available and unclaimed
+    gigs can be cancelled.
+  </p>
+
+  <button type="button" id="gl5kc2-load">
+    Load My Customer Gigs
+  </button>
+
+  <button type="button" id="gl5kc2-refresh">
+    Refresh My Gigs
+  </button>
+
+  <div id="gl5kc2-message" role="status">
+    Sign in using Real Login, then
+    load your customer gigs.
+  </div>
+
+  <div id="gl5kc2-summary"></div>
+
+  <div id="gl5kc2-list"></div>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  const URL =
+    "https://mhpqclzullhvxasllbdh.supabase.co";
+
+  // Replace with your PUBLIC Supabase key.
+  const KEY =
+    "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+  const el = id =>
+    document.getElementById(id);
+
+  const message = el("gl5kc2-message");
+  const summary = el("gl5kc2-summary");
+  const list = el("gl5kc2-list");
+  const loadButton = el("gl5kc2-load");
+  const refreshButton = el("gl5kc2-refresh");
+
+  let busy = false;
+  let loadedUserId = null;
+  let requestVersion = 0;
+
+  function show(text) {
+    message.textContent = text;
+  }
+
+  function clearGigs() {
+    loadedUserId = null;
+    requestVersion++;
+    summary.textContent = "";
+    list.replaceChildren();
+  }
+
+  function setBusy(value) {
+    busy = value;
+    loadButton.disabled = value;
+    refreshButton.disabled = value;
+
+    list.querySelectorAll("button")
+      .forEach(button => {
+        button.disabled = value;
+      });
+  }
+
+  function money(value) {
+    const amount = Number(value);
+
+    return Number.isFinite(amount)
+      ? amount.toLocaleString("en-US", {
+          style:"currency",
+          currency:"USD"
+        })
+      : "Not specified";
+  }
+
+  function line(parent,label,value) {
+    const p = document.createElement("p");
+
+    const strong =
+      document.createElement("strong");
+
+    strong.textContent = label + ": ";
+
+    p.append(
+      strong,
+      document.createTextNode(
+        value == null ? "" : String(value)
+      )
+    );
+
+    parent.appendChild(p);
+  }
+
+  if (KEY.includes("PASTE_YOUR_")) {
+    show(
+      "Setup required: add your " +
+      "Supabase publishable key."
+    );
+
+    loadButton.disabled = true;
+    refreshButton.disabled = true;
+    return;
+  }
+
+  if (!window.supabase?.createClient) {
+    show(
+      "Supabase library unavailable. " +
+      "Check Step 5G."
+    );
+    return;
+  }
+
+  const client = window.supabase.createClient(
+    URL,
+    KEY,
+    {
+      auth:{
+        persistSession:true,
+        autoRefreshToken:true,
+        detectSessionInUrl:false
+      }
+    }
+  );
+
+  async function getCustomer() {
+    const {data,error} =
+      await client.auth.getUser();
+
+    if (error || !data.user) {
+      throw new Error(
+        "Please sign in using Real Login."
+      );
+    }
+
+    const user = data.user;
+
+    const {data:profile,error:profileError} =
+      await client
+        .from("giglink_profiles")
+        .select("role")
+        .eq("id",user.id)
+        .single();
+
+    if (profileError) throw profileError;
+
+    if (profile.role !== "customer") {
+      throw new Error(
+        "This section is for customer " +
+        "accounts. Your current role is: " +
+        profile.role
+      );
+    }
+
+    return user;
+  }
+
+  async function loadGigs() {
+    clearGigs();
+
+    const user = await getCustomer();
+    const version = requestVersion;
+
+    const {data,error} = await client
+      .from("giglink_jobs")
+      .select(
+        "id,title,category,location," +
+        "description,budget,status," +
+        "worker_id,scheduled_date," +
+        "scheduled_time,created_at"
+      )
+      .eq("customer_id",user.id)
+      .order("created_at",{
+        ascending:false
+      })
+      .limit(100);
+
+    if (error) throw error;
+
+    const {data:latest,error:latestError} =
+      await client.auth.getUser();
+
+    if (
+      latestError ||
+      latest.user?.id !== user.id ||
+      version !== requestVersion
+    ) {
+      clearGigs();
+      throw new Error(
+        "Account changed. Load gigs again."
+      );
+    }
+
+    loadedUserId = user.id;
+
+    const gigs = data || [];
+
+    const available = gigs.filter(
+      job =>
+        job.status === "available" &&
+        job.worker_id === null
+    );
+
+    const claimed = gigs.filter(
+      job => job.status === "claimed"
+    );
+
+    const cancelled = gigs.filter(
+      job => job.status === "cancelled"
+    );
+
+    summary.textContent =
+      "Loaded: " + gigs.length +
+      " | Available: " + available.length +
+      " | Claimed: " + claimed.length +
+      " | Cancelled: " + cancelled.length;
+
+    list.replaceChildren();
+
+    if (gigs.length === 0) {
+      show(
+        "No customer gigs found.\n" +
+        "Use Post Gig in the Real " +
+        "Gig Marketplace."
+      );
+      return;
+    }
+
+    gigs.forEach(job => {
+      const card =
+        document.createElement("article");
+
+      card.className = "gl5kc2-card";
+
+      const heading =
+        document.createElement("h3");
+
+      heading.textContent =
+        job.title || "Untitled Gig";
+
+      card.appendChild(heading);
+
+      const badge =
+        document.createElement("span");
+
+      badge.className = "gl5kc2-status";
+      badge.textContent =
+        String(job.status).toUpperCase();
+
+      card.appendChild(badge);
+
+      line(card,"Category",job.category);
+      line(card,"Location",job.location);
+      line(card,"Description",job.description);
+      line(card,"Budget",money(job.budget));
+      line(
+        card,
+        "Scheduled Date",
+        job.scheduled_date || "Not scheduled"
+      );
+      line(
+        card,
+        "Scheduled Time",
+        job.scheduled_time || "Not specified"
+      );
+
+      if (
+        job.status === "available" &&
+        job.worker_id === null
+      ) {
+        const cancelButton =
+          document.createElement("button");
+
+        cancelButton.type = "button";
+        cancelButton.className =
+          "gl5kc2-danger";
+
+        cancelButton.textContent =
+          "Cancel This Gig";
+
+        cancelButton.addEventListener(
+          "click",
+          () => cancelGig(job)
+        );
+
+        card.appendChild(cancelButton);
+      } else if (job.status === "claimed") {
+        line(
+          card,
+          "Cancellation",
+          "Already claimed. Standard " +
+          "cancellation is unavailable."
+        );
+      } else if (job.status === "cancelled") {
+        line(
+          card,
+          "Cancellation",
+          "This gig has been cancelled."
+        );
+      }
+
+      list.appendChild(card);
+    });
+
+    show(
+      "Customer gigs loaded successfully.\n" +
+      "Showing up to 100 recent gigs."
+    );
+  }
+
+  async function cancelGig(job) {
+    if (busy) return;
+
+    const confirmed = window.confirm(
+      "Cancel this real gig?\n\n" +
+      job.title + "\n\n" +
+      "This will change the job status " +
+      "to CANCELLED in Supabase.\n\n" +
+      "This action cannot be undone " +
+      "from this screen."
+    );
+
+    if (!confirmed) return;
+
+    await run(async () => {
+      const user = await getCustomer();
+
+      if (
+        !loadedUserId ||
+        user.id !== loadedUserId
+      ) {
+        clearGigs();
+        throw new Error(
+          "Account changed. Load gigs again."
+        );
+      }
+
+      show("Cancelling gig securely...");
+
+      // The database function verifies
+      // job ownership and availability.
+      const {data,error} = await client.rpc(
+        "giglink_cancel_job",
+        {
+          p_job_id:job.id
+        }
+      );
+
+      if (error) throw error;
+
+      // Refresh customer gig list.
+      await loadGigs();
+
+      show(
+        "GIG CANCELLED SUCCESSFULLY!\n" +
+        "Title: " + data.title + "\n" +
+        "Status: " + data.status + "\n" +
+        "Saved in Supabase.\n\n" +
+        "Refresh Browse Gigs in the " +
+        "Real Gig Marketplace to " +
+        "see the updated listings."
+      );
+    });
+  }
+
+  async function run(action) {
+    if (busy) return;
+
+    setBusy(true);
+
+    try {
+      await action();
+    } catch (error) {
+      show(
+        "Error: " +
+        (error.message || "Unknown error")
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  loadButton.addEventListener(
+    "click",
+    () => run(loadGigs)
+  );
+
+  refreshButton.addEventListener(
+    "click",
+    () => run(loadGigs)
+  );
+
+  client.auth.onAuthStateChange(
+    (event,session) => {
+      if (
+        event === "SIGNED_OUT" ||
+        (
+          loadedUserId &&
+          session?.user?.id &&
+          session.user.id !== loadedUserId
+        )
+      ) {
+        clearGigs();
+        show(
+          "Account changed or signed out. " +
+          "Load your gigs again."
+        );
+      }
+    }
+  );
+
+  show(
+    "Customer Gig Management ready.\n" +
+    "Sign in and tap Load My Customer Gigs."
+  );
+})();
+</script>
+
+<!-- END GIGLINK STEP 5K-C2 -->
+
 </body></html>
