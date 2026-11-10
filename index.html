@@ -10149,4 +10149,127 @@ setTimeout(()=>load(),900);
 </script>
 <!-- END GIGLINK FIX -->
 
+<!-- GIGLINK COLLAPSIBLE WORKER JOB CONTROLS -->
+<style>
+  .giglink-job-controls-toggle {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    margin: 12px 0;
+    background: #192d50;
+    color: white;
+    border: 2px solid #287cff;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .giglink-job-controls-toggle:focus-visible {
+    outline: 3px solid #64b5ff;
+    outline-offset: 3px;
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  const mine = document.getElementById("mineList");
+  if (!mine) return;
+
+  const expandedJobs = new Set();
+  let updating = false;
+
+  function updateJobControls() {
+    const cards = mine.querySelectorAll(".card.job");
+
+    cards.forEach((card, index) => {
+      const heading = Array.from(
+        card.querySelectorAll("h3")
+      ).find(h =>
+        h.textContent.trim().includes(
+          "WORKER JOB CONTROLS"
+        )
+      );
+
+      if (!heading) return;
+
+      const controls = heading.closest(".controls");
+      if (!controls) return;
+
+      const jobId = (
+        controls.querySelector('input[type="file"]')?.id ||
+        card.querySelector("[data-clock]")?.dataset.clock ||
+        "job-" + index
+      );
+
+      let toggle = controls.previousElementSibling;
+
+      if (
+        !toggle ||
+        !toggle.classList.contains(
+          "giglink-job-controls-toggle"
+        )
+      ) {
+        toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className =
+          "giglink-job-controls-toggle";
+
+        controls.before(toggle);
+      }
+
+      const expanded = expandedJobs.has(jobId);
+
+      controls.style.display = expanded ? "" : "none";
+
+      toggle.textContent = expanded
+        ? "▼ Hide Job Controls"
+        : "▶ Show Job Controls";
+
+      toggle.setAttribute(
+        "aria-expanded",
+        String(expanded)
+      );
+
+      toggle.onclick = function () {
+        if (expandedJobs.has(jobId)) {
+          expandedJobs.delete(jobId);
+        } else {
+          expandedJobs.add(jobId);
+        }
+
+        updateJobControls();
+      };
+    });
+  }
+
+  const observer = new MutationObserver(() => {
+    if (updating) return;
+
+    updating = true;
+    observer.disconnect();
+
+    updateJobControls();
+
+    observer.observe(mine, {
+      childList: true,
+      subtree: true
+    });
+
+    updating = false;
+  });
+
+  updateJobControls();
+
+  observer.observe(mine, {
+    childList: true,
+    subtree: true
+  });
+})();
+</script>
+<!-- END GIGLINK JOB CONTROLS FIX -->
+
 </body></html>
