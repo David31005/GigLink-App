@@ -2165,4 +2165,274 @@ render();
 </script>
 <!-- END GIGLINK STEP 14D -->
 
+<!-- GIGLINK STEP 14E — ADVERTISING MANAGEMENT -->
+<style>
+#gl14e{margin:18px 0;padding:16px;border:2px solid #bfd3ef;border-radius:18px;background:#fff}
+#gl14e h2,#gl14e h3{color:#174c91}
+#gl14e .e-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#gl14e .e-stat,#gl14e .e-entry{background:#f5f8ff;border:1px solid #d8e4f3;border-radius:12px;padding:13px;margin:8px 0}
+#gl14e .e-stat strong{display:block;font-size:23px;color:#1659b0}
+#gl14e .e-entry{overflow-wrap:anywhere}
+#gl14e .e-note{background:#fff3d8;padding:12px;border-radius:10px}
+#gl14e label{display:block;font-weight:700;margin-top:10px}
+#gl14e input,#gl14e select,#gl14e textarea{width:100%;font-size:16px}
+#gl14e .e-small{font-size:13px;color:#60758e}
+@media(min-width:700px){#gl14e .e-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+const REQUESTS='giglink_step14b_business_requests_demo_v1';
+const REVIEWS='giglink_step14d_admin_reviews_demo_v1';
+const RECORDS='giglink_step14e_records_v1';
+const host=document.getElementById('external');
+if(!host||document.getElementById('gl14e'))return;
+
+const $=id=>document.getElementById(id);
+const read=(key,fallback)=>{
+ try{return JSON.parse(localStorage.getItem(key))??fallback}
+ catch{return fallback}
+};
+const requests=()=> {
+ const data=read(REQUESTS,[]);
+ return Array.isArray(data)?data:[];
+};
+const reviews=()=>{
+ const data=read(REVIEWS,{});
+ return data&&typeof data==='object'&&!Array.isArray(data)?data:{};
+};
+const records=()=>{
+ const data=read(RECORDS,{});
+ return data&&typeof data==='object'&&!Array.isArray(data)?data:{};
+};
+const prices={standard:9.99,featured:19.99,subscription:49.99};
+const durations={standard:30,featured:7,subscription:30};
+const money=n=>'$'+Number(n||0).toFixed(2);
+const dateOnly=ms=>{
+ const d=new Date(ms);
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+};
+const today=()=>dateOnly(Date.now());
+const addDays=(date,n)=>{
+ const d=new Date(date+'T12:00:00');
+ d.setDate(d.getDate()+n);
+ return dateOnly(d.getTime());
+};
+const daysLeft=date=>{
+ const a=new Date(today()+'T12:00:00');
+ const b=new Date(date+'T12:00:00');
+ return Math.round((b-a)/86400000);
+};
+function save(data){
+ try{localStorage.setItem(RECORDS,JSON.stringify(data));return true}
+ catch{alert('Unable to save. Browser storage may be full.');return false}
+}
+function node(tag,text){
+ const n=document.createElement(tag);
+ if(text!==undefined)n.textContent=text;
+ return n;
+}
+function field(parent,label,type,value){
+ const l=node('label',label),input=node(type==='textarea'?'textarea':'input');
+ if(type!=='textarea')input.type=type;
+ input.value=value||'';
+ parent.append(l,input);
+ return input;
+}
+function selector(parent,label,options,value){
+ const l=node('label',label),s=node('select');
+ options.forEach(([v,t])=>s.add(new Option(t,v)));
+ s.value=value;
+ parent.append(l,s);
+ return s;
+}
+function btn(parent,label,callback){
+ const b=node('button',label);
+ b.type='button';b.addEventListener('click',callback);
+ parent.appendChild(b);
+ return b;
+}
+function reviewStatus(j){
+ const s=reviews()[String(j.id)]?.status;
+ return ['approved','changes','rejected'].includes(s)?s:'pending';
+}
+function effective(j,r){
+ const s=reviewStatus(j);
+ if(s!=='approved')return 'Not approved';
+ if(r.paymentStatus!=='verified')return 'Awaiting verified payment';
+ if(!r.startDate||!r.endDate)return 'Dates not activated';
+ const left=daysLeft(r.endDate);
+ if(left<0)return 'Expired';
+ if(left<=7)return 'Renewal due soon';
+ return 'Eligible for future publication';
+}
+
+const box=node('div');
+box.id='gl14e';
+box.innerHTML=`
+<h2>💼 GigLink Step 14E</h2>
+<p>Business Advertising Management</p>
+<p class="e-note"><b>Local demo only.</b>
+Payment verification is simulated. This screen cannot
+collect money, activate subscriptions, or publish listings.
+It is not secured to the real owner.</p>
+<div id="e-stats" class="e-grid"></div>
+<h3>Manage Advertising Requests</h3>
+<label>Search business or listing</label>
+<input id="e-search" type="search" placeholder="Business, job, city...">
+<label>Filter</label>
+<select id="e-filter">
+<option value="all">All requests</option>
+<option value="unpaid">Unpaid</option>
+<option value="pending">Payment pending</option>
+<option value="verified">Demo verified</option>
+<option value="renewal">Renewal due soon</option>
+<option value="expired">Expired</option>
+</select>
+<div id="e-list"></div>
+<h3>Advertising Reports</h3>
+<button id="e-export" type="button">EXPORT STEP 14E CSV</button>
+<button id="e-refresh" type="button">REFRESH</button>
+<p class="e-small">Reports are local estimates, not financial statements.</p>
+`;
+const anchor=$('gl14d')||$('gl14b');
+if(anchor)anchor.insertAdjacentElement('afterend',box);
+else host.appendChild(box);
+
+function render(){
+ const all=requests(),saved=records();
+ const verified=all.filter(j=>saved[j.id]?.paymentStatus==='verified');
+ const renewal=all.filter(j=>effective(j,saved[j.id]||{})==='Renewal due soon');
+ const expired=all.filter(j=>effective(j,saved[j.id]||{})==='Expired');
+ const stats=[
+ ['Advertising requests',all.length],
+ ['Demo verified',verified.length],
+ ['Renewals due',renewal.length],
+ ['Expired',expired.length]
+ ];
+ $('e-stats').replaceChildren();
+ stats.forEach(([label,value])=>{
+  const c=node('div');c.className='e-stat';
+  c.append(node('strong',String(value)),node('span',label));
+  $('e-stats').append(c);
+ });
+ const q=$('e-search').value.trim().toLowerCase();
+ const filter=$('e-filter').value;
+ const visible=all.filter(j=>{
+  const r=saved[j.id]||{},status=effective(j,r);
+  const text=[j.company,j.title,j.location,j.email].join(' ').toLowerCase();
+  const matches=filter==='all'||
+   (filter==='unpaid'&&(!r.paymentStatus||r.paymentStatus==='unpaid'))||
+   (filter==='pending'&&r.paymentStatus==='pending')||
+   (filter==='verified'&&r.paymentStatus==='verified')||
+   (filter==='renewal'&&status==='Renewal due soon')||
+   (filter==='expired'&&status==='Expired');
+  return matches&&(!q||text.includes(q));
+ });
+ const list=$('e-list');list.replaceChildren();
+ if(!visible.length){list.append(node('p','No matching requests.'));return}
+ visible.forEach(j=>{
+  const id=String(j.id),r=saved[id]||{};
+  const card=node('div');card.className='e-entry';
+  card.append(
+   node('h3',j.title||'Untitled listing'),
+   node('p',(j.company||'Business')+' · '+(j.location||'')),
+   node('p','Plan: '+(j.plan||'Unknown')+' · '+money(prices[j.plan]||0)),
+   node('p','Owner review: '+reviewStatus(j)),
+   node('p','Advertising status: '+effective(j,r))
+  );
+  const payment=selector(card,'Demo payment status',[
+   ['unpaid','Unpaid'],
+   ['pending','Payment pending'],
+   ['verified','Demo verified — not real payment']
+  ],r.paymentStatus||'unpaid');
+  const start=field(card,'Proposed activation date','date',r.startDate||'');
+  const end=field(card,'Proposed expiration date','date',r.endDate||'');
+  btn(card,'SUGGEST PLAN DATES',()=>{
+   start.value=today();
+   end.value=addDays(start.value,durations[j.plan]||30);
+  });
+  const notes=field(card,'Owner notes','textarea',r.notes||'');
+  notes.maxLength=1000;
+  const history=node('div');
+  history.className='e-small';
+  const events=Array.isArray(r.history)?r.history:[];
+  history.append(node('h4','Activity History'));
+  events.slice(-5).reverse().forEach(event=>{
+   history.append(node('p',new Date(event.at).toLocaleString()+
+    ' — '+event.action));
+  });
+  btn(card,'SAVE ADVERTISING RECORD',()=>{
+   if(start.value&&end.value&&end.value<start.value){
+    alert('Expiration must be on or after activation.');return;
+   }
+   if(payment.value==='verified'&&
+      !confirm('Mark as DEMO verified? This is NOT proof of payment.'))return;
+   const next=records(),previous=next[id]||{};
+   const action='Payment: '+payment.value+
+     '; dates: '+(start.value||'unset')+' to '+(end.value||'unset');
+   next[id]={
+    paymentStatus:payment.value,
+    startDate:start.value,
+    endDate:end.value,
+    notes:notes.value.trim(),
+    history:[...(Array.isArray(previous.history)?previous.history:[]),
+      {at:Date.now(),action}].slice(-50)
+   };
+   if(save(next)){render();alert('Demo advertising record saved.')}
+  });
+  card.append(history);
+  list.append(card);
+ });
+}
+function csvCell(v){
+ let s=String(v??'');
+ if(/^\s*[=+\-@\t\r]/.test(s))s="'"+s;
+ return '"'+s.replace(/"/g,'""')+'"';
+}
+function exportCSV(){
+ const saved=records(),review=reviews();
+ const rows=[[
+  'Business','Job','Plan','Proposed Price',
+  'Review','Demo Payment','Start','Expiration',
+  'Advertising Status','Notes'
+ ]];
+ requests().forEach(j=>{
+  const r=saved[j.id]||{};
+  rows.push([
+   j.company,j.title,j.plan,prices[j.plan]||0,
+   review[j.id]?.status||'pending',
+   r.paymentStatus||'unpaid',
+   r.startDate||'',r.endDate||'',
+   effective(j,r),r.notes||''
+  ]);
+ });
+ const blob=new Blob([rows.map(row=>row.map(csvCell).join(',')).join('\r\n')],
+  {type:'text/csv;charset=utf-8'});
+ const url=URL.createObjectURL(blob),a=node('a');
+ a.href=url;a.download='GigLink_Step14E_Demo.csv';
+ document.body.append(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+$('e-search').addEventListener('input',render);
+$('e-filter').addEventListener('change',render);
+$('e-refresh').addEventListener('click',render);
+$('e-export').addEventListener('click',exportCSV);
+window.addEventListener('storage',e=>{
+ if([REQUESTS,REVIEWS,RECORDS].includes(e.key))render();
+});
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden)render();
+});
+const form=$('gl14b-form');
+if(form)form.addEventListener('submit',()=>setTimeout(render,0));
+const admin=$('adm-list');
+if(admin)admin.addEventListener('click',()=>setTimeout(render,0));
+render();
+})();
+</script>
+<!-- END GIGLINK STEP 14E -->
+
 </body></html>
