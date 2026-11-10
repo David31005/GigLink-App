@@ -8064,10 +8064,14 @@ feature.hidden = false;
 // Open real available gigs when Explore is selected.
 
 if (page === "marketplace") {
-  const tab =
-    window.GigLinkRequestedMarketplaceTab === "post"
-      ? "post"
+  
+const tab =
+  window.GigLinkRequestedMarketplaceTab === "post"
+    ? "post"
+    : window.GigLinkRequestedMarketplaceTab === "mine"
+      ? "mine"
       : "browse";
+
 
   const tabButton = feature.querySelector(
     '[data-gl5kb-tab="' + tab + '"]'
