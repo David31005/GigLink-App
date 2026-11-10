@@ -4319,4 +4319,794 @@ render();
 
 <!-- END GIGLINK STEP 5J-E -->
 
+<!-- =========================================
+ GIGLINK STEP 5K-B
+ REAL SUPABASE GIG MARKETPLACE
+ Diamond Shine Service LLC
+ Add immediately before final </body>
+========================================= -->
+
+<style>
+#gl5kb {
+  max-width:750px;
+  margin:20px auto;
+  padding:20px;
+  background:#fff;
+  color:#17324a;
+  border:2px solid #087f83;
+  border-radius:16px;
+  font:16px Arial,sans-serif;
+  box-sizing:border-box;
+}
+#gl5kb * { box-sizing:border-box; }
+#gl5kb h2 { margin:0 0 12px; }
+#gl5kb h3 { margin:14px 0 8px; }
+#gl5kb label {
+  display:block;
+  margin-top:12px;
+  font-weight:bold;
+}
+#gl5kb input,
+#gl5kb select,
+#gl5kb textarea {
+  display:block;
+  width:100%;
+  margin-top:5px;
+  padding:12px;
+  border:1px solid #b9c8d2;
+  border-radius:9px;
+  background:#fff;
+  color:#17324a;
+  font:16px Arial,sans-serif;
+}
+#gl5kb textarea {
+  min-height:90px;
+  resize:vertical;
+}
+#gl5kb button {
+  padding:12px 14px;
+  margin:5px 5px 5px 0;
+  border:0;
+  border-radius:9px;
+  background:#087f83;
+  color:white;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
+}
+#gl5kb button:disabled {
+  opacity:.5;
+  cursor:default;
+}
+#gl5kb .gl5kb-tabs {
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin:12px 0;
+}
+#gl5kb .gl5kb-tabs button {
+  background:#174d76;
+}
+#gl5kb .gl5kb-card {
+  margin:12px 0;
+  padding:15px;
+  background:#f5f9fc;
+  border:1px solid #cbd8e2;
+  border-radius:12px;
+  overflow-wrap:anywhere;
+}
+#gl5kb .gl5kb-card p {
+  margin:7px 0;
+  line-height:1.4;
+}
+#gl5kb-status {
+  margin:14px 0;
+  padding:13px;
+  border-radius:9px;
+  background:#eaf5f5;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+#gl5kb .gl5kb-note {
+  font-size:13px;
+  color:#53677b;
+  line-height:1.5;
+}
+#gl5kb [hidden] {
+  display:none !important;
+}
+</style>
+
+<section id="gl5kb">
+  <h2>GigLink — Real Gig Marketplace</h2>
+
+  <p class="gl5kb-note">
+    Connected to Supabase.
+    Real gig records are saved online.
+    Payments and payouts are not enabled.
+  </p>
+
+  <button type="button" id="gl5kb-verify">
+    Connect My Account
+  </button>
+
+  <div id="gl5kb-status" role="status">
+    Sign in using Real Login, then
+    tap Connect My Account.
+  </div>
+
+  <div class="gl5kb-tabs">
+    <button type="button" data-gl5kb-tab="post">
+      Post Gig
+    </button>
+    <button type="button" data-gl5kb-tab="browse">
+      Browse Gigs
+    </button>
+    <button type="button" data-gl5kb-tab="mine">
+      My Gigs
+    </button>
+  </div>
+
+  <div id="gl5kb-post" hidden>
+    <h3>Post a Real Gig</h3>
+
+    <p class="gl5kb-note">
+      For customer accounts only.
+    </p>
+
+    <label for="gl5kb-title">Gig Title</label>
+    <input id="gl5kb-title"
+      maxlength="120"
+      placeholder="Example: House Cleaning">
+
+    <label for="gl5kb-category">Category</label>
+    <select id="gl5kb-category">
+      <option value="">Select category</option>
+      <option>Cleaning</option>
+      <option>Lawn Care</option>
+      <option>Moving</option>
+      <option>Handyman</option>
+      <option>Delivery</option>
+      <option>Transportation</option>
+      <option>Event Staffing</option>
+      <option>Technology</option>
+      <option>Administrative</option>
+      <option>Other</option>
+    </select>
+
+    <label for="gl5kb-location">
+      Gig Location
+    </label>
+    <input id="gl5kb-location"
+      maxlength="180"
+      placeholder="City and state">
+
+    <label for="gl5kb-description">
+      Description
+    </label>
+    <textarea id="gl5kb-description"
+      maxlength="2000"
+      placeholder="Describe the work needed"
+    ></textarea>
+
+    <label for="gl5kb-budget">
+      Budget (USD)
+    </label>
+    <input id="gl5kb-budget"
+      type="number"
+      min="0.01"
+      max="9999999.99"
+      step="0.01"
+      placeholder="150.00">
+
+    <label for="gl5kb-date">
+      Scheduled Date (optional)
+    </label>
+    <input id="gl5kb-date" type="date">
+
+    <label for="gl5kb-time">
+      Scheduled Time (optional)
+    </label>
+    <input id="gl5kb-time" type="time">
+
+    <button type="button" id="gl5kb-submit">
+      Publish Real Gig
+    </button>
+  </div>
+
+  <div id="gl5kb-browse" hidden>
+    <h3>Available Real Gigs</h3>
+    <button type="button" id="gl5kb-refresh">
+      Refresh Available Gigs
+    </button>
+    <div id="gl5kb-available"></div>
+  </div>
+
+  <div id="gl5kb-mine" hidden>
+    <h3>My Real Gigs</h3>
+    <button type="button" id="gl5kb-refreshmine">
+      Refresh My Gigs
+    </button>
+    <div id="gl5kb-mylist"></div>
+  </div>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  const URL =
+    "https://mhpqclzullhvxasllbdh.supabase.co";
+
+  // Use the same PUBLIC key as Step 5G.
+  const KEY =
+    "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+  const el = id => document.getElementById(id);
+
+  const status = el("gl5kb-status");
+  const available = el("gl5kb-available");
+  const mylist = el("gl5kb-mylist");
+
+  let busy = false;
+  let currentUserId = null;
+  let currentRole = null;
+  let approvedWorker = false;
+  let activeTab = "browse";
+  let generation = 0;
+
+  function show(message) {
+    status.textContent = message;
+  }
+
+  function clearData() {
+    currentUserId = null;
+    currentRole = null;
+    approvedWorker = false;
+    generation++;
+    available.replaceChildren();
+    mylist.replaceChildren();
+  }
+
+  function setBusy(value) {
+    busy = value;
+    el("gl5kb-submit").disabled = value;
+    el("gl5kb-refresh").disabled = value;
+    el("gl5kb-refreshmine").disabled = value;
+    el("gl5kb-verify").disabled = value;
+    document.querySelectorAll(
+      "#gl5kb button[data-gl5kb-tab]"
+    ).forEach(b => b.disabled = value);
+  }
+
+  function field(id) {
+    return el(id).value.trim();
+  }
+
+  function money(value) {
+    const n = Number(value);
+    return Number.isFinite(n)
+      ? n.toLocaleString("en-US", {
+          style:"currency",
+          currency:"USD"
+        })
+      : "Not specified";
+  }
+
+  function dateText(value) {
+    if (!value) return "Not scheduled";
+    return String(value);
+  }
+
+  function line(parent, label, value) {
+    const p = document.createElement("p");
+    const strong = document.createElement("strong");
+    strong.textContent = label + ": ";
+    p.append(
+      strong,
+      document.createTextNode(
+        value == null ? "" : String(value)
+      )
+    );
+    parent.appendChild(p);
+  }
+
+  function emptyMessage(target, message) {
+    target.replaceChildren();
+    const p = document.createElement("p");
+    p.textContent = message;
+    target.appendChild(p);
+  }
+
+  if (KEY.includes("PASTE_YOUR_")) {
+    show("Add your Supabase publishable key.");
+    return;
+  }
+
+  if (!window.supabase?.createClient) {
+    show(
+      "Supabase library unavailable. " +
+      "Check Step 5G."
+    );
+    return;
+  }
+
+  const client = window.supabase.createClient(
+    URL,
+    KEY,
+    {
+      auth:{
+        persistSession:true,
+        autoRefreshToken:true,
+        detectSessionInUrl:false
+      }
+    }
+  );
+
+  async function getSignedInUser() {
+    const {data,error} =
+      await client.auth.getUser();
+
+    if (error || !data.user) {
+      throw new Error(
+        "Please sign in using Real Login."
+      );
+    }
+
+    return data.user;
+  }
+
+  async function verifyAccount() {
+    const user = await getSignedInUser();
+
+    const {data:profile,error} =
+      await client
+        .from("giglink_profiles")
+        .select("role,full_name")
+        .eq("id",user.id)
+        .single();
+
+    if (error) throw error;
+
+    let isApproved = false;
+
+    if (profile.role === "worker") {
+      const {data:application,error:appError} =
+        await client
+          .from("giglink_worker_applications")
+          .select("status")
+          .eq("user_id",user.id)
+          .maybeSingle();
+
+      if (appError) throw appError;
+
+      isApproved =
+        application?.status === "approved";
+    }
+
+    currentUserId = user.id;
+    currentRole = profile.role;
+    approvedWorker =
+      profile.role === "worker" && isApproved;
+
+    show(
+      "Account connected!\n" +
+      "Role: " + currentRole + "\n" +
+      "Approved worker: " +
+      (approvedWorker ? "YES" : "NO")
+    );
+
+    return user;
+  }
+
+  async function requireAccount() {
+    const user = await getSignedInUser();
+
+    if (
+      !currentUserId ||
+      user.id !== currentUserId
+    ) {
+      clearData();
+      await verifyAccount();
+    }
+
+    return user;
+  }
+
+  async function requireCustomer() {
+    const user = await requireAccount();
+
+    // Recheck role before posting.
+    const {data,error} = await client
+      .from("giglink_profiles")
+      .select("role")
+      .eq("id",user.id)
+      .single();
+
+    if (error) throw error;
+
+    if (data.role !== "customer") {
+      throw new Error(
+        "Only customer accounts can post " +
+        "through this form."
+      );
+    }
+
+    return user;
+  }
+
+  async function requireWorker() {
+    const user = await requireAccount();
+
+    // UI precheck. Database function
+    // performs the actual authorization.
+    const {data:profile,error} =
+      await client
+        .from("giglink_profiles")
+        .select("role")
+        .eq("id",user.id)
+        .single();
+
+    if (error) throw error;
+
+    const {data:application,error:appError} =
+      await client
+        .from("giglink_worker_applications")
+        .select("status")
+        .eq("user_id",user.id)
+        .maybeSingle();
+
+    if (appError) throw appError;
+
+    if (
+      profile.role !== "worker" ||
+      application?.status !== "approved"
+    ) {
+      throw new Error(
+        "Only approved workers can claim gigs."
+      );
+    }
+
+    return user;
+  }
+
+  function showTab(tab) {
+    activeTab = tab;
+
+    ["post","browse","mine"].forEach(name => {
+      el("gl5kb-" + name).hidden =
+        name !== tab;
+    });
+  }
+
+  async function postGig() {
+    const user = await requireCustomer();
+
+    const title = field("gl5kb-title");
+    const category = field("gl5kb-category");
+    const location = field("gl5kb-location");
+    const description =
+      field("gl5kb-description");
+
+    const rawBudget = field("gl5kb-budget");
+    const budget = Number(rawBudget);
+
+    const date = field("gl5kb-date");
+    const time = field("gl5kb-time");
+
+    if (title.length < 3 || title.length > 120) {
+      throw new Error("Enter a valid gig title.");
+    }
+
+    if (!category) {
+      throw new Error("Select a category.");
+    }
+
+    if (!location || location.length > 180) {
+      throw new Error("Enter a valid location.");
+    }
+
+    if (
+      description.length < 10 ||
+      description.length > 2000
+    ) {
+      throw new Error(
+        "Description must be 10–2000 characters."
+      );
+    }
+
+    if (
+      rawBudget === "" ||
+      !Number.isFinite(budget) ||
+      budget <= 0 ||
+      budget > 9999999.99 ||
+      !Number.isInteger(
+        Math.round(budget * 10000) / 100
+      )
+    ) {
+      throw new Error(
+        "Enter a valid budget in dollars and cents."
+      );
+    }
+
+    const job = {
+      customer_id:user.id,
+      worker_id:null,
+      title,
+      category,
+      location,
+      description,
+      budget,
+      scheduled_date:date || null,
+      scheduled_time:time || null,
+      status:"available"
+    };
+
+    const {data,error} = await client
+      .from("giglink_jobs")
+      .insert(job)
+      .select("id,title,status")
+      .single();
+
+    if (error) throw error;
+
+    show(
+      "Real gig published successfully!\n" +
+      "Title: " + data.title + "\n" +
+      "Status: " + data.status + "\n" +
+      "Saved to Supabase."
+    );
+
+    [
+      "gl5kb-title",
+      "gl5kb-location",
+      "gl5kb-description",
+      "gl5kb-budget",
+      "gl5kb-date",
+      "gl5kb-time"
+    ].forEach(id => {
+      el(id).value = "";
+    });
+
+    el("gl5kb-category").value = "";
+  }
+
+  function renderJob(job, target, canClaim) {
+    const card = document.createElement("article");
+    card.className = "gl5kb-card";
+
+    const h = document.createElement("h3");
+    h.textContent = job.title || "Untitled gig";
+    card.appendChild(h);
+
+    line(card,"Category",job.category);
+    line(card,"Location",job.location);
+    line(card,"Description",job.description);
+    line(card,"Budget",money(job.budget));
+    line(card,"Status",job.status);
+    line(card,"Date",dateText(job.scheduled_date));
+    line(
+      card,
+      "Time",
+      job.scheduled_time || "Not specified"
+    );
+
+    if (canClaim) {
+      const button =
+        document.createElement("button");
+
+      button.type = "button";
+      button.textContent = "Claim This Gig";
+
+      button.addEventListener("click", () => {
+        claimGig(job.id,job.title);
+      });
+
+      card.appendChild(button);
+    }
+
+    target.appendChild(card);
+  }
+
+  async function browseGigs() {
+    await requireAccount();
+
+    const requestGeneration = generation;
+
+    const {data,error} = await client
+      .from("giglink_jobs")
+      .select(
+        "id,title,category,location," +
+        "description,budget,status," +
+        "scheduled_date,scheduled_time"
+      )
+      .eq("status","available")
+      .is("worker_id",null)
+      .order("created_at",{ascending:false})
+      .limit(100);
+
+    if (error) throw error;
+    if (requestGeneration !== generation) return;
+
+    available.replaceChildren();
+
+    if (!data?.length) {
+      emptyMessage(
+        available,
+        "No available real gigs found."
+      );
+    } else {
+      data.forEach(job => {
+        renderJob(job,available,approvedWorker);
+      });
+    }
+
+    show(
+      "Available gigs loaded: " +
+      (data?.length || 0) +
+      "\nShowing up to 100 recent gigs."
+    );
+  }
+
+  async function myGigs() {
+    const user = await requireAccount();
+    const requestGeneration = generation;
+
+    const {data,error} = await client
+      .from("giglink_jobs")
+      .select(
+        "id,title,category,location," +
+        "description,budget,status," +
+        "scheduled_date,scheduled_time"
+      )
+      .eq(
+        currentRole === "worker"
+          ? "worker_id"
+          : "customer_id",
+        user.id
+      )
+      .order("created_at",{ascending:false})
+      .limit(100);
+
+    if (error) throw error;
+    if (requestGeneration !== generation) return;
+
+    mylist.replaceChildren();
+
+    if (!data?.length) {
+      emptyMessage(
+        mylist,
+        "No real gigs associated with this account."
+      );
+    } else {
+      data.forEach(job => {
+        renderJob(job,mylist,false);
+      });
+    }
+
+    show(
+      "My real gigs loaded: " +
+      (data?.length || 0)
+    );
+  }
+
+  async function claimGig(jobId,title) {
+    if (busy) return;
+
+    const confirmed = window.confirm(
+      "Claim this real gig?\n\n" +
+      title + "\n\n" +
+      "This will assign the job to your " +
+      "approved worker account."
+    );
+
+    if (!confirmed) return;
+
+    await run(async () => {
+      await requireWorker();
+
+      show("Claiming gig securely...");
+
+      const {data,error} = await client.rpc(
+        "giglink_claim_job",
+        {p_job_id:jobId}
+      );
+
+      if (error) throw error;
+
+      await browseGigs();
+
+      show(
+        "GIG CLAIMED SUCCESSFULLY!\n" +
+        "Title: " + data.title + "\n" +
+        "Status: " + data.status + "\n" +
+        "Open My Gigs to see your job."
+      );
+    });
+  }
+
+  async function run(action) {
+    if (busy) return;
+
+    setBusy(true);
+
+    try {
+      await action();
+    } catch (error) {
+      show(
+        "Error: " +
+        (error.message || "Unknown error")
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  el("gl5kb-verify").addEventListener(
+    "click",
+    () => run(verifyAccount)
+  );
+
+  el("gl5kb-submit").addEventListener(
+    "click",
+    () => run(postGig)
+  );
+
+  el("gl5kb-refresh").addEventListener(
+    "click",
+    () => run(browseGigs)
+  );
+
+  el("gl5kb-refreshmine").addEventListener(
+    "click",
+    () => run(myGigs)
+  );
+
+  document.querySelectorAll(
+    "#gl5kb button[data-gl5kb-tab]"
+  ).forEach(button => {
+    button.addEventListener("click", () => {
+      const tab =
+        button.getAttribute("data-gl5kb-tab");
+
+      showTab(tab);
+
+      if (tab === "browse") {
+        run(browseGigs);
+      } else if (tab === "mine") {
+        run(myGigs);
+      }
+    });
+  });
+
+  client.auth.onAuthStateChange(
+    (event,session) => {
+      if (
+        event === "SIGNED_OUT" ||
+        (
+          currentUserId &&
+          session?.user?.id &&
+          session.user.id !== currentUserId
+        )
+      ) {
+        clearData();
+        show(
+          "Account changed or signed out. " +
+          "Connect your account again."
+        );
+      }
+    }
+  );
+
+  showTab("browse");
+
+  show(
+    "Real Gig Marketplace ready.\n" +
+    "Sign in, then tap Connect My Account."
+  );
+})();
+</script>
+
+<!-- END GIGLINK STEP 5K-B -->
+
 </body></html>
