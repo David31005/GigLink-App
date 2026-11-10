@@ -9693,4 +9693,168 @@ setTimeout(()=>load(),900);
 </script>
 <!-- END GIGLINK STEP 5K-S -->
 
+<!-- GIGLINK STEP 5K-T: COLLAPSIBLE COMPLETED GIGS -->
+<style>
+.gl5kt-completed-toggle{
+  display:block;
+  width:100%;
+  background:#112b50!important;
+  color:#ffffff!important;
+  border:1px solid #278bff!important;
+  border-radius:12px!important;
+  padding:15px!important;
+  margin:12px 0!important;
+  text-align:left!important;
+  font-weight:700!important;
+}
+.gl5kt-completed-toggle:focus-visible{
+  outline:3px solid #55c9ff;
+}
+.gl5kt-completed-list{
+  display:grid;
+  gap:12px;
+}
+.gl5kt-completed-list[hidden]{
+  display:none!important;
+}
+</style>
+
+<script>
+(function(){
+  "use strict";
+
+  const MY_GIGS_ID="gl5kb-mine";
+  const root=document.getElementById(MY_GIGS_ID);
+
+  if(!root)return;
+
+  let expanded=false;
+  const groups=new Map();
+
+  function isCompleted(card){
+    const status=card.querySelector(
+      "[data-status],.status,.gig-status,.job-status"
+    );
+
+    if(status){
+      const value=(
+        status.dataset.status||status.textContent||""
+      ).trim().toLowerCase();
+
+      if(/\bcompleted\b/.test(value))return true;
+    }
+
+    const text=card.textContent||"";
+
+    return /(?:status\s*:\s*completed|status\s+completed|✓\s*completed|✅\s*completed)/i.test(text);
+  }
+
+  function getCards(container){
+    return [...container.children].filter(child=>{
+      if(child.classList.contains("gl5kt-completed-toggle"))return false;
+      if(child.classList.contains("gl5kt-completed-list"))return false;
+
+      return child.matches(
+        ".gl5kg-card,.gl5kb-card,.gig-card,.job-card,.card"
+      );
+    });
+  }
+
+  function setup(container){
+    if(!container || groups.has(container))return;
+
+    const toggle=document.createElement("button");
+    toggle.type="button";
+    toggle.className="gl5kt-completed-toggle";
+    toggle.setAttribute("aria-expanded","false");
+
+    const list=document.createElement("div");
+    list.className="gl5kt-completed-list";
+    list.hidden=true;
+
+    toggle.addEventListener("click",()=>{
+      expanded=!expanded;
+      update();
+    });
+
+    container.append(toggle,list);
+    groups.set(container,{toggle,list});
+  }
+
+  function update(){
+    let total=0;
+
+    for(const [container,group] of groups){
+      const cards=getCards(container);
+
+      cards.forEach(card=>{
+        if(isCompleted(card)){
+          group.list.append(card);
+        }
+      });
+
+      const completed=[...group.list.children];
+      total+=completed.length;
+
+      group.toggle.hidden=completed.length===0;
+      group.list.hidden=!expanded;
+
+      group.toggle.setAttribute(
+        "aria-expanded",String(expanded)
+      );
+
+      group.toggle.textContent=expanded
+        ? "▼ Hide Completed Gigs ("+completed.length+")"
+        : "▶ Show Completed Gigs ("+completed.length+")";
+    }
+
+    return total;
+  }
+
+  function initialize(){
+    const containers=[
+      root.querySelector("#gl5kg-mine-list"),
+      root.querySelector("#gl5kb-mine-list"),
+      root.querySelector("[data-my-gigs-list]")
+    ].filter(Boolean);
+
+    if(!containers.length){
+      const candidates=[...root.querySelectorAll("div")]
+        .filter(node=>getCards(node).length>0);
+
+      if(candidates.length){
+        containers.push(candidates[candidates.length-1]);
+      }
+    }
+
+    containers.forEach(setup);
+    update();
+  }
+
+  let timer;
+
+  const observer=new MutationObserver(()=>{
+    clearTimeout(timer);
+    timer=setTimeout(()=>{
+      observer.disconnect();
+      initialize();
+      observer.observe(root,{
+        childList:true,
+        subtree:true
+      });
+    },200);
+  });
+
+  initialize();
+
+  observer.observe(root,{
+    childList:true,
+    subtree:true
+  });
+
+  console.log("GigLink completed gig minimizer loaded.");
+})();
+</script>
+<!-- END GIGLINK STEP 5K-T -->
+
 </body></html>
