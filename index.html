@@ -7761,4 +7761,360 @@ body{background:var(--glbg)!important;color:var(--glink)!important}
 </script>
 <!-- END GIGLINK STEP 5K-G -->
 
+<!-- GIGLINK STEP 5K-H: MOBILE APP SCREENS -->
+<style>
+body.glh-app {
+  background:#f5f8ff!important;
+  overflow-x:hidden;
+}
+body.glh-app #startup,
+body.glh-app #authScreen,
+body.glh-app #app,
+body.glh-app #gl5kg-home,
+body.glh-app #gl5kg-wallet,
+body.glh-app #gl5kg-more,
+body.glh-app .glh-feature {
+  display:none!important;
+}
+body.glh-app #app.glh-show {
+  display:block!important;
+}
+body.glh-app #app.glh-show > header,
+body.glh-app #app.glh-show > nav,
+body.glh-app #app.glh-show > footer {
+  display:none!important;
+}
+body.glh-app #app.glh-show > main {
+  padding:14px 14px 115px!important;
+  min-height:80dvh;
+}
+body.glh-app #app.glh-show > main > section {
+  display:none!important;
+}
+body.glh-app #app.glh-show > main > section.glh-show {
+  display:block!important;
+}
+body.glh-app #gl5kg-home.glh-show,
+body.glh-app #gl5kg-wallet.glh-show,
+body.glh-app #gl5kg-more.glh-show,
+body.glh-app .glh-feature.glh-show {
+  display:block!important;
+}
+body.glh-app .glh-feature.glh-show {
+  max-width:900px!important;
+  width:100%!important;
+  margin:0 auto 110px!important;
+  padding:14px!important;
+}
+body.glh-app #gl5kg-nav {
+  display:flex!important;
+  z-index:2147483000!important;
+}
+body.glh-app #gl5kg-more {
+  position:relative!important;
+  inset:auto!important;
+  padding-bottom:110px!important;
+}
+#glh-header {
+  display:none;
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:white;
+  border-bottom:1px solid #dce5f5;
+  padding:12px;
+  align-items:center;
+  gap:10px;
+}
+body.glh-app #glh-header {
+  display:flex;
+}
+#glh-header strong {
+  flex:1;
+  font-size:17px;
+  color:#17345c;
+}
+#glh-header button {
+  background:#e9f0ff!important;
+  color:#2563eb!important;
+  padding:10px!important;
+  margin:0!important;
+}
+#glh-tools {
+  margin:20px auto;
+  max-width:900px;
+}
+#glh-tools h3 {
+  color:#17345c;
+}
+#glh-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+#glh-grid button {
+  width:100%;
+  margin:0;
+  padding:16px 10px;
+  min-height:70px;
+  border-radius:15px;
+  background:white;
+  color:#17345c;
+  border:1px solid #dce5f5;
+  font-weight:bold;
+  text-align:left;
+  font-size:14px;
+}
+body.glh-app #signatureModal:not(.hidden),
+body.glh-app #calendarModal:not(.hidden) {
+  display:flex!important;
+}
+</style>
+
+<div id="glh-header">
+  <button type="button" id="glh-back">← Back</button>
+  <strong id="glh-title">GigLink</strong>
+  <button type="button" id="glh-home">Home</button>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+const app = $("app");
+const home = $("gl5kg-home");
+const wallet = $("gl5kg-wallet");
+const more = $("gl5kg-more");
+const nav = $("gl5kg-nav");
+
+if (!app || !home || !wallet || !more || !nav) {
+  console.warn("GigLink 5K-G navigation not found.");
+  return;
+}
+
+const featureIds = {
+  login:"glAuthTest",
+  realprofile:"gl5i",
+  apply:"gl5jb",
+  approvals:"gl5jd",
+  workerdashboard:"gl5je",
+  marketplace:"gl5kb",
+  customergigs:"gl5kc2",
+  progress:"gl5kd2",
+  receipts:"gl5ke",
+  payments:"gl5ke-payments",
+  securepay:"glSecurePay"
+};
+
+const titles = {
+  home:"Home",
+  browse:"Explore Gigs",
+  mine:"My Gigs",
+  wallet:"Wallet",
+  more:"More",
+  dashboard:"Dashboard",
+  post:"Post a Gig",
+  external:"Outside Gigs",
+  requests:"Service Requests",
+  messages:"Messages",
+  schedule:"Schedule",
+  workers:"Workers",
+  earnings:"Earnings",
+  verification:"Verify ID",
+  profile:"Profile",
+  assistant:"Help",
+  platform:"Platform Demo",
+  login:"Real Account Login",
+  realprofile:"Real Profile",
+  apply:"Become a Worker",
+  approvals:"Owner Approvals",
+  workerdashboard:"Worker Dashboard",
+  marketplace:"Real Gig Marketplace",
+  customergigs:"Customer Gigs",
+  progress:"Job Progress",
+  receipts:"Earnings & Receipts",
+  payments:"Payment Tracking",
+  securepay:"Secure Pay"
+};
+
+const demoPages = [
+  "dashboard","post","browse","mine",
+  "external","requests","messages",
+  "schedule","workers","earnings",
+  "verification","profile",
+  "assistant","platform"
+];
+
+const featureElements = Object.values(featureIds)
+  .map(id => $(id))
+  .filter(Boolean);
+
+featureElements.forEach(el => {
+  el.classList.add("glh-feature");
+});
+
+const tools = document.createElement("div");
+tools.id = "glh-tools";
+
+const links = [
+  ["login","🔐 Real Login"],
+  ["realprofile","👤 Real Profile"],
+  ["apply","📝 Become a Worker"],
+  ["approvals","🛡️ Owner Approvals"],
+  ["workerdashboard","👷 Worker Dashboard"],
+  ["marketplace","🧰 Real Marketplace"],
+  ["customergigs","📋 Customer Gigs"],
+  ["progress","📷 Job Progress"],
+  ["receipts","🧾 Earnings & Receipts"],
+  ["payments","💳 Payment Tracking"],
+  ["securepay","🔒 Secure Pay"],
+  ["messages","💬 Messages"],
+  ["schedule","📅 Schedule"],
+  ["workers","👷 Worker Directory"],
+  ["external","🌐 Outside Gigs"],
+  ["requests","🤝 Service Requests"],
+  ["profile","👤 Demo Profile"],
+  ["assistant","🤖 Help"],
+  ["platform","⚙️ Platform Demo"]
+];
+
+tools.innerHTML =
+  '<h3>All GigLink Features</h3>' +
+  '<div id="glh-grid">' +
+  links.map(([id,label]) =>
+    '<button type="button" data-glh-open="' +
+    id + '">' + label + '</button>'
+  ).join("") +
+  '</div>';
+
+more.appendChild(tools);
+
+let current = "home";
+let previous = "home";
+
+function clearScreens() {
+  [app,home,wallet,more,...featureElements]
+    .forEach(el => el.classList.remove("glh-show"));
+
+  app.querySelectorAll("main > section")
+    .forEach(el => el.classList.remove("glh-show"));
+}
+
+function activeTab(page) {
+  let tab = "more";
+
+  if (page === "home" || page === "dashboard")
+    tab = "home";
+
+  if (page === "browse" || page === "marketplace")
+    tab = "browse";
+
+  if (["mine","customergigs","progress"].includes(page))
+    tab = "mine";
+
+  if (["wallet","earnings","receipts",
+       "payments","securepay"].includes(page))
+    tab = "wallet";
+
+  nav.querySelectorAll("[data-gl5kg-go]")
+    .forEach(button => {
+      button.classList.toggle(
+        "active",
+        button.dataset.gl5kgGo === tab
+      );
+    });
+}
+
+function openScreen(page) {
+  if (!titles[page]) return;
+
+  previous = current;
+  current = page;
+
+  clearScreens();
+
+  if (page === "home") {
+    home.classList.add("glh-show");
+  }
+  else if (page === "wallet") {
+    wallet.classList.add("glh-show");
+  }
+  else if (page === "more") {
+    more.classList.add("glh-show");
+  }
+  else if (demoPages.includes(page)) {
+    app.classList.add("glh-show");
+
+    const screen = $(page);
+    if (screen) {
+      screen.classList.remove("hidden");
+      screen.classList.add("glh-show");
+    }
+  }
+  else if (featureIds[page]) {
+    const feature = $(featureIds[page]);
+
+    if (feature) {
+      feature.classList.add("glh-show");
+      feature.hidden = false;
+    } else {
+      alert("This feature was not found in your current code.");
+      return;
+    }
+  }
+
+  $("glh-title").textContent = titles[page];
+  $("glh-back").style.visibility =
+    page === "home" ? "hidden" : "visible";
+
+  activeTab(page);
+  window.scrollTo(0,0);
+}
+
+/* Intercept the older navigation before it
+   can reopen the long stacked page. */
+document.addEventListener("click",function(event) {
+  const button = event.target.closest(
+    "[data-gl5kg-go],[data-glh-open]"
+  );
+
+  if (!button) return;
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
+
+  let page = button.dataset.glhOpen ||
+             button.dataset.gl5kgGo;
+
+  const aliases = {
+    verify:"verification",
+    business:"approvals",
+    demo:"platform"
+  };
+
+  page = aliases[page] || page;
+  openScreen(page);
+},true);
+
+$("glh-back").addEventListener("click",function() {
+  openScreen(previous === current ? "home" : previous);
+});
+
+$("glh-home").addEventListener("click",function() {
+  openScreen("home");
+});
+
+document.body.classList.add("glh-app");
+nav.hidden = false;
+
+openScreen("home");
+
+window.GigLinkOpenScreen = openScreen;
+
+})();
+</script>
+<!-- END GIGLINK STEP 5K-H -->
+
 </body></html>
