@@ -9585,4 +9585,112 @@ setTimeout(()=>load(),900);
 </script>
 <!-- END GIGLINK STEP 5K-Q -->
 
+<!-- GIGLINK STEP 5K-S: WORK CONTROLS INSIDE MY GIGS -->
+<style>
+#gl5kb-mine #gl5kd2{
+  display:block!important;
+  margin:18px 0;
+  padding:16px;
+  background:#0b1932;
+  color:#fff;
+  border:1px solid #2563eb;
+  border-radius:16px;
+}
+#gl5kb-mine #gl5kd2 h2,
+#gl5kb-mine #gl5kd2 h3{
+  color:#fff;
+}
+#gl5kb-mine #gl5kd2 button{
+  min-height:46px;
+  border-radius:10px;
+}
+#gl5kb-mine #gl5kd2 input[type=file]{
+  max-width:100%;
+}
+#gl5kb-mine #gl5kd2-list{
+  display:grid;
+  gap:12px;
+}
+#gl5kb-mine #gl5kd2 .gl5kd2-card{
+  margin:0;
+}
+</style>
+
+<script>
+(function(){
+  "use strict";
+
+  const mine=document.getElementById("gl5kb-mine");
+  const progress=document.getElementById("gl5kd2");
+  const load=document.getElementById("gl5kd2-load");
+
+  if(!mine || !progress || !load){
+    console.warn("GigLink My Gigs or Job Progress not found.");
+    return;
+  }
+
+  if(document.getElementById("gl5ks-title"))return;
+
+  const heading=document.createElement("h3");
+  heading.id="gl5ks-title";
+  heading.textContent="📷 Photos, Clock In & Clock Out";
+
+  const description=document.createElement("p");
+  description.textContent=
+    "Manage your claimed gigs here. Upload before photos, " +
+    "clock in, clock out, upload after photos, and submit work.";
+
+  description.style.cssText=
+    "color:#526b8a;font-size:14px;line-height:1.5";
+
+  mine.append(heading,description,progress);
+
+  const oldHeading=progress.querySelector("h2");
+  if(oldHeading){
+    oldHeading.textContent="🧰 Job Work Controls";
+  }
+
+  let refreshTimer=null;
+
+  function refreshProgress(){
+    clearTimeout(refreshTimer);
+
+    refreshTimer=setTimeout(function(){
+      if(!mine.hidden && !load.disabled){
+        load.click();
+      }
+    },250);
+  }
+
+  document.addEventListener("click",function(event){
+    const button=event.target.closest(
+      '[data-gl5kg-go="mine"],' +
+      '[data-glh-open="mine"],' +
+      '[data-gl5kb-tab="mine"],' +
+      '#gl5kb-refreshmine'
+    );
+
+    if(button){
+      refreshProgress();
+    }
+  });
+
+  const observer=new MutationObserver(function(){
+    if(!mine.hidden){
+      refreshProgress();
+    }
+  });
+
+  observer.observe(mine,{
+    attributes:true,
+    attributeFilter:["hidden"]
+  });
+
+  console.log(
+    "GigLink Step 5K-S: Job controls moved into My Gigs."
+  );
+})();
+</script>
+<!-- END GIGLINK STEP 5K-S -->
+
 </body></html>
