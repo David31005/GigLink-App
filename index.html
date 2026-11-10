@@ -3616,7 +3616,7 @@ render();
 
   // Replace with your existing public key.
   const KEY =
-    "https://mhpqclzullhvxasllbdh.supabase.co";
+    "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
 
   const status =
     document.getElementById("gl5jd-status");
@@ -3996,5 +3996,327 @@ render();
 </script>
 
 <!-- END GIGLINK STEP 5J-D -->
+
+<!-- ==========================================
+ GIGLINK STEP 5J-E
+ REAL SUPABASE WORKER ACCESS
+ Diamond Shine Service LLC
+ Add above final </body>
+========================================== -->
+
+<style>
+#gl5je {
+  max-width:650px;
+  margin:20px auto;
+  padding:20px;
+  background:#fff;
+  color:#183047;
+  border:2px solid #087f83;
+  border-radius:16px;
+  font:16px Arial,sans-serif;
+  box-sizing:border-box;
+}
+#gl5je * { box-sizing:border-box; }
+#gl5je h2 { margin:0 0 12px; }
+#gl5je button {
+  padding:12px 16px;
+  margin:5px 5px 5px 0;
+  border:0;
+  border-radius:9px;
+  background:#087f83;
+  color:white;
+  font-size:15px;
+  font-weight:bold;
+}
+#gl5je button:disabled { opacity:.5; }
+#gl5je-status {
+  padding:13px;
+  margin:14px 0;
+  background:#eaf5f5;
+  border-radius:9px;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+#gl5je-panel {
+  padding:15px;
+  background:#f5f9fc;
+  border:1px solid #cbd8e2;
+  border-radius:12px;
+}
+#gl5je-panel p { overflow-wrap:anywhere; }
+#gl5je .note {
+  font-size:13px;
+  color:#53677b;
+  line-height:1.5;
+}
+</style>
+
+<section id="gl5je">
+  <h2>GigLink — Real Worker Dashboard</h2>
+
+  <p class="note">
+    Secure worker account verification.
+    Only approved Supabase worker accounts
+    can view this dashboard.
+  </p>
+
+  <button type="button" id="gl5je-check">
+    Verify Worker Access
+  </button>
+
+  <button type="button" id="gl5je-refresh">
+    Refresh Worker Profile
+  </button>
+
+  <div id="gl5je-status" role="status">
+    Ready. Sign in with your real
+    Supabase account.
+  </div>
+
+  <div id="gl5je-panel" hidden>
+    <h3>Worker Account</h3>
+    <p><strong>Name:</strong>
+      <span id="gl5je-name"></span>
+    </p>
+    <p><strong>City:</strong>
+      <span id="gl5je-city"></span>
+    </p>
+    <p><strong>Service:</strong>
+      <span id="gl5je-service"></span>
+    </p>
+    <p><strong>Account Role:</strong>
+      <span id="gl5je-role"></span>
+    </p>
+    <p><strong>Approval:</strong>
+      <span id="gl5je-approval"></span>
+    </p>
+
+    <p class="note">
+      Your worker account is approved.
+      Real gig claiming will be enabled
+      after secure job permissions are added.
+    </p>
+  </div>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  const URL =
+    "https://mhpqclzullhvxasllbdh.supabase.co";
+
+  // Use your existing PUBLIC publishable key.
+  const KEY =
+    "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+  const el = id => document.getElementById(id);
+
+  const status = el("gl5je-status");
+  const panel = el("gl5je-panel");
+  const checkButton = el("gl5je-check");
+  const refreshButton = el("gl5je-refresh");
+
+  let busy = false;
+  let verifiedUserId = null;
+
+  function show(message) {
+    status.textContent = message;
+  }
+
+  function clearWorker() {
+    verifiedUserId = null;
+    panel.hidden = true;
+
+    [
+      "gl5je-name",
+      "gl5je-city",
+      "gl5je-service",
+      "gl5je-role",
+      "gl5je-approval"
+    ].forEach(id => {
+      el(id).textContent = "";
+    });
+  }
+
+  function setBusy(value) {
+    busy = value;
+    checkButton.disabled = value;
+    refreshButton.disabled = value;
+  }
+
+  if (KEY.includes("PASTE_YOUR_")) {
+    show("");
+    checkButton.disabled = true;
+    refreshButton.disabled = true;
+    return;
+  }
+
+  if (!window.supabase?.createClient) {
+    show("Supabase library unavailable.");
+    return;
+  }
+
+  const client = window.supabase.createClient(
+    URL,
+    KEY,
+    {
+      auth: {
+        persistSession:true,
+        autoRefreshToken:true,
+        detectSessionInUrl:false
+      }
+    }
+  );
+
+  async function verifyWorker() {
+    clearWorker();
+    show("Checking worker authorization...");
+
+    const { data:userData, error:userError } =
+      await client.auth.getUser();
+
+    if (userError || !userData.user) {
+      throw new Error(
+        "Please sign in using Real Login."
+      );
+    }
+
+    const user = userData.user;
+
+    const { data:profile, error:profileError } =
+      await client
+        .from("giglink_profiles")
+        .select(
+          "full_name,city,service,role"
+        )
+        .eq("id",user.id)
+        .single();
+
+    if (profileError) throw profileError;
+
+    if (profile.role !== "worker") {
+      show(
+        "Worker access denied.\n" +
+        "Your current account role is: " +
+        profile.role + "\n" +
+        "Submit a worker application " +
+        "and wait for owner approval."
+      );
+      return;
+    }
+
+    const { data:application, error:appError } =
+      await client
+        .from("giglink_worker_applications")
+        .select("status")
+        .eq("user_id",user.id)
+        .maybeSingle();
+
+    if (appError) throw appError;
+
+    if (
+      !application ||
+      application.status !== "approved"
+    ) {
+      show(
+        "Worker access unavailable.\n" +
+        "An approved application is required."
+      );
+      return;
+    }
+
+    // Check again before showing the panel.
+    const { data:latest, error:latestError } =
+      await client.auth.getUser();
+
+    if (
+      latestError ||
+      latest.user?.id !== user.id
+    ) {
+      throw new Error(
+        "Your login changed. Please try again."
+      );
+    }
+
+    verifiedUserId = user.id;
+
+    el("gl5je-name").textContent =
+      profile.full_name || "Not provided";
+
+    el("gl5je-city").textContent =
+      profile.city || "Not provided";
+
+    el("gl5je-service").textContent =
+      profile.service || "Not provided";
+
+    el("gl5je-role").textContent =
+      profile.role;
+
+    el("gl5je-approval").textContent =
+      "APPROVED";
+
+    panel.hidden = false;
+
+    show(
+      "Worker access verified!\n" +
+      "Your account is approved in Supabase."
+    );
+  }
+
+  async function run(action) {
+    if (busy) return;
+
+    setBusy(true);
+
+    try {
+      await action();
+    } catch (error) {
+      clearWorker();
+      show(
+        "Error: " +
+        (error.message || "Unknown error")
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  checkButton.addEventListener(
+    "click",
+    () => run(verifyWorker)
+  );
+
+  refreshButton.addEventListener(
+    "click",
+    () => run(verifyWorker)
+  );
+
+  client.auth.onAuthStateChange(
+    (event, session) => {
+      if (
+        event === "SIGNED_OUT" ||
+        (
+          verifiedUserId &&
+          session?.user?.id !== verifiedUserId
+        )
+      ) {
+        clearWorker();
+        show(
+          "Account changed or signed out. " +
+          "Verify worker access again."
+        );
+      }
+    }
+  );
+
+  show(
+    "Worker dashboard ready. " +
+    "Tap Verify Worker Access."
+  );
+})();
+</script>
+
+<!-- END GIGLINK STEP 5J-E -->
 
 </body></html>
