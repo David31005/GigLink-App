@@ -7544,4 +7544,221 @@ $('glSecurePayRefresh')
 
 <!-- END GIGLINK STEP 5K-F UI -->
 
+<!-- GIGLINK STEP 5K-G MOBILE APP REDESIGN: PASTE BEFORE </body> -->
+<style>
+:root{--glblue:#2563eb;--glink:#172b4d;--glbg:#f4f7fd}
+body{background:var(--glbg)!important;color:var(--glink)!important}
+#app{padding-bottom:86px;background:var(--glbg)}
+#app>header{background:#fff;color:#142c51;text-align:left;padding:15px 18px 12px;box-shadow:0 1px 8px #173a6815}
+#app>header h1{font-size:23px;margin:0 0 4px;color:#1c55c9}
+#app>header>p:nth-of-type(1),#app>header>p:nth-of-type(3){display:none}
+#app>header>p:nth-of-type(2){font-size:12px;color:#61718a}
+#app>header button{border-radius:12px}
+#app .card,#app .panel{border-radius:16px}
+#gl5kg-home{padding:14px 12px 100px;max-width:860px;margin:auto}
+#gl5kg-home .hero{background:linear-gradient(135deg,#123d95,#3679f8);border-radius:22px;padding:22px;color:#fff;box-shadow:0 10px 24px #18499b27}
+#gl5kg-home .hero h2{color:#fff;font-size:25px;margin:6px 0}
+#gl5kg-home .hero p{color:#e8f1ff;font-size:14px}
+#gl5kg-home button{cursor:pointer}
+#gl5kg-home .hero button{background:#fff;color:#194ea8;border:0;border-radius:12px;padding:13px 16px;font-weight:800;width:100%;margin-top:10px}
+#gl5kg-home h3{font-size:17px;color:#1d3555;margin:20px 0 12px}
+#gl5kg-home .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#gl5kg-home .tile{background:#fff;border:1px solid #e2e9f5;border-radius:17px;min-height:115px;padding:15px;text-align:left;box-shadow:0 4px 12px #214d8610}
+#gl5kg-home .tile .ico{display:block;font-size:26px;margin-bottom:9px}
+#gl5kg-home .tile strong{display:block;font-size:15px;color:#17345c}
+#gl5kg-home .tile small{display:block;font-size:12px;color:#73849c;margin-top:5px}
+#gl5kg-home .hint{background:#fff;border:1px solid #e3eaf5;border-radius:16px;padding:15px;color:#5b6d87;font-size:13px}
+#gl5kg-nav{position:fixed;bottom:0;left:0;right:0;z-index:2147483000;background:#fff;display:flex;justify-content:space-around;align-items:stretch;box-shadow:0 -4px 24px #173a6824;padding:8px 4px calc(8px + env(safe-area-inset-bottom));border-top:1px solid #e3eaf5}
+#gl5kg-nav button{background:transparent!important;border:0!important;color:#71819a!important;flex:1;min-width:0;padding:6px 1px!important;border-radius:10px!important;font-size:10px!important;font-weight:700!important;box-shadow:none!important}
+#gl5kg-nav button .ico{display:block;font-size:22px;margin-bottom:3px}
+#gl5kg-nav button.active{color:#2463ed!important;background:#eaf1ff!important}
+#gl5kg-more{position:fixed;inset:0;z-index:2147482999;background:#f4f7fd;overflow:auto;padding:20px 15px 105px;display:none}
+#gl5kg-more h2{margin:8px 0 20px;color:#163968}
+#gl5kg-more .moregrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:860px;margin:auto}
+#gl5kg-more button{border:1px solid #e0e8f4;background:#fff;color:#17345c;border-radius:15px;padding:17px 12px;text-align:left;min-height:76px;font-weight:700;font-size:14px}
+#gl5kg-more button span{display:block;font-size:22px;margin-bottom:8px}
+#gl5kg-wallet{padding:16px 12px 105px;max-width:860px;margin:auto}
+#gl5kg-wallet h2{color:#17345c}
+#gl5kg-wallet .walletcard{background:#fff;border:1px solid #e0e8f4;border-radius:16px;padding:16px;margin:12px 0}
+#gl5kg-wallet .walletcard button{background:#2463ed;color:#fff;border:0;border-radius:12px;padding:13px;width:100%;font-weight:700}
+#gl5kg-wallet .walletcard p{font-size:13px;color:#65758e}
+@media(min-width:700px){#gl5kg-home .tiles,#gl5kg-more .moregrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
+
+<div id="gl5kg-home" hidden>
+  <div class="hero">
+    <div style="font-size:12px;font-weight:800;letter-spacing:1px">GIGLINK MARKETPLACE</div>
+    <h2>Welcome to GigLink</h2>
+    <p>Post it. Claim it. Get it done.</p>
+    <button type="button" data-gl5kg-go="post">＋ Post a Gig</button>
+  </div>
+  <h3>What would you like to do?</h3>
+  <div class="tiles">
+    <button class="tile" data-gl5kg-go="browse"><span class="ico">🔎</span><strong>Find Gigs</strong><small>Explore opportunities</small></button>
+    <button class="tile" data-gl5kg-go="mine"><span class="ico">📋</span><strong>My Gigs</strong><small>Track your jobs</small></button>
+    <button class="tile" data-gl5kg-go="wallet"><span class="ico">💳</span><strong>Wallet</strong><small>Payments and earnings</small></button>
+    <button class="tile" data-gl5kg-go="messages"><span class="ico">💬</span><strong>Messages</strong><small>Connect with users</small></button>
+  </div>
+  <h3>Secure &amp; Simple</h3>
+  <div class="hint">Your existing GigLink features are still available. Use the bottom navigation to switch between Home, Explore, My Gigs, Wallet, and More.</div>
+</div>
+
+<div id="gl5kg-wallet" hidden>
+  <h2>💳 GigLink Wallet</h2>
+  <div class="walletcard">
+    <h3>Payment &amp; Earnings</h3>
+    <p>View your existing payment tracking and worker earnings.</p>
+    <button data-gl5kg-go="earnings">Open Earnings</button>
+  </div>
+  <div class="walletcard">
+    <h3>🔒 Secure Pay</h3>
+    <p>Check verified customer payments and worker payout status.</p>
+    <button data-gl5kg-go="payments">Open Payment Tracking</button>
+  </div>
+</div>
+
+<div id="gl5kg-more" hidden>
+  <h2>More GigLink Tools</h2>
+  <div class="moregrid">
+    <button data-gl5kg-go="dashboard"><span>🏠</span>Dashboard</button>
+    <button data-gl5kg-go="post"><span>➕</span>Post a Gig</button>
+    <button data-gl5kg-go="messages"><span>💬</span>Messages</button>
+    <button data-gl5kg-go="schedule"><span>📅</span>Schedule</button>
+    <button data-gl5kg-go="workers"><span>👷</span>Workers</button>
+    <button data-gl5kg-go="earnings"><span>💵</span>Earnings</button>
+    <button data-gl5kg-go="verify"><span>🪪</span>Verify ID</button>
+    <button data-gl5kg-go="profile"><span>👤</span>Profile</button>
+    <button data-gl5kg-go="assistant"><span>🤖</span>AI Assistant</button>
+    <button data-gl5kg-go="business"><span>🏢</span>Business Tools</button>
+    <button data-gl5kg-go="payments"><span>🔒</span>Payment Tracking</button>
+    <button data-gl5kg-go="demo"><span>🧪</span>Platform Demo</button>
+  </div>
+</div>
+
+<nav id="gl5kg-nav" hidden aria-label="GigLink mobile navigation">
+  <button data-gl5kg-go="home" class="active"><span class="ico">🏠</span>Home</button>
+  <button data-gl5kg-go="browse"><span class="ico">🔎</span>Explore</button>
+  <button data-gl5kg-go="mine"><span class="ico">📋</span>My Gigs</button>
+  <button data-gl5kg-go="wallet"><span class="ico">💳</span>Wallet</button>
+  <button data-gl5kg-go="more"><span class="ico">☰</span>More</button>
+</nav>
+
+<script>
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const home=$('gl5kg-home'),wallet=$('gl5kg-wallet'),more=$('gl5kg-more'),nav=$('gl5kg-nav');
+  if(!home||!wallet||!more||!nav)return;
+  const app=$('app');
+  const oldPanels=['gl5ke-payments','glSecurePay'];
+  let current='home';
+  function hideExtras(){
+    home.hidden=true;wallet.hidden=true;more.hidden=true;
+    home.style.display='none';wallet.style.display='none';more.style.display='none';
+  }
+  function setActive(name){
+    nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.gl5kgGo===name));
+  }
+  function showExtra(name){
+    hideExtras();
+    const el=name==='home'?home:name==='wallet'?wallet:more;
+    el.hidden=false;el.style.display='block';
+    if(app)app.style.display='none';
+    oldPanels.forEach(id=>{const x=$(id);if(x)x.style.display='none'});
+    current=name;setActive(name);
+    window.scrollTo(0,0);
+  }
+  const possible={
+    dashboard:['dashboard','home'],
+    post:['post','postgig','postGig','create'],
+    browse:['browse','available','explore'],
+    mine:['mygigs','myGigs','mine','jobs'],
+    messages:['messages','chat'],
+    schedule:['schedule','calendar'],
+    workers:['workers'],
+    earnings:['earnings'],
+    verify:['verify','verifyid','verification'],
+    profile:['profile'],
+    assistant:['assistant','ai'],
+    business:['business','businessDashboard'],
+    demo:['demo']
+  };
+  function findButton(name){
+    const words=possible[name]||[name];
+    const all=Array.from(document.querySelectorAll('button,a'));
+    return all.find(el=>{
+      if(el.closest('#gl5kg-home,#gl5kg-more,#gl5kg-wallet,#gl5kg-nav'))return false;
+      const s=((el.getAttribute('onclick')||'')+' '+(el.id||'')+' '+(el.getAttribute('data-screen')||'')+' '+(el.textContent||'')).toLowerCase().replace(/\s+/g,'');
+      return words.some(w=>s.includes(w.toLowerCase().replace(/\s+/g,'')));
+    });
+  }
+  function revealApp(){
+    hideExtras();
+    if(app)app.style.display='';
+    oldPanels.forEach(id=>{const x=$(id);if(x)x.style.display=''});
+    window.scrollTo(0,0);
+  }
+  function openLegacy(name){
+    revealApp();
+    const btn=findButton(name);
+    if(btn){
+      btn.click();
+      current=name;
+      setActive(name==='browse'?'browse':name==='mine'?'mine':'more');
+      return true;
+    }
+    if(typeof window.show==='function'){
+      for(const key of (possible[name]||[name])){
+        try{window.show(key);current=name;return true}catch(e){}
+      }
+    }
+    alert('Open '+name+' from your original GigLink dashboard. This feature was not removed.');
+    return false;
+  }
+  function go(name){
+    if(name==='home'||name==='wallet'||name==='more'){showExtra(name);return}
+    if(name==='payments'){
+      revealApp();
+      const el=$('gl5ke-payments')||$('glSecurePay');
+      if(el){el.style.display='block';el.scrollIntoView({behavior:'smooth'});return}
+      openLegacy('earnings');return;
+    }
+    openLegacy(name);
+  }
+  document.querySelectorAll('[data-gl5kg-go]').forEach(b=>{
+    b.addEventListener('click',()=>go(b.dataset.gl5kgGo));
+  });
+  function hasAuthScreen(){
+    if(!app)return false;
+    const candidates=app.querySelectorAll('[id*="auth"],[id*="login"],[id*="signup"]');
+    return Array.from(candidates).some(el=>{
+      const s=getComputedStyle(el);
+      return s.display!=='none'&&s.visibility!=='hidden'&&el.getClientRects().length>0;
+    });
+  }
+  function sync(){
+    if(!app)return;
+    const visible=app.getComputedStyle?true:getComputedStyle(app).display!=='none';
+    if(hasAuthScreen()){
+      nav.hidden=true;nav.style.display='none';
+      hideExtras();
+      app.style.display='';
+    }else if(visible||current!=='home'){
+      nav.hidden=false;nav.style.display='flex';
+    }
+  }
+  const observer=new MutationObserver(()=>{if(!document.hidden)sync()});
+  if(app)observer.observe(app,{attributes:true,subtree:true,attributeFilter:['style','class','hidden']});
+  setTimeout(()=>{
+    if(!hasAuthScreen()){
+      nav.hidden=false;nav.style.display='flex';
+      showExtra('home');
+    }
+  },1200);
+  setInterval(sync,2500);
+  window.GigLinkMobileGo=go;
+})();
+</script>
+<!-- END GIGLINK STEP 5K-G -->
+
 </body></html>
