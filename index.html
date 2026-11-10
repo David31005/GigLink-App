@@ -1650,4 +1650,519 @@ if(version){
 </script>
 <!-- END DASHBOARD DISPLAY FIX -->
 
+<!-- GIGLINK STEP 14D — OWNER ADMIN DASHBOARD -->
+<style>
+#gl14d{
+  margin:20px 0;
+  padding:18px;
+  border:2px solid #bfd3ef;
+  border-radius:18px;
+  background:linear-gradient(145deg,#fff,#edf4ff);
+  color:#17304d;
+}
+#gl14d *{box-sizing:border-box}
+#gl14d h2{color:#123d79;margin:0 0 8px}
+#gl14d h3{color:#174c91}
+#gl14d .admin-note{
+  background:#fff4d8;
+  border:1px solid #e9d298;
+  border-radius:10px;
+  padding:12px;
+  font-size:13px;
+  margin:12px 0;
+}
+#gl14d .admin-stats{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:15px 0;
+}
+#gl14d .admin-stat{
+  padding:14px;
+  background:#fff;
+  border:1px solid #d8e4f3;
+  border-radius:12px;
+}
+#gl14d .admin-stat strong{
+  display:block;
+  font-size:23px;
+  color:#1659b0;
+}
+#gl14d .admin-stat span{
+  font-size:12px;
+  color:#62758c;
+}
+#gl14d .admin-panel{
+  padding:15px;
+  margin:15px 0;
+  border:1px solid #d8e4f3;
+  border-radius:14px;
+  background:#fff;
+}
+#gl14d .admin-entry{
+  border:1px solid #d8e4f3;
+  border-radius:12px;
+  padding:14px;
+  margin:10px 0;
+  background:#f9fbff;
+  overflow-wrap:anywhere;
+}
+#gl14d .admin-entry h4{
+  margin:0 0 7px;
+  font-size:18px;
+}
+#gl14d .admin-entry p{
+  margin:6px 0;
+  font-size:14px;
+}
+#gl14d .admin-status{
+  display:inline-block;
+  border-radius:99px;
+  padding:5px 9px;
+  background:#e8effa;
+  color:#254d85;
+  font-size:12px;
+  font-weight:800;
+}
+#gl14d input,
+#gl14d select{
+  width:100%;
+  padding:11px;
+  margin:5px 0 10px;
+  border:1px solid #cbd9e9;
+  border-radius:9px;
+  background:#fff;
+  color:#17304d;
+  font-size:16px;
+}
+#gl14d label{
+  display:block;
+  font-size:13px;
+  font-weight:700;
+}
+#gl14d button{
+  border:0;
+  border-radius:10px;
+  padding:11px 13px;
+  min-height:43px;
+  margin:5px 5px 5px 0;
+  background:#1769e8;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+#gl14d button.secondary{background:#526b89}
+#gl14d .admin-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+}
+#gl14d .admin-small{
+  color:#60758e;
+  font-size:12px;
+}
+@media(min-width:700px){
+  #gl14d .admin-stats{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+const JOB_KEY=
+  'giglink_step14b_business_requests_demo_v1';
+const REVIEW_KEY=
+  'giglink_step14d_admin_reviews_demo_v1';
+
+const host=document.getElementById('external');
+if(!host||document.getElementById('gl14d'))return;
+
+const plans={
+  standard:{name:'Standard',price:9.99},
+  featured:{name:'Featured',price:19.99},
+  subscription:{name:'Business Subscription',price:49.99}
+};
+
+const $=id=>document.getElementById(id);
+
+function read(key,fallback){
+  try{
+    const result=JSON.parse(
+      localStorage.getItem(key)||'null'
+    );
+    return result??fallback;
+  }catch{return fallback}
+}
+
+function getJobs(){
+  const data=read(JOB_KEY,[]);
+  return Array.isArray(data)?data:[];
+}
+
+function getReviews(){
+  const data=read(REVIEW_KEY,{});
+  return data&&typeof data==='object'&&!Array.isArray(data)
+    ?data:{};
+}
+
+function saveReviews(data){
+  try{
+    localStorage.setItem(REVIEW_KEY,JSON.stringify(data));
+    return true;
+  }catch{
+    alert('Could not save admin review.');
+    return false;
+  }
+}
+
+function money(n){
+  return '$'+Number(n||0).toFixed(2);
+}
+
+function safeURL(value){
+  try{
+    const u=new URL(value);
+    return u.protocol==='https:'?u.href:null;
+  }catch{return null}
+}
+
+const container=document.createElement('div');
+container.id='gl14d';
+
+container.innerHTML=`
+  <h2>🛡️ GigLink Owner Admin Dashboard</h2>
+  <p>Review business advertising requests and
+  monitor projected listing value.</p>
+
+  <div class="admin-note">
+    <b>Local demo only:</b> This panel is not
+    restricted to the real GigLink owner.
+    Reviews do not publish jobs, verify
+    payment, or activate subscriptions.
+    Never use this interface for real
+    payment authorization.
+  </div>
+
+  <div class="admin-stats">
+    <div class="admin-stat">
+      <strong id="adm-total">0</strong>
+      <span>Total advertising requests</span>
+    </div>
+    <div class="admin-stat">
+      <strong id="adm-pending">0</strong>
+      <span>Awaiting review</span>
+    </div>
+    <div class="admin-stat">
+      <strong id="adm-approved">0</strong>
+      <span>Approved for future publication</span>
+    </div>
+    <div class="admin-stat">
+      <strong id="adm-value">$0.00</strong>
+      <span>Proposed advertising value</span>
+    </div>
+  </div>
+
+  <div class="admin-panel">
+    <h3>Advertising Plan Breakdown</h3>
+    <div id="adm-breakdown"></div>
+  </div>
+
+  <div class="admin-panel">
+    <h3>Review Business Listings</h3>
+
+    <label for="adm-search">Search business or job</label>
+    <input id="adm-search" type="search"
+      placeholder="Business, job, city...">
+
+    <label for="adm-filter">Review status</label>
+    <select id="adm-filter">
+      <option value="all">All requests</option>
+      <option value="pending">Awaiting review</option>
+      <option value="approved">Approved for future publication</option>
+      <option value="changes">Needs changes</option>
+      <option value="rejected">Rejected</option>
+    </select>
+
+    <div id="adm-list" aria-live="polite"></div>
+  </div>
+
+  <div class="admin-panel">
+    <h3>Advertising Reports</h3>
+    <p class="admin-small">
+      Export a CSV report of locally saved
+      advertising requests and review decisions.
+      This is not a financial transaction report.
+    </p>
+
+    <button id="adm-export" type="button">
+      EXPORT CSV REPORT
+    </button>
+    <button id="adm-refresh" type="button"
+      class="secondary">
+      REFRESH DASHBOARD
+    </button>
+  </div>
+`;
+
+const anchor=document.getElementById('gl14c')||
+  document.getElementById('gl14b');
+
+if(anchor){
+  anchor.insertAdjacentElement('afterend',container);
+}else{
+  host.appendChild(container);
+}
+
+function statusOf(job,reviews){
+  const status=reviews[String(job.id)]?.status;
+  return ['approved','changes','rejected'].includes(status)
+    ?status:'pending';
+}
+
+function statusLabel(status){
+  return {
+    pending:'Awaiting review',
+    approved:'Approved for future publication',
+    changes:'Needs changes',
+    rejected:'Rejected'
+  }[status]||'Awaiting review';
+}
+
+function render(){
+  const jobs=getJobs();
+  const reviews=getReviews();
+
+  $('adm-total').textContent=jobs.length;
+  $('adm-pending').textContent=
+    jobs.filter(j=>statusOf(j,reviews)==='pending').length;
+  $('adm-approved').textContent=
+    jobs.filter(j=>statusOf(j,reviews)==='approved').length;
+
+  const total=jobs.reduce((sum,j)=>{
+    return sum+(plans[j.plan]?.price||0);
+  },0);
+
+  $('adm-value').textContent=money(total);
+
+  const breakdown=$('adm-breakdown');
+  breakdown.replaceChildren();
+
+  for(const [key,plan] of Object.entries(plans)){
+    const count=jobs.filter(j=>j.plan===key).length;
+    const p=document.createElement('p');
+    p.textContent=
+      plan.name+': '+count+
+      ' request(s) · '+money(count*plan.price)+
+      ' proposed value';
+    breakdown.appendChild(p);
+  }
+
+  const query=$('adm-search').value.trim().toLowerCase();
+  const filter=$('adm-filter').value;
+
+  const visible=jobs.filter(j=>{
+    const status=statusOf(j,reviews);
+    const searchable=[
+      j.company,j.title,j.location,j.email,j.category
+    ].join(' ').toLowerCase();
+
+    return (!query||searchable.includes(query))&&
+      (filter==='all'||filter===status);
+  });
+
+  const list=$('adm-list');
+  list.replaceChildren();
+
+  if(!visible.length){
+    const p=document.createElement('p');
+    p.textContent='No matching advertising requests.';
+    list.appendChild(p);
+    return;
+  }
+
+  visible.forEach(j=>{
+    const id=String(j.id);
+    const review=reviews[id]||{};
+    const status=statusOf(j,reviews);
+    const plan=plans[j.plan]||{
+      name:'Unknown plan',price:0
+    };
+
+    const card=document.createElement('div');
+    card.className='admin-entry';
+
+    const title=document.createElement('h4');
+    title.textContent=j.title||'Untitled job';
+
+    const badge=document.createElement('span');
+    badge.className='admin-status';
+    badge.textContent=statusLabel(status);
+
+    const business=document.createElement('p');
+    business.textContent=[
+      j.company||'Unknown business',
+      j.location||'Unknown location'
+    ].join(' · ');
+
+    const contact=document.createElement('p');
+    contact.textContent='Contact: '+(j.email||'Not provided');
+
+    const planText=document.createElement('p');
+    planText.textContent=
+      'Plan: '+plan.name+' · '+money(plan.price)+
+      ' proposed';
+
+    const payment=document.createElement('p');
+    payment.textContent=
+      'Payment: Not verified · Publication: Inactive';
+
+    const expiry=document.createElement('p');
+    expiry.textContent=
+      'Proposed expiration: '+
+      (review.expiresOn||'Not set');
+
+    const link=safeURL(j.url);
+    if(link){
+      const a=document.createElement('a');
+      a.href=link;
+      a.target='_blank';
+      a.rel='noopener noreferrer';
+      a.textContent='Review original job URL';
+      card.appendChild(title,badge,business,contact,
+        planText,payment,expiry,a);
+    }else{
+      card.append(title,badge,business,contact,
+        planText,payment,expiry);
+    }
+
+    const statusSelect=document.createElement('select');
+    statusSelect.setAttribute('aria-label','Review decision');
+
+    [
+      ['pending','Awaiting review'],
+      ['approved','Approve for future publication'],
+      ['changes','Needs changes'],
+      ['rejected','Reject request']
+    ].forEach(([value,label])=>{
+      statusSelect.add(new Option(label,value));
+    });
+
+    statusSelect.value=status;
+
+    const dateLabel=document.createElement('label');
+    dateLabel.textContent='Proposed expiration date';
+
+    const date=document.createElement('input');
+    date.type='date';
+    date.value=review.expiresOn||'';
+
+    const save=document.createElement('button');
+    save.type='button';
+    save.textContent='SAVE REVIEW';
+
+    save.addEventListener('click',()=>{
+      const next=getReviews();
+      next[id]={
+        status:statusSelect.value,
+        expiresOn:date.value,
+        reviewedAt:Date.now()
+      };
+
+      if(saveReviews(next)){
+        render();
+        alert(
+          'Review saved on this device. '+
+          'No listing was published or charged.'
+        );
+      }
+    });
+
+    card.append(statusSelect,dateLabel,date,save);
+    list.appendChild(card);
+  });
+}
+
+function csvCell(value){
+  const s=String(value??'');
+  const safe=/^[\s]*[=+\-@\t\r]/.test(s)?"'"+s:s;
+  return '"'+safe.replace(/"/g,'""')+'"';
+}
+
+function exportCSV(){
+  const jobs=getJobs();
+  const reviews=getReviews();
+
+  const rows=[[
+    'Business','Email','Job','Category','Location',
+    'Plan','Proposed Price','Review Status',
+    'Proposed Expiration','Payment Verified',
+    'Publicly Published'
+  ]];
+
+  jobs.forEach(j=>{
+    const r=reviews[String(j.id)]||{};
+    rows.push([
+      j.company,j.email,j.title,j.category,j.location,
+      plans[j.plan]?.name||'Unknown',
+      plans[j.plan]?.price||0,
+      statusLabel(statusOf(j,reviews)),
+      r.expiresOn||'',
+      'No','No'
+    ]);
+  });
+
+  const csv=rows.map(row=>row.map(csvCell).join(','))
+    .join('\r\n');
+
+  const blob=new Blob([csv],{
+    type:'text/csv;charset=utf-8'
+  });
+
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='GigLink_Advertising_Demo_Report.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+$('adm-search').addEventListener('input',render);
+$('adm-filter').addEventListener('change',render);
+$('adm-refresh').addEventListener('click',render);
+$('adm-export').addEventListener('click',exportCSV);
+
+const businessForm=document.getElementById('gl14b-form');
+if(businessForm){
+  businessForm.addEventListener('submit',()=>{
+    setTimeout(render,0);
+  });
+}
+
+const businessList=document.getElementById('gl14b-list');
+if(businessList){
+  businessList.addEventListener('click',()=>{
+    setTimeout(render,0);
+  });
+}
+
+window.addEventListener('storage',e=>{
+  if(e.key===JOB_KEY||e.key===REVIEW_KEY){
+    render();
+  }
+});
+
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden)render();
+});
+
+render();
+})();
+</script>
+<!-- END GIGLINK STEP 14D -->
+
 </body></html>
