@@ -9163,4 +9163,426 @@ body.glk-locked {
 </script>
 <!-- END GIGLINK NAVIGATION FIX -->
 
+<!-- GIGLINK STEP 5K-Q: WORKER DASHBOARD -->
+<style>
+#glq-dashboard{background:#0d1932;color:#f6faff;border:1px solid #2c4d76;border-radius:18px;padding:16px;margin:18px 0;font-family:Arial,sans-serif}
+#glq-dashboard *{box-sizing:border-box}
+#glq-dashboard h2,#glq-dashboard h3{color:#fff;margin:10px 0}
+#glq-dashboard p{color:#c2d2e8;line-height:1.45}
+#glq-dashboard .glq-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+#glq-dashboard .glq-stat,#glq-dashboard .glq-panel{background:#192d4d;border:1px solid #355278;border-radius:13px;padding:13px;min-width:0}
+#glq-dashboard .glq-stat b{display:block;color:#62cbff;font-size:23px;margin:7px 0;overflow-wrap:anywhere}
+#glq-dashboard .glq-stat small{color:#c4d4e9}
+#glq-dashboard button{background:#13baf1!important;color:#07182b!important;border:0!important;border-radius:10px!important;padding:12px!important;font-weight:800!important;margin:5px 4px 5px 0!important;cursor:pointer}
+#glq-dashboard .glq-job{padding:10px 0;border-bottom:1px solid #3b5474}
+#glq-dashboard .glq-job:last-child{border:0}
+#glq-dashboard .glq-sub{color:#a9bfdc;font-size:13px}
+#glq-dashboard canvas{display:block;width:100%;height:190px;background:#101f38;border-radius:10px}
+#glq-dashboard .glq-note{font-size:12px;color:#a8bad5}
+#glq-dashboard .glq-error{color:#ffceaa}
+#glq-dashboard .glq-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+#glq-dashboard .glq-avatar{width:48px;height:48px;border-radius:50%;background:#2b527d;display:grid;place-items:center;font-size:24px}
+#glq-dashboard .glq-row{display:flex;gap:12px;align-items:center}
+#glq-dashboard [hidden]{display:none!important}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+const HOME=document.getElementById('gl5kg-home');
+if(!HOME || document.getElementById('glq-dashboard'))return;
+
+const URL='https://mhpqclzullhvxasllbdh.supabase.co';
+const KEY='sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA';
+
+const root=document.createElement('section');
+root.id='glq-dashboard';
+root.hidden=true;
+
+root.innerHTML=`
+<div class="glq-head">
+<h2>👷 Worker Dashboard</h2>
+<button id="glq-refresh" type="button">↻ Refresh</button>
+</div>
+
+<p id="glq-status" role="status">
+Connect your worker account to load your jobs.
+</p>
+
+<div class="glq-panel">
+<div class="glq-row">
+<div class="glq-avatar">👤</div>
+<div>
+<h3 id="glq-name">Worker Profile</h3>
+<div class="glq-sub" id="glq-profile">
+Your worker information
+</div>
+</div>
+</div>
+<button type="button" id="glq-profile-btn">
+View Profile
+</button>
+</div>
+
+<div class="glq-grid">
+<div class="glq-stat">
+<small>Upcoming Jobs</small>
+<b id="glq-upcoming">—</b>
+</div>
+<div class="glq-stat">
+<small>Active Jobs</small>
+<b id="glq-active">—</b>
+</div>
+<div class="glq-stat">
+<small>Completed Jobs</small>
+<b id="glq-completed">—</b>
+</div>
+<div class="glq-stat">
+<small>Estimated Worker Earnings</small>
+<b id="glq-earned">—</b>
+</div>
+</div>
+
+<div class="glq-panel">
+<h3>📊 Earnings by Month</h3>
+<canvas id="glq-earn-chart"></canvas>
+<p class="glq-note">
+Completed job estimates after the 15% GigLink fee.
+Not actual payments.
+</p>
+</div>
+
+<div class="glq-panel" style="margin-top:12px">
+<h3>📈 Completed Jobs by Month</h3>
+<canvas id="glq-jobs-chart"></canvas>
+</div>
+
+<div class="glq-panel" style="margin-top:12px">
+<h3>📋 Job Status Breakdown</h3>
+<canvas id="glq-status-chart"></canvas>
+</div>
+
+<div class="glq-panel" style="margin-top:12px">
+<h3>📅 Upcoming Work</h3>
+<div id="glq-upcoming-list"></div>
+</div>
+
+<div class="glq-panel" style="margin-top:12px">
+<h3>🧰 Active Work</h3>
+<div id="glq-active-list"></div>
+</div>
+
+<div class="glq-panel" style="margin-top:12px">
+<h3>✅ Completed Work</h3>
+<div id="glq-completed-list"></div>
+<button type="button" id="glq-explore">
+Explore Gigs
+</button>
+</div>
+`;
+
+HOME.appendChild(root);
+
+const $=id=>document.getElementById(id);
+const fmt=n=>new Intl.NumberFormat('en-US',{
+style:'currency',currency:'USD'
+}).format(n||0);
+
+const safeDate=s=>{
+if(!s)return null;
+const d=new Date(s);
+return isNaN(d.getTime())?null:d;
+};
+
+const statusText=s=>String(s||'unknown').replace(/_/g,' ');
+let db=null,loading=false;
+
+function open(page){
+if(typeof window.GigLinkOpenScreen==='function')
+window.GigLinkOpenScreen(page);
+}
+
+$('glq-profile-btn').onclick=()=>open('profile');
+
+$('glq-explore').onclick=()=>{
+window.GigLinkRequestedMarketplaceTab='browse';
+open('marketplace');
+};
+
+$('glq-refresh').onclick=()=>load();
+
+function list(target,items,empty){
+const node=$(target);
+node.replaceChildren();
+
+if(!items.length){
+const p=document.createElement('p');
+p.textContent=empty;
+node.append(p);
+return;
+}
+
+items.slice(0,8).forEach(j=>{
+const row=document.createElement('div');
+row.className='glq-job';
+
+const title=document.createElement('strong');
+title.textContent=j.title||'Untitled gig';
+
+const details=document.createElement('div');
+details.className='glq-sub';
+
+details.textContent=[
+statusText(j.status),
+j.location||'',
+j.scheduled_date||j.job_date||'',
+fmt(Number(j.budget||0)*.85)+' estimated worker share'
+].filter(Boolean).join(' · ');
+
+row.append(title,details);
+node.append(row);
+});
+}
+
+function plot(id,labels,values,kind){
+const canvas=$(id);
+const w=Math.max(280,Math.round(
+canvas.getBoundingClientRect().width||300
+));
+const h=190;
+const dpr=Math.min(devicePixelRatio||1,2);
+
+canvas.width=w*dpr;
+canvas.height=h*dpr;
+
+const c=canvas.getContext('2d');
+c.scale(dpr,dpr);
+c.clearRect(0,0,w,h);
+
+const left=40,right=12,top=16,bottom=34;
+const plotW=w-left-right;
+const plotH=h-top-bottom;
+const max=Math.max(1,...values);
+
+c.font='11px Arial';
+c.fillStyle='#b6cbe6';
+c.strokeStyle='#365274';
+c.beginPath();
+c.moveTo(left,top);
+c.lineTo(left,h-bottom);
+c.lineTo(w-right,h-bottom);
+c.stroke();
+
+for(let i=0;i<4;i++){
+let y=h-bottom-i*plotH/3;
+c.fillStyle='#a6bbd6';
+c.fillText(String(Math.round(max*i/3)),4,y+3);
+c.strokeStyle='#253d5c';
+c.beginPath();
+c.moveTo(left,y);
+c.lineTo(w-right,y);
+c.stroke();
+}
+
+const step=plotW/Math.max(1,values.length);
+
+if(kind==='line'){
+c.strokeStyle='#58caff';
+c.lineWidth=3;
+c.beginPath();
+values.forEach((v,i)=>{
+const x=left+step*(i+.5);
+const y=h-bottom-v/max*plotH;
+if(!i)c.moveTo(x,y);
+else c.lineTo(x,y);
+});
+c.stroke();
+}
+
+values.forEach((v,i)=>{
+const x=left+step*(i+.5);
+const y=h-bottom-v/max*plotH;
+
+if(kind==='bar'){
+c.fillStyle='#16baf4';
+c.fillRect(x-step*.29,y,step*.58,h-bottom-y);
+}else{
+c.fillStyle='#6cdbff';
+c.beginPath();
+c.arc(x,y,4,0,Math.PI*2);
+c.fill();
+}
+
+c.fillStyle='#d4e3f6';
+c.textAlign='center';
+c.fillText(labels[i]||'',x,h-13);
+});
+c.textAlign='left';
+}
+
+function chartJobs(jobs){
+const months=[];
+const now=new Date();
+
+for(let i=5;i>=0;i--){
+const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+months.push({
+key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),
+label:d.toLocaleString('en-US',{month:'short'})
+});
+}
+
+const done=jobs.filter(j=>j.status==='completed');
+
+function jobMonth(j){
+const d=safeDate(
+j.customer_approved_at||j.completed_at||j.updated_at
+);
+return d?d.getFullYear()+'-'+
+String(d.getMonth()+1).padStart(2,'0'):'';
+}
+
+const amounts=months.map(m=>
+done.filter(j=>jobMonth(j)===m.key)
+.reduce((sum,j)=>{
+const cents=Math.max(0,Math.round(Number(j.budget||0)*100));
+return sum+(cents-Math.round(cents*.15))/100;
+},0)
+);
+
+const counts=months.map(m=>
+done.filter(j=>jobMonth(j)===m.key).length
+);
+
+plot('glq-earn-chart',months.map(x=>x.label),amounts,'bar');
+plot('glq-jobs-chart',months.map(x=>x.label),counts,'line');
+
+const statuses=['Upcoming','Active','Completed'];
+const counts2=[
+jobs.filter(j=>['claimed','assigned','scheduled'].includes(j.status)).length,
+jobs.filter(j=>['in_progress','submitted','awaiting_approval'].includes(j.status)).length,
+done.length
+];
+
+plot('glq-status-chart',statuses,counts2,'bar');
+}
+
+async function load(){
+if(loading)return;
+
+if(!window.supabase?.createClient){
+$('glq-status').textContent='Supabase library unavailable. Refresh the page.';
+return;
+}
+
+loading=true;
+$('glq-refresh').disabled=true;
+$('glq-status').textContent='Loading your real worker dashboard…';
+
+try{
+db=db||window.supabase.createClient(URL,KEY);
+
+const auth=await db.auth.getUser();
+if(auth.error)throw auth.error;
+
+const user=auth.data.user;
+
+if(!user){
+root.hidden=true;
+return;
+}
+
+const profile=await db.from('giglink_profiles')
+.select('*')
+.eq('id',user.id)
+.maybeSingle();
+
+if(profile.error)throw profile.error;
+
+if(profile.data?.role!=='worker'){
+root.hidden=true;
+return;
+}
+
+root.hidden=false;
+const p=profile.data||{};
+
+$('glq-name').textContent=
+p.full_name||p.name||user.email?.split('@')[0]||'Worker';
+
+$('glq-profile').textContent=[
+p.service_area||p.city||p.location||'',
+p.primary_service||p.service||'Worker',
+p.is_verified===true?'Verified':'Verification not confirmed'
+].filter(Boolean).join(' · ');
+
+const result=await db.from('giglink_jobs')
+.select('*')
+.eq('worker_id',user.id)
+.order('created_at',{ascending:false})
+.limit(200);
+
+if(result.error)throw result.error;
+
+const jobs=result.data||[];
+
+const upcoming=jobs.filter(j=>
+['claimed','assigned','scheduled'].includes(j.status)
+);
+
+const active=jobs.filter(j=>
+['in_progress','submitted','awaiting_approval'].includes(j.status)
+);
+
+const completed=jobs.filter(j=>j.status==='completed');
+
+const earned=completed.reduce((sum,j)=>{
+const cents=Math.max(0,Math.round(Number(j.budget||0)*100));
+return sum+cents-Math.round(cents*.15);
+},0)/100;
+
+$('glq-upcoming').textContent=upcoming.length;
+$('glq-active').textContent=active.length;
+$('glq-completed').textContent=completed.length;
+$('glq-earned').textContent=fmt(earned);
+
+list('glq-upcoming-list',upcoming,'No upcoming gigs.');
+list('glq-active-list',active,'No active gigs.');
+list('glq-completed-list',completed,'No completed gigs yet.');
+
+chartJobs(jobs);
+
+$('glq-status').textContent=
+'Live Supabase data · '+jobs.length+
+' assigned gig(s) loaded. Earnings are estimates, not payouts.';
+
+}catch(e){
+root.hidden=false;
+$('glq-status').textContent=
+'Dashboard error: '+(e.message||String(e));
+$('glq-status').classList.add('glq-error');
+}finally{
+loading=false;
+$('glq-refresh').disabled=false;
+}
+}
+
+document.addEventListener('click',e=>{
+const b=e.target.closest('[data-gl5kg-go],[data-glh-open]');
+if(b&&(b.dataset.gl5kgGo==='home'||b.dataset.glhOpen==='home')){
+setTimeout(()=>load(),100);
+}
+});
+
+window.addEventListener('focus',()=>{
+if(!root.hidden)load();
+});
+
+setTimeout(()=>load(),900);
+
+})();
+</script>
+<!-- END GIGLINK STEP 5K-Q -->
+
 </body></html>
