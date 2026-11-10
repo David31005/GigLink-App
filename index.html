@@ -8111,9 +8111,18 @@ document.addEventListener("click",function(event) {
 page = aliases[page] || page;
 
 // Use the real Supabase marketplace for Explore.
-if (page === "browse") {
+
+// Send Explore and Post Gig to the real marketplace.
+const requestedPage = page;
+
+if (page === "browse" || page === "post") {
   page = "marketplace";
 }
+
+// Remember which real marketplace tab to open.
+window.GigLinkRequestedMarketplaceTab =
+  requestedPage === "post" ? "post" : "browse";
+
 
   openScreen(page);
 },true);
