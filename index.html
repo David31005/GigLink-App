@@ -5800,4 +5800,685 @@ render();
 </script>
 <!-- END GIGLINK STEP 5K-C2 -->
   
+<!-- GIGLINK STEP 5K-D2: REAL JOB PROGRESS -->
+<style>
+#gl5kd2{
+  max-width:760px;
+  margin:24px auto;
+  padding:18px;
+  background:#0f172a;
+  color:#f8fafc;
+  border:1px solid #334155;
+  border-radius:16px;
+  font:15px/1.5 system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+}
+#gl5kd2 *{box-sizing:border-box}
+#gl5kd2 h2{margin:0 0 6px}
+#gl5kd2 p{margin:7px 0}
+#gl5kd2 button{
+  min-height:44px;
+  padding:10px 13px;
+  margin:5px 5px 5px 0;
+  border:0;
+  border-radius:9px;
+  background:#2563eb;
+  color:white;
+  font-weight:650;
+  cursor:pointer;
+}
+#gl5kd2 button:disabled{opacity:.55;cursor:wait}
+#gl5kd2 input[type=file],
+#gl5kd2 input[type=text]{
+  width:100%;
+  padding:10px;
+  margin:7px 0;
+  background:#1e293b;
+  color:white;
+  border:1px solid #64748b;
+  border-radius:9px;
+}
+#gl5kd2 .gl5kd2-card{
+  background:#1e293b;
+  border:1px solid #475569;
+  border-radius:12px;
+  padding:14px;
+  margin:12px 0;
+}
+#gl5kd2 .gl5kd2-muted{
+  color:#cbd5e1;
+  font-size:13px;
+}
+#gl5kd2 .gl5kd2-error{color:#fecaca}
+#gl5kd2 .gl5kd2-success{color:#bbf7d0}
+#gl5kd2 img{
+  max-width:100%;
+  max-height:220px;
+  border-radius:8px;
+  object-fit:contain;
+  margin:6px 0;
+}
+#gl5kd2 .gl5kd2-photo{
+  border-top:1px solid #475569;
+  padding-top:10px;
+  margin-top:10px;
+}
+</style>
+
+<section id="gl5kd2" aria-label="GigLink real job progress">
+  <h2>GigLink • Real Job Progress</h2>
+  <p class="gl5kd2-muted">
+    Workers submit photos and time records.
+    Customers review and approve completed work.
+  </p>
+  <button type="button" id="gl5kd2-load">
+    Load My Active Gigs
+  </button>
+  <p id="gl5kd2-status" role="status" aria-live="polite">
+    Ready to connect.
+  </p>
+  <div id="gl5kd2-list"></div>
+</section>
+
+<script>
+(function(){
+'use strict';
+
+const SUPABASE_URL =
+  'https://mhpqclzullhvxasllbdh.supabase.co';
+
+const SUPABASE_KEY =
+  'PASTE_YOUR_PUBLISHABLE_KEY_HERE';
+
+const BUCKET = 'giglink-job-photos';
+
+const list = document.getElementById('gl5kd2-list');
+const status = document.getElementById('gl5kd2-status');
+const loadButton = document.getElementById('gl5kd2-load');
+
+let db = null;
+let loading = false;
+
+function say(message,kind){
+  status.textContent = message;
+  status.className =
+    kind === 'error' ? 'gl5kd2-error' :
+    kind === 'success' ? 'gl5kd2-success' : '';
+}
+
+function el(tag,txt,cls){
+  const node = document.createElement(tag);
+  if(txt !== undefined) node.textContent = txt;
+  if(cls) node.className = cls;
+  return node;
+}
+
+function btn(text,action){
+  const b = el('button',text);
+  b.type = 'button';
+  b.addEventListener('click',action);
+  return b;
+}
+
+function errorText(e){
+  return e && e.message ? e.message : String(e);
+}
+
+function safeName(name){
+  return String(name || 'photo')
+    .replace(/[^a-zA-Z0-9_-]/g,'_')
+    .slice(0,35);
+}
+
+function uuid(){
+  return (
+    typeof crypto !== 'undefined' &&
+    crypto.randomUUID
+  ) ? crypto.randomUUID() :
+    Date.now().toString(36) + '_' +
+    Math.random().toString(36).slice(2);
+}
+
+function triggerMarketplaceRefresh(){
+  [
+    'gl5kb-refreshmine',
+    'gl5kb-refresh',
+    'gl5kc2-load'
+  ].forEach(id=>{
+    const b = document.getElementById(id);
+    if(b && !b.disabled) b.click();
+  });
+}
+
+async function currentUser(){
+  const r = await db.auth.getUser();
+  if(r.error) throw r.error;
+
+  if(!r.data.user){
+    throw new Error(
+      'Sign in using your real GigLink Supabase account first.'
+    );
+  }
+
+  return r.data.user;
+}
+
+async function runAction(button,working,fn){
+  const old = button.textContent;
+  button.disabled = true;
+  button.textContent = working;
+
+  try{
+    await fn();
+  }catch(e){
+    say(errorText(e),'error');
+  }finally{
+    button.disabled = false;
+    button.textContent = old;
+  }
+}
+
+async function callRpc(name,args){
+  const r = await db.rpc(name,args);
+
+  if(r.error) throw r.error;
+
+  if(!r.data || r.data.success !== true){
+    throw new Error(
+      'Operation was not confirmed by the server.'
+    );
+  }
+
+  return r.data;
+}
+
+async function signedPhoto(path){
+  const r = await db.storage
+    .from(BUCKET)
+    .createSignedUrl(path,120);
+
+  if(r.error) throw r.error;
+  return r.data.signedUrl;
+}
+
+async function uploadPhoto(job,type,file){
+  if(!file){
+    throw new Error('Choose a photo first.');
+  }
+
+  const types = {
+    'image/jpeg':'jpg',
+    'image/png':'png',
+    'image/webp':'webp'
+  };
+
+  const ext = types[file.type];
+
+  if(!ext){
+    throw new Error(
+      'Use JPG, PNG, or WebP images only. ' +
+      'iPhone HEIC photos may need conversion to JPG.'
+    );
+  }
+
+  if(file.size > 10 * 1024 * 1024){
+    throw new Error(
+      'Photo must be 10 MB or smaller.'
+    );
+  }
+
+  const name =
+    uuid() + '_' + safeName(file.name) + '.' + ext;
+
+  const path =
+    job.id + '/' + type + '/' + name;
+
+  const uploaded = await db.storage
+    .from(BUCKET)
+    .upload(path,file,{
+      contentType:file.type,
+      upsert:false
+    });
+
+  if(uploaded.error) throw uploaded.error;
+
+  try{
+    await callRpc('giglink_register_job_photo',{
+      p_job_id:job.id,
+      p_photo_type:type,
+      p_storage_path:path
+    });
+  }catch(e){
+    try{
+      await db.storage.from(BUCKET).remove([path]);
+    }catch(_ignored){}
+
+    throw new Error(
+      'File uploaded, but photo registration failed: ' +
+      errorText(e)
+    );
+  }
+}
+
+async function addPhotoView(parent,photo){
+  const holder = el(
+    'div',undefined,'gl5kd2-photo'
+  );
+
+  holder.appendChild(el(
+    'p',
+    photo.photo_type.toUpperCase() +
+    ' photo • ' +
+    new Date(photo.uploaded_at).toLocaleString()
+  ));
+
+  try{
+    const url = await signedPhoto(
+      photo.storage_path
+    );
+
+    const a = el('a','View photo');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.style.color = '#93c5fd';
+    holder.appendChild(a);
+
+    const img = el('img');
+    img.src = url;
+    img.alt = photo.photo_type + ' job photo';
+    img.loading = 'lazy';
+    holder.appendChild(img);
+  }catch(e){
+    holder.appendChild(el(
+      'p',
+      'Photo unavailable: ' + errorText(e),
+      'gl5kd2-error'
+    ));
+  }
+
+  parent.appendChild(holder);
+}
+
+function photoControl(card,job,type){
+  const group = el(
+    'div',undefined,'gl5kd2-photo'
+  );
+
+  group.appendChild(el(
+    'p',
+    type === 'before'
+      ? 'Upload before-work photo (required before clock-in)'
+      : 'Upload after-work photo (required before clock-out)'
+  ));
+
+  const input = el('input');
+  input.type = 'file';
+  input.accept =
+    'image/jpeg,image/png,image/webp';
+
+  input.setAttribute(
+    'aria-label','Choose ' + type + ' photo'
+  );
+
+  const send = btn(
+    'Upload ' + type + ' photo',
+    ()=>runAction(send,'Uploading...',async()=>{
+      say('Uploading ' + type + ' photo...');
+
+      await uploadPhoto(
+        job,
+        type,
+        input.files && input.files[0]
+      );
+
+      say(
+        type + ' photo uploaded and registered.',
+        'success'
+      );
+
+      await loadGigs();
+    })
+  );
+
+  group.append(input,send);
+  card.appendChild(group);
+}
+
+async function showJob(job,role,photos){
+  const card = el(
+    'article',undefined,'gl5kd2-card'
+  );
+
+  card.appendChild(el(
+    'h3',job.title || 'Untitled gig'
+  ));
+
+  card.appendChild(el(
+    'p','Status: ' + job.status
+  ));
+
+  card.appendChild(el(
+    'p',
+    'Location: ' +
+    (job.location || 'Not specified') +
+    ' • Budget: $' +
+    Number(job.budget || 0).toFixed(2),
+    'gl5kd2-muted'
+  ));
+
+  if(job.clock_in_at){
+    card.appendChild(el(
+      'p',
+      'Clocked in: ' +
+      new Date(job.clock_in_at).toLocaleString(),
+      'gl5kd2-muted'
+    ));
+  }
+
+  if(job.clock_out_at){
+    card.appendChild(el(
+      'p',
+      'Clocked out: ' +
+      new Date(job.clock_out_at).toLocaleString(),
+      'gl5kd2-muted'
+    ));
+  }
+
+  if(job.customer_approved_at){
+    card.appendChild(el(
+      'p',
+      'Approved: ' +
+      new Date(
+        job.customer_approved_at
+      ).toLocaleString(),
+      'gl5kd2-muted'
+    ));
+  }
+
+  const related = photos.filter(
+    p => p.job_id === job.id
+  );
+
+  for(const p of related){
+    await addPhotoView(card,p);
+  }
+
+  if(role === 'worker'){
+    if(job.status === 'claimed'){
+      photoControl(card,job,'before');
+
+      const b = btn(
+        'Clock In',
+        ()=>runAction(
+          b,'Clocking in...',async()=>{
+            await callRpc(
+              'giglink_clock_in',
+              {p_job_id:job.id}
+            );
+
+            say(
+              'Clock-in recorded.',
+              'success'
+            );
+
+            triggerMarketplaceRefresh();
+            await loadGigs();
+          }
+        )
+      );
+
+      card.appendChild(b);
+    }
+
+    if(job.status === 'in_progress'){
+      photoControl(card,job,'after');
+
+      const b = btn(
+        'Clock Out',
+        ()=>runAction(
+          b,'Clocking out...',async()=>{
+            await callRpc(
+              'giglink_clock_out',
+              {p_job_id:job.id}
+            );
+
+            say(
+              'Clock-out recorded. Waiting for customer approval.',
+              'success'
+            );
+
+            triggerMarketplaceRefresh();
+            await loadGigs();
+          }
+        )
+      );
+
+      card.appendChild(b);
+    }
+
+    if(job.status === 'awaiting_approval'){
+      card.appendChild(el(
+        'p',
+        'Waiting for customer review and signature.',
+        'gl5kd2-muted'
+      ));
+    }
+  }
+
+  if(
+    role === 'customer' &&
+    job.status === 'awaiting_approval'
+  ){
+    const label = el(
+      'label',
+      'Type your name as your electronic signature to approve the work:'
+    );
+
+    const input = el('input');
+    input.type = 'text';
+    input.placeholder = 'Customer full name';
+    input.autocomplete = 'name';
+
+    label.appendChild(input);
+    card.appendChild(label);
+
+    const b = btn(
+      'Approve & Complete Gig',
+      ()=>runAction(
+        b,'Approving...',async()=>{
+          const signature =
+            input.value.trim();
+
+          if(
+            signature.length < 2 ||
+            signature.length > 200
+          ){
+            throw new Error(
+              'Enter a valid signature between 2 and 200 characters.'
+            );
+          }
+
+          if(!window.confirm(
+            'Approve this completed work and apply your typed electronic signature?'
+          )) return;
+
+          await callRpc(
+            'giglink_approve_completion',
+            {
+              p_job_id:job.id,
+              p_signature:signature
+            }
+          );
+
+          say(
+            'Gig approved and completed.',
+            'success'
+          );
+
+          triggerMarketplaceRefresh();
+          await loadGigs();
+        }
+      )
+    );
+
+    card.appendChild(b);
+  }
+
+  list.appendChild(card);
+}
+
+async function loadGigs(){
+  if(loading) return;
+
+  loading = true;
+  loadButton.disabled = true;
+  list.replaceChildren();
+  say('Loading real gigs...');
+
+  try{
+    const user = await currentUser();
+
+    const profile = await db
+      .from('giglink_profiles')
+      .select('role')
+      .eq('id',user.id)
+      .single();
+
+    if(profile.error) throw profile.error;
+
+    const role = profile.data.role;
+
+    if(
+      role !== 'customer' &&
+      role !== 'worker'
+    ){
+      throw new Error(
+        'This account has no supported customer/worker role.'
+      );
+    }
+
+    const column =
+      role === 'worker'
+        ? 'worker_id'
+        : 'customer_id';
+
+    const jobsResult = await db
+      .from('giglink_jobs')
+      .select(
+        'id,title,location,budget,status,worker_id,customer_id,clock_in_at,clock_out_at,customer_approved_at,created_at'
+      )
+      .eq(column,user.id)
+      .in('status',[
+        'claimed',
+        'in_progress',
+        'awaiting_approval',
+        'completed'
+      ])
+      .order('created_at',{
+        ascending:false
+      })
+      .limit(50);
+
+    if(jobsResult.error){
+      throw jobsResult.error;
+    }
+
+    const jobs = jobsResult.data || [];
+
+    if(!jobs.length){
+      say(
+        'No claimed, in-progress, awaiting-approval, or completed gigs for this account.'
+      );
+      return;
+    }
+
+    const ids = jobs.map(j=>j.id);
+
+    const photoResult = await db
+      .from('giglink_job_photos')
+      .select(
+        'job_id,photo_type,storage_path,uploaded_at'
+      )
+      .in('job_id',ids)
+      .order('uploaded_at',{
+        ascending:true
+      })
+      .limit(200);
+
+    if(photoResult.error){
+      throw photoResult.error;
+    }
+
+    say(
+      'Loaded ' + jobs.length +
+      ' real gig(s) for your ' +
+      role + ' account.',
+      'success'
+    );
+
+    for(const job of jobs){
+      await showJob(
+        job,
+        role,
+        photoResult.data || []
+      );
+    }
+  }catch(e){
+    say(
+      'Error: ' + errorText(e),
+      'error'
+    );
+  }finally{
+    loading = false;
+    loadButton.disabled = false;
+  }
+}
+
+if(
+  !window.supabase ||
+  !window.supabase.createClient
+){
+  say(
+    'Supabase library not loaded. Keep the existing Supabase script above this section.',
+    'error'
+  );
+  return;
+}
+
+if(
+  SUPABASE_KEY ===
+  'sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA'
+){
+  say(
+    'Replace the publishable key placeholder with your existing Supabase public key.',
+    'error'
+  );
+  return;
+}
+
+db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+loadButton.addEventListener(
+  'click',loadGigs
+);
+
+db.auth.onAuthStateChange(()=>{
+  list.replaceChildren();
+  say(
+    'Account session changed. Tap Load My Active Gigs.'
+  );
+});
+
+say(
+  'Ready. Sign in with your real Supabase account and load your gigs.'
+);
+
+})();
+</script>
+<!-- END GIGLINK STEP 5K-D2 -->
+  
 </body></html>
