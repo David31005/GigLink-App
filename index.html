@@ -3496,4 +3496,505 @@ render();
 
 <!-- END GIGLINK STEP 5J-B -->
 
+<!-- ==========================================
+ GIGLINK STEP 5J-D
+ SECURE OWNER WORKER APPROVAL DASHBOARD
+ Diamond Shine Service LLC
+ Add above the final </body> tag
+========================================== -->
+
+<style>
+#gl5jd {
+  max-width:650px;
+  margin:20px auto;
+  padding:20px;
+  background:#fff;
+  color:#183047;
+  border:2px solid #087f83;
+  border-radius:16px;
+  font:16px Arial,sans-serif;
+  box-sizing:border-box;
+}
+#gl5jd * {
+  box-sizing:border-box;
+}
+#gl5jd h2 {
+  font-size:23px;
+  margin:0 0 10px;
+}
+#gl5jd p {
+  line-height:1.5;
+}
+#gl5jd button {
+  padding:12px 14px;
+  margin:4px 4px 4px 0;
+  border:0;
+  border-radius:9px;
+  background:#087f83;
+  color:white;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
+}
+#gl5jd button:disabled {
+  opacity:.5;
+  cursor:default;
+}
+#gl5jd .gl5jd-reject {
+  background:#b42332;
+}
+#gl5jd .gl5jd-card {
+  margin-top:14px;
+  padding:15px;
+  border:1px solid #c9d4dc;
+  border-radius:12px;
+  background:#f7fafc;
+  overflow-wrap:anywhere;
+}
+#gl5jd .gl5jd-card p {
+  margin:7px 0;
+}
+#gl5jd .gl5jd-badge {
+  display:inline-block;
+  padding:5px 9px;
+  border-radius:7px;
+  background:#e1ebf4;
+  font-size:13px;
+  font-weight:bold;
+}
+#gl5jd-status {
+  margin:14px 0;
+  padding:12px;
+  border-radius:9px;
+  background:#eaf5f5;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+#gl5jd-summary {
+  font-weight:bold;
+  margin:12px 0;
+}
+#gl5jd .gl5jd-note {
+  font-size:13px;
+  color:#52677c;
+}
+</style>
+
+<section id="gl5jd">
+  <h2>GigLink — Owner Worker Approvals</h2>
+
+  <p class="gl5jd-note">
+    Secure Supabase administration.
+    Only an authorized owner can access
+    worker applications or approve workers.
+  </p>
+
+  <button type="button" id="gl5jd-open">
+    Open Owner Dashboard
+  </button>
+
+  <button type="button" id="gl5jd-refresh">
+    Refresh Applications
+  </button>
+
+  <div id="gl5jd-status" role="status">
+    Ready. Sign in with your authorized
+    Supabase owner account.
+  </div>
+
+  <div id="gl5jd-summary"></div>
+
+  <div id="gl5jd-applications"></div>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  const URL =
+    "https://mhpqclzullhvxasllbdh.supabase.co";
+
+  // Replace with your existing public key.
+  const KEY =
+    "https://mhpqclzullhvxasllbdh.supabase.co";
+
+  const status =
+    document.getElementById("gl5jd-status");
+
+  const summary =
+    document.getElementById("gl5jd-summary");
+
+  const list =
+    document.getElementById("gl5jd-applications");
+
+  const openButton =
+    document.getElementById("gl5jd-open");
+
+  const refreshButton =
+    document.getElementById("gl5jd-refresh");
+
+  let busy = false;
+  let authorized = false;
+  let currentOwnerId = null;
+
+  function show(message) {
+    status.textContent = message;
+  }
+
+  function clearResults() {
+    list.replaceChildren();
+    summary.textContent = "";
+  }
+
+  function setBusy(value) {
+    busy = value;
+    openButton.disabled = value;
+    refreshButton.disabled = value;
+  }
+
+  function paragraph(parent, label, value) {
+    const p = document.createElement("p");
+
+    const strong =
+      document.createElement("strong");
+
+    strong.textContent = label + ": ";
+
+    const span = document.createElement("span");
+
+    span.textContent =
+      value == null ? "" : String(value);
+
+    p.append(strong, span);
+    parent.appendChild(p);
+  }
+
+  function dateText(value) {
+    if (!value) return "Not yet reviewed";
+
+    const date = new Date(value);
+
+    return Number.isNaN(date.getTime())
+      ? "Unknown date"
+      : date.toLocaleString();
+  }
+
+  if (KEY.includes("PASTE_YOUR_")) {
+    show(
+      "Setup required: enter your Supabase " +
+      "publishable key in Step 5J-D."
+    );
+    openButton.disabled = true;
+    refreshButton.disabled = true;
+    return;
+  }
+
+  if (
+    !window.supabase ||
+    !window.supabase.createClient
+  ) {
+    show(
+      "Supabase library unavailable. " +
+      "Make sure Step 5G loads first."
+    );
+    return;
+  }
+
+  const client = window.supabase.createClient(
+    URL,
+    KEY,
+    {
+      auth: {
+        persistSession:true,
+        autoRefreshToken:true,
+        detectSessionInUrl:false
+      }
+    }
+  );
+
+  async function requireOwner() {
+    const { data:userData, error:userError } =
+      await client.auth.getUser();
+
+    if (userError || !userData.user) {
+      throw new Error(
+        "Sign in using Real Login first."
+      );
+    }
+
+    const { data:isOwner, error:ownerError } =
+      await client.rpc("giglink_is_owner");
+
+    if (ownerError) throw ownerError;
+
+    if (isOwner !== true) {
+      authorized = false;
+      currentOwnerId = null;
+      clearResults();
+
+      throw new Error(
+        "Access denied. This Supabase " +
+        "account is not an authorized owner."
+      );
+    }
+
+    authorized = true;
+    currentOwnerId = userData.user.id;
+
+    return userData.user;
+  }
+
+  async function loadApplications() {
+    await requireOwner();
+
+    const { data, error } = await client.rpc(
+      "giglink_admin_applications"
+    );
+
+    if (error) throw error;
+
+    const applications = data || [];
+
+    clearResults();
+
+    const pending = applications.filter(
+      app => app.status === "pending"
+    );
+
+    const approved = applications.filter(
+      app => app.status === "approved"
+    );
+
+    const rejected = applications.filter(
+      app => app.status === "rejected"
+    );
+
+    summary.textContent =
+      "Loaded: " + applications.length +
+      " | Pending: " + pending.length +
+      " | Approved: " + approved.length +
+      " | Rejected: " + rejected.length;
+
+    if (applications.length === 0) {
+      show(
+        "Owner access verified. " +
+        "No worker applications found."
+      );
+      return;
+    }
+
+    // Pending applications first.
+    const ordered = [
+      ...pending,
+      ...applications.filter(
+        app => app.status !== "pending"
+      )
+    ];
+
+    ordered.forEach(app => {
+      const card =
+        document.createElement("article");
+
+      card.className = "gl5jd-card";
+
+      const heading =
+        document.createElement("h3");
+
+      heading.textContent =
+        app.full_name || "Unnamed applicant";
+
+      card.appendChild(heading);
+
+      const badge =
+        document.createElement("span");
+
+      badge.className = "gl5jd-badge";
+      badge.textContent =
+        (app.status || "unknown").toUpperCase();
+
+      card.appendChild(badge);
+
+      paragraph(
+        card,
+        "City",
+        app.city
+      );
+
+      paragraph(
+        card,
+        "Service",
+        app.service
+      );
+
+      paragraph(
+        card,
+        "Experience",
+        app.experience || "Not provided"
+      );
+
+      paragraph(
+        card,
+        "Submitted",
+        dateText(app.submitted_at)
+      );
+
+      paragraph(
+        card,
+        "Reviewed",
+        dateText(app.reviewed_at)
+      );
+
+      if (app.status === "pending") {
+        if (app.user_id === currentOwnerId) {
+          paragraph(
+            card,
+            "Review",
+            "Cannot review your own application"
+          );
+        } else {
+          const approve =
+            document.createElement("button");
+
+          approve.type = "button";
+          approve.textContent =
+            "Approve Worker";
+
+          approve.addEventListener(
+            "click",
+            () => reviewApplication(
+              app,
+              "approved"
+            )
+          );
+
+          const reject =
+            document.createElement("button");
+
+          reject.type = "button";
+          reject.className = "gl5jd-reject";
+          reject.textContent =
+            "Reject Application";
+
+          reject.addEventListener(
+            "click",
+            () => reviewApplication(
+              app,
+              "rejected"
+            )
+          );
+
+          card.append(approve, reject);
+        }
+      }
+
+      list.appendChild(card);
+    });
+
+    show(
+      "Owner verified. Applications loaded.\n" +
+      "Showing up to 200 recent applications."
+    );
+  }
+
+  async function reviewApplication(
+    app,
+    decision
+  ) {
+    if (busy || !authorized) return;
+
+    const action =
+      decision === "approved"
+        ? "APPROVE"
+        : "REJECT";
+
+    const confirmed = window.confirm(
+      action + " worker application for " +
+      app.full_name + "?\n\n" +
+      "This action changes the application " +
+      "status in your real Supabase database."
+    );
+
+    if (!confirmed) return;
+
+    await run(async () => {
+      await requireOwner();
+
+      show("Saving owner decision...");
+
+      const { data, error } = await client.rpc(
+        "giglink_review_worker",
+        {
+          p_application_id:app.id,
+          p_decision:decision
+        }
+      );
+
+      if (error) throw error;
+
+      await loadApplications();
+
+      show(
+        data + "\n" +
+        "Supabase database updated.\n" +
+        (
+          decision === "approved"
+            ? "Worker role activated."
+            : "Application rejected."
+        )
+      );
+    });
+  }
+
+  async function run(action) {
+    if (busy) return;
+
+    setBusy(true);
+
+    try {
+      await action();
+    } catch (error) {
+      show(
+        "Error: " +
+        (error.message || "Unknown error")
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  openButton.addEventListener(
+    "click",
+    () => run(loadApplications)
+  );
+
+  refreshButton.addEventListener(
+    "click",
+    () => run(loadApplications)
+  );
+
+  // Hide previously loaded applications
+  // if the real Supabase account changes.
+  client.auth.onAuthStateChange(
+    (event) => {
+      if (
+        event === "SIGNED_OUT" ||
+        event === "USER_DELETED"
+      ) {
+        authorized = false;
+        currentOwnerId = null;
+        clearResults();
+        show("Signed out of owner dashboard.");
+      }
+    }
+  );
+
+  show(
+    "Owner dashboard ready. " +
+    "Tap Open Owner Dashboard."
+  );
+})();
+</script>
+
+<!-- END GIGLINK STEP 5J-D -->
+
 </body></html>
