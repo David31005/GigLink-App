@@ -11032,4 +11032,352 @@ setTimeout(check,1500);
 </script>
 <!-- END GIGLINK NOTIFICATION CENTER -->
 
+<!-- GIGLINK PAYMENTS STEP 1A: CUSTOMER SCREEN -->
+<style>
+#glpay-open{
+  position:fixed;
+  right:12px;
+  bottom:88px;
+  z-index:1250;
+  background:#18bafa;
+  color:#07182b;
+  border:0;
+  border-radius:14px;
+  padding:12px 15px;
+  font-weight:800;
+  box-shadow:0 4px 16px #0007;
+}
+#glpay-screen[hidden],
+#glpay-open[hidden]{
+  display:none!important;
+}
+#glpay-screen{
+  position:fixed;
+  inset:0;
+  z-index:1800;
+  background:#08152b;
+  color:#fff;
+  overflow-y:auto;
+  padding:20px 16px 100px;
+  box-sizing:border-box;
+}
+#glpay-screen *{box-sizing:border-box}
+#glpay-screen h2,
+#glpay-screen h3{color:#fff!important}
+.glpay-card{
+  background:#172c4d;
+  border:1px solid #345780;
+  border-radius:16px;
+  padding:18px;
+  margin:14px 0;
+}
+.glpay-stat{
+  color:#8adfff;
+  font-weight:800;
+  font-size:14px;
+}
+#glpay-screen button{
+  border:0;
+  border-radius:11px;
+  padding:13px 16px;
+  margin:5px 5px 5px 0;
+  background:#18bafa;
+  color:#07182b;
+  font-weight:800;
+}
+#glpay-screen button:disabled{
+  opacity:.5;
+}
+#glpay-message{
+  color:#d8e7ff;
+  overflow-wrap:anywhere;
+}
+.glpay-method{
+  border-top:1px solid #355278;
+  padding:13px 0;
+}
+.glpay-small{
+  color:#b9cde6;
+  font-size:13px;
+}
+</style>
+
+<button id="glpay-open" type="button" hidden>
+  💳 Payments
+</button>
+
+<section id="glpay-screen" hidden
+  aria-label="Customer payment methods">
+  <button id="glpay-back" type="button">
+    ← Back to GigLink
+  </button>
+
+  <h2>💳 Payment Methods</h2>
+  <p>Manage your payment methods securely.</p>
+
+  <div class="glpay-card">
+    <div class="glpay-stat">
+      🧪 STRIPE TEST MODE
+    </div>
+    <h3>Saved Cards</h3>
+    <p class="glpay-small">
+      Card details are collected by Stripe,
+      not stored in GigLink.
+    </p>
+    <div id="glpay-methods">
+      No cards loaded yet.
+    </div>
+    <button id="glpay-add" type="button">
+      + Add Payment Method
+    </button>
+    <button id="glpay-refresh" type="button">
+      ↻ Refresh Cards
+    </button>
+  </div>
+
+  <div class="glpay-card">
+    <h3>🔒 How GigLink Payments Work</h3>
+    <p>1. Save a card before booking.</p>
+    <p>2. Approve the worker's completed job.</p>
+    <p>3. GigLink attempts to collect payment.</p>
+    <p>4. Worker payout is processed after
+       successful payment.</p>
+    <p class="glpay-small">
+      No live charges are enabled in this step.
+    </p>
+  </div>
+
+  <p id="glpay-message" role="status"></p>
+</section>
+
+<script>
+(function(){
+"use strict";
+
+if(window.GigLinkPaymentScreenReady)return;
+window.GigLinkPaymentScreenReady=true;
+
+const $=id=>document.getElementById(id);
+const open=$("glpay-open");
+const screen=$("glpay-screen");
+const message=$("glpay-message");
+const methods=$("glpay-methods");
+
+let client=null;
+let currentUserId=null;
+
+function setMessage(value){
+  message.textContent=value;
+}
+
+function getClient(){
+  if(!window.supabase?.createClient){
+    throw Error("Supabase library is unavailable.");
+  }
+
+  if(!client){
+    client=window.supabase.createClient(
+      "https://mhpqclzullhvxasllbdh.supabase.co",
+      "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA"
+    );
+  }
+  return client;
+}
+
+async function getCustomer(){
+  const db=getClient();
+
+  const {data,error}=await db.auth.getUser();
+  if(error)throw error;
+
+  if(!data.user){
+    throw Error("Please sign in first.");
+  }
+
+  const profile=await db
+    .from("giglink_profiles")
+    .select("role")
+    .eq("id",data.user.id)
+    .maybeSingle();
+
+  if(profile.error)throw profile.error;
+
+  if(profile.data?.role!=="customer"){
+    throw Error(
+      "Payment Methods is for customer accounts."
+    );
+  }
+
+  return data.user;
+}
+
+async function invoke(name,body={}){
+  const db=getClient();
+  const result=await db.functions.invoke(
+    name,{body}
+  );
+
+  if(result.error)throw result.error;
+  return result.data;
+}
+
+async function refreshCards(){
+  methods.textContent="Loading payment methods...";
+
+  try{
+    const user=await getCustomer();
+
+    if(currentUserId!==user.id){
+      currentUserId=user.id;
+    }
+
+    const data=await invoke(
+      "giglink-payment-methods"
+    );
+
+    methods.replaceChildren();
+
+    const cards=data?.methods||[];
+
+    if(!cards.length){
+      methods.textContent=
+        "No saved payment methods.";
+      return;
+    }
+
+    cards.forEach(card=>{
+      const row=document.createElement("div");
+      row.className="glpay-method";
+
+      const brand=String(
+        card.brand||"Card"
+      ).toUpperCase();
+
+      const last4=String(card.last4||"????");
+      const exp=String(card.exp_month||"")+
+        "/"+String(card.exp_year||"");
+
+      row.textContent=
+        "💳 "+brand+" •••• "+last4+
+        " — Expires "+exp;
+
+      methods.appendChild(row);
+    });
+
+    setMessage("Payment methods updated.");
+
+  }catch(error){
+    methods.textContent=
+      "Saved cards are not available yet.";
+    setMessage(
+      "Backend setup required: "+
+      (error.message||String(error))
+    );
+  }
+}
+
+async function openScreen(){
+  try{
+    await getCustomer();
+    screen.hidden=false;
+    await refreshCards();
+  }catch(error){
+    setMessage(error.message||String(error));
+    screen.hidden=false;
+  }
+}
+
+async function addCard(){
+  const button=$("glpay-add");
+  button.disabled=true;
+
+  try{
+    await getCustomer();
+
+    setMessage("Opening secure Stripe setup...");
+
+    const data=await invoke(
+      "giglink-create-card-setup",
+      {
+        return_url:
+          location.origin+location.pathname+
+          "?giglink_payment_return=1"
+      }
+    );
+
+    if(!data?.url||
+       !data.url.startsWith(
+         "https://checkout.stripe.com/"
+       )){
+      throw Error(
+        "Stripe did not return a valid setup URL."
+      );
+    }
+
+    location.assign(data.url);
+
+  }catch(error){
+    setMessage(
+      "Card setup unavailable: "+
+      (error.message||String(error))
+    );
+  }finally{
+    button.disabled=false;
+  }
+}
+
+open.addEventListener("click",openScreen);
+
+$("glpay-back").addEventListener(
+  "click",()=>{screen.hidden=true;}
+);
+
+$("glpay-refresh").addEventListener(
+  "click",refreshCards
+);
+
+$("glpay-add").addEventListener(
+  "click",addCard
+);
+
+async function updateVisibility(){
+  try{
+    const user=await getCustomer();
+    currentUserId=user.id;
+    open.hidden=false;
+  }catch{
+    open.hidden=true;
+    screen.hidden=true;
+    currentUserId=null;
+  }
+}
+
+document.addEventListener("click",e=>{
+  if(e.target.closest(
+    '[data-gl5kg-go="home"]'
+  )){
+    setTimeout(updateVisibility,500);
+  }
+});
+
+window.addEventListener("pageshow",()=>{
+  updateVisibility();
+
+  if(new URLSearchParams(
+    location.search
+  ).has("giglink_payment_return")){
+    screen.hidden=false;
+    refreshCards();
+    history.replaceState(
+      {},document.title,location.pathname
+    );
+  }
+});
+
+setTimeout(updateVisibility,1500);
+
+})();
+</script>
+<!-- END GIGLINK PAYMENTS STEP 1A -->
+
 </body></html>
