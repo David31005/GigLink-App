@@ -11628,4 +11628,111 @@ setTimeout(updateVisibility,1500);
   }
 </style>
 <!-- END GIGLINK SCREEN VISIBILITY FIX -->
-</body></html>
+<!-- GIGLINK COLLAPSIBLE WORK CONTROLS AND PHOTOS -->
+<style>
+  #gl5kb-mine .gl-mine-work,
+  #gl5kd2 .gl-job-photos {
+    margin: 12px 0;
+  }
+
+  .gl-mine-work > summary,
+  .gl-job-photos > summary {
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 12px 14px;
+    border: 1px solid #355278;
+    border-radius: 10px;
+    background: #192d50;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .gl-mine-work > summary:focus-visible,
+  .gl-job-photos > summary:focus-visible {
+    outline: 3px solid #55c9ff;
+    outline-offset: 2px;
+  }
+
+  #gl5kb-mine.gl-mine-collapsible #gl5ks-title,
+  #gl5kb-mine.gl-mine-collapsible #gl5ks-title + p,
+  .gl-mine-work #gl5kd2 > h2 {
+    display: none !important;
+  }
+
+  #gl5kb-mine #gl5kd2 .gl5kd2-card > h3 {
+    color: #fff !important;
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  function setup() {
+    const mine = document.getElementById("gl5kb-mine");
+    const progress = document.getElementById("gl5kd2");
+    const list = document.getElementById("gl5kd2-list");
+
+    if (!progress || !list || list.dataset.glPhotoToggleReady) return;
+    list.dataset.glPhotoToggleReady = "true";
+
+    if (mine && mine.contains(progress)) {
+      const controls = document.createElement("details");
+      const summary = document.createElement("summary");
+
+      controls.className = "gl-mine-work";
+      summary.textContent = "Job Work Controls";
+      controls.appendChild(summary);
+
+      progress.before(controls);
+      controls.appendChild(progress);
+      mine.classList.add("gl-mine-collapsible");
+    }
+
+    function groupPhotos() {
+      list.querySelectorAll(".gl5kd2-card").forEach(card => {
+        const photos = Array.from(card.children).filter(row => {
+          const label = row.firstElementChild;
+          return row.classList.contains("gl5kd2-photo") &&
+            label &&
+            /^(before|after)\s+photo\s*•/i.test(label.textContent.trim());
+        });
+
+        if (!photos.length) return;
+
+        let gallery = card.querySelector(":scope > .gl-job-photos");
+
+        if (!gallery) {
+          gallery = document.createElement("details");
+          gallery.className = "gl-job-photos";
+
+          const summary = document.createElement("summary");
+          summary.textContent = "Before & After Photos";
+          gallery.appendChild(summary);
+
+          photos[0].before(gallery);
+        }
+
+        photos.forEach(photo => gallery.appendChild(photo));
+      });
+    }
+
+    groupPhotos();
+
+    new MutationObserver(groupPhotos).observe(list, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setup, { once: true });
+  } else {
+    setup();
+  }
+})();
+</script>
+<!-- END GIGLINK COLLAPSIBLE WORK CONTROLS AND PHOTOS -->
+
+ </body></html>
