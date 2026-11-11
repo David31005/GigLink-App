@@ -10001,4 +10001,61 @@ setTimeout(()=>load(),900);
 <!-- END GIGLINK MY GIGS CLEANUP -->
 
 
+<!-- GIGLINK HOME & DASHBOARD BUTTON LINK FIX -->
+<script>
+(function () {
+  "use strict";
+
+  function openGigLinkHome() {
+    // Use the existing mobile Home navigation.
+    if (typeof window.GigLinkMobileGo === "function") {
+      window.GigLinkMobileGo("home");
+    } else if (
+      typeof window.GigLinkOpenScreen === "function"
+    ) {
+      window.GigLinkOpenScreen("home");
+    } else {
+      const home = document.getElementById("gl5kg-home");
+      if (home) {
+        home.hidden = false;
+        home.style.display = "block";
+      }
+    }
+
+    // Refresh the existing worker dashboard.
+    setTimeout(function () {
+      const dashboard =
+        document.getElementById("glq-dashboard");
+
+      const refresh =
+        document.getElementById("glq-refresh");
+
+      if (dashboard && !dashboard.hidden &&
+          refresh && !refresh.disabled) {
+        refresh.click();
+      }
+    }, 300);
+  }
+
+  // Intercept the More > Dashboard button.
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest(
+      '#gl5kg-more [data-gl5kg-go="dashboard"]'
+    );
+
+    if (!button) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    openGigLinkHome();
+  }, true);
+
+  console.log(
+    "GigLink Home and Dashboard navigation linked."
+  );
+})();
+</script>
+<!-- END GIGLINK HOME & DASHBOARD BUTTON LINK FIX -->
+
 </body></html>
