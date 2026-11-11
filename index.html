@@ -11615,5 +11615,17 @@ setTimeout(updateVisibility,1500);
   
 <!-- END GIGLINK MOBILE ORGANIZATION UPDATE -- 
 
+<!-- GIGLINK SCREEN VISIBILITY FIX -->
+<style>
+  /* Hide the duplicate panel outside the app's navigation. */
+  body.glh-app #gl5kc2:not(.glh-feature) {
+    display: none !important;
+  }
 
+  /* Show the app content when navigation opens an in-app page. */
+  body.glh-app.glk-real-mode:not(.glk-locked) #app.glh-show {
+    display: block !important;
+  }
+</style>
+<!-- END GIGLINK SCREEN VISIBILITY FIX -->
 </body></html>
