@@ -10178,4 +10178,410 @@ setTimeout(()=>load(),900);
 </script>
 <!-- END GIGLINK HOME DASHBOARD DISPLAY FIX -->
 
+<!-- GIGLINK CUSTOMER HOME DASHBOARD -->
+<style>
+#gl-customer-home{
+  background:#0d1932;
+  color:#fff;
+  border:1px solid #2c4d76;
+  border-radius:18px;
+  padding:16px;
+  margin:16px 0;
+  font-family:Arial,sans-serif;
+}
+#gl-customer-home[hidden]{display:none!important}
+#gl-customer-home h2,
+#gl-customer-home h3{color:#fff}
+#gl-customer-home .gc-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:15px 0;
+}
+#gl-customer-home .gc-stat,
+#gl-customer-home .gc-panel{
+  background:#192d4d;
+  border:1px solid #355278;
+  border-radius:13px;
+  padding:14px;
+  margin-bottom:12px;
+}
+#gl-customer-home .gc-stat strong{
+  display:block;
+  font-size:23px;
+  color:#62cbff;
+  margin-top:8px;
+  overflow-wrap:anywhere;
+}
+#gl-customer-home .gc-stat small{
+  color:#c4d4e9;
+}
+#gl-customer-home button{
+  background:#13baf1;
+  color:#07182b;
+  border:0;
+  border-radius:10px;
+  padding:13px;
+  margin:5px;
+  font-weight:800;
+}
+#gl-customer-home .gc-job{
+  border-bottom:1px solid #355278;
+  padding:12px 0;
+}
+#gl-customer-home .gc-job:last-child{
+  border-bottom:0;
+}
+#gl-customer-home .gc-muted{
+  color:#b9cbe3;
+  font-size:13px;
+}
+#gl-customer-home .gc-bar{
+  height:14px;
+  background:#304768;
+  border-radius:8px;
+  overflow:hidden;
+  margin:8px 0 14px;
+}
+#gl-customer-home .gc-fill{
+  height:100%;
+  background:#13baf1;
+}
+</style>
+
+<script>
+(function(){
+"use strict";
+
+const home=document.getElementById("gl5kg-home");
+if(!home)return;
+
+if(document.getElementById("gl-customer-home"))return;
+
+const SUPABASE_URL=
+"https://mhpqclzullhvxasllbdh.supabase.co";
+
+const SUPABASE_KEY=
+"sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+const box=document.createElement("section");
+box.id="gl-customer-home";
+box.hidden=true;
+
+box.innerHTML=`
+<h2>🏠 Customer Dashboard</h2>
+<p id="gc-welcome">Welcome to GigLink</p>
+<p id="gc-message" role="status"></p>
+
+<button id="gc-refresh" type="button">
+↻ Refresh Dashboard
+</button>
+
+<div class="gc-grid">
+  <div class="gc-stat">
+    <small>Posted Gigs</small>
+    <strong id="gc-posted">0</strong>
+  </div>
+  <div class="gc-stat">
+    <small>Active Jobs</small>
+    <strong id="gc-active">0</strong>
+  </div>
+  <div class="gc-stat">
+    <small>Pending Approval</small>
+    <strong id="gc-pending">0</strong>
+  </div>
+  <div class="gc-stat">
+    <small>Completed Jobs</small>
+    <strong id="gc-completed">0</strong>
+  </div>
+  <div class="gc-stat" style="grid-column:1/-1">
+    <small>Total Posted Job Value</small>
+    <strong id="gc-value">$0.00</strong>
+  </div>
+</div>
+
+<div class="gc-panel">
+  <h3>📊 Job Status Overview</h3>
+  <div id="gc-chart"></div>
+</div>
+
+<div class="gc-panel">
+  <h3>⏳ Jobs Awaiting Approval</h3>
+  <div id="gc-approval-list"></div>
+</div>
+
+<div class="gc-panel">
+  <h3>🧰 Active Jobs</h3>
+  <div id="gc-active-list"></div>
+</div>
+
+<div class="gc-panel">
+  <h3>✅ Completed Jobs</h3>
+  <div id="gc-completed-list"></div>
+</div>
+
+<div class="gc-panel">
+  <h3>⚡ Quick Actions</h3>
+  <button id="gc-my-gigs" type="button">
+    📋 My Gigs
+  </button>
+  <button id="gc-post-gig" type="button">
+    ➕ Post a Gig
+  </button>
+</div>
+
+<p class="gc-muted">
+  Dashboard values reflect available Supabase records.
+  Job value is not a payment or payout balance.
+</p>
+`;
+
+home.prepend(box);
+
+const $=id=>document.getElementById(id);
+
+const money=n=>new Intl.NumberFormat("en-US",{
+  style:"currency",
+  currency:"USD"
+}).format(Number(n)||0);
+
+const statuses={
+  available:"Available",
+  open:"Open",
+  claimed:"Claimed",
+  assigned:"Assigned",
+  scheduled:"Scheduled",
+  in_progress:"In Progress",
+  submitted:"Submitted",
+  awaiting_approval:"Awaiting Approval",
+  completed:"Completed",
+  cancelled:"Cancelled",
+  canceled:"Cancelled"
+};
+
+let db=null;
+let loading=false;
+let requestId=0;
+
+function go(page){
+  if(typeof window.GigLinkMobileGo==="function"){
+    window.GigLinkMobileGo(page);
+  }else if(
+    typeof window.GigLinkOpenScreen==="function"
+  ){
+    window.GigLinkOpenScreen(page);
+  }
+}
+
+$("gc-my-gigs").onclick=()=>go("mine");
+$("gc-post-gig").onclick=()=>go("post");
+$("gc-refresh").onclick=()=>load();
+
+function renderJobs(id,jobs,empty){
+  const target=$(id);
+  target.replaceChildren();
+
+  if(!jobs.length){
+    const p=document.createElement("p");
+    p.className="gc-muted";
+    p.textContent=empty;
+    target.appendChild(p);
+    return;
+  }
+
+  jobs.slice(0,8).forEach(j=>{
+    const card=document.createElement("div");
+    card.className="gc-job";
+
+    const title=document.createElement("strong");
+    title.textContent=j.title||"Untitled Gig";
+
+    const detail=document.createElement("p");
+    detail.className="gc-muted";
+    detail.textContent=
+      (statuses[j.status]||j.status||"Unknown")+
+      " • "+money(j.budget)+
+      (j.location?" • "+j.location:"");
+
+    card.append(title,detail);
+    target.appendChild(card);
+  });
+}
+
+function renderChart(jobs){
+  const target=$("gc-chart");
+  target.replaceChildren();
+
+  const groups=[
+    ["Available",jobs.filter(j=>
+      ["available","open"].includes(j.status)).length],
+    ["Active",jobs.filter(j=>
+      ["claimed","assigned","scheduled","in_progress"]
+      .includes(j.status)).length],
+    ["Pending",jobs.filter(j=>
+      ["submitted","awaiting_approval"]
+      .includes(j.status)).length],
+    ["Completed",jobs.filter(j=>
+      j.status==="completed").length]
+  ];
+
+  const max=Math.max(1,...groups.map(g=>g[1]));
+
+  groups.forEach(([name,count])=>{
+    const label=document.createElement("div");
+    label.textContent=name+" — "+count;
+
+    const bar=document.createElement("div");
+    bar.className="gc-bar";
+
+    const fill=document.createElement("div");
+    fill.className="gc-fill";
+    fill.style.width=(count/max*100)+"%";
+
+    bar.appendChild(fill);
+    target.append(label,bar);
+  });
+}
+
+async function load(){
+  if(loading)return;
+
+  if(!window.supabase?.createClient){
+    $("gc-message").textContent=
+      "Supabase is unavailable. Refresh the page.";
+    return;
+  }
+
+  loading=true;
+  const version=++requestId;
+  $("gc-refresh").disabled=true;
+
+  try{
+    db=db||window.supabase.createClient(
+      SUPABASE_URL,SUPABASE_KEY
+    );
+
+    const auth=await db.auth.getUser();
+    if(auth.error)throw auth.error;
+
+    const user=auth.data.user;
+
+    if(!user){
+      box.hidden=true;
+      return;
+    }
+
+    const profile=await db
+      .from("giglink_profiles")
+      .select("*")
+      .eq("id",user.id)
+      .maybeSingle();
+
+    if(profile.error)throw profile.error;
+
+    if(profile.data?.role!=="customer"){
+      box.hidden=true;
+      return;
+    }
+
+    box.hidden=false;
+    $("gc-message").textContent=
+      "Loading your posted gigs...";
+
+    const result=await db
+      .from("giglink_jobs")
+      .select(
+        "id,title,location,budget,status,created_at"
+      )
+      .eq("customer_id",user.id)
+      .order("created_at",{ascending:false})
+      .limit(200);
+
+    if(result.error)throw result.error;
+    if(version!==requestId)return;
+
+    const jobs=result.data||[];
+
+    const active=jobs.filter(j=>
+      ["claimed","assigned","scheduled","in_progress"]
+      .includes(j.status)
+    );
+
+    const pending=jobs.filter(j=>
+      ["submitted","awaiting_approval"]
+      .includes(j.status)
+    );
+
+    const completed=jobs.filter(j=>
+      j.status==="completed"
+    );
+
+    const value=jobs.reduce(
+      (sum,j)=>sum+(Number(j.budget)||0),0
+    );
+
+    const p=profile.data||{};
+
+    $("gc-welcome").textContent=
+      "Welcome, "+
+      (p.full_name||p.name||
+       user.email?.split("@")[0]||"Customer")+"!";
+
+    $("gc-posted").textContent=jobs.length;
+    $("gc-active").textContent=active.length;
+    $("gc-pending").textContent=pending.length;
+    $("gc-completed").textContent=completed.length;
+    $("gc-value").textContent=money(value);
+
+    renderChart(jobs);
+
+    renderJobs(
+      "gc-approval-list",pending,
+      "No jobs waiting for approval."
+    );
+
+    renderJobs(
+      "gc-active-list",active,
+      "No active jobs."
+    );
+
+    renderJobs(
+      "gc-completed-list",completed,
+      "No completed jobs yet."
+    );
+
+    $("gc-message").textContent=
+      "Loaded "+jobs.length+" posted gig(s).";
+
+  }catch(error){
+    box.hidden=false;
+    $("gc-message").textContent=
+      "Dashboard error: "+
+      (error.message||String(error));
+  }finally{
+    loading=false;
+    $("gc-refresh").disabled=false;
+  }
+}
+
+function refresh(){
+  load();
+}
+
+document.addEventListener("click",e=>{
+  const button=e.target.closest(
+    '[data-gl5kg-go="home"],'+
+    '#gl5kg-more [data-gl5kg-go="dashboard"]'
+  );
+  if(button)setTimeout(refresh,450);
+});
+
+window.addEventListener("load",()=>{
+  setTimeout(refresh,1200);
+});
+
+})();
+</script>
+<!-- END GIGLINK CUSTOMER HOME DASHBOARD -->
+
 </body></html>
