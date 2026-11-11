@@ -12117,5 +12117,234 @@ setTimeout(updateVisibility,1500);
 })();
 </script>
 <!-- END GIGLINK COMPACT MORE MENU AND WALLET -->
+<!-- GIGLINK CUSTOMER AND WORKER PROFILE PICTURES -->
+<style>
+  #gl-profile-picture {
+    margin: 16px 0;
+    padding: 16px;
+    border: 1px solid #355278;
+    border-radius: 14px;
+    background: #142a4b;
+    color: #fff;
+  }
 
+  #gl-profile-picture h3 {
+    margin: 0 0 12px;
+  }
+
+  #gl-profile-picture-preview {
+    display: block;
+    width: 96px;
+    height: 96px;
+    margin: 0 0 12px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  #gl-profile-picture-preview[hidden] {
+    display: none !important;
+  }
+
+  #gl-profile-picture input[type="file"] {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  #gl-profile-picture button {
+    min-height: 44px;
+  }
+
+  #gl-profile-picture-status {
+    overflow-wrap: anywhere;
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  const profile = document.getElementById("gl5i");
+  const nameField = document.querySelector('#gl5i label[for="gl5i-name"]');
+
+  if (!profile || !nameField ||
+      document.getElementById("gl-profile-picture")) return;
+
+  const section = document.createElement("section");
+  section.id = "gl-profile-picture";
+  section.innerHTML = `
+    <h3>Profile Picture</h3>
+    <img id="gl-profile-picture-preview" alt="Your profile picture" hidden>
+    <label for="gl-profile-picture-file">Choose a picture</label>
+    <input id="gl-profile-picture-file" type="file"
+      accept="image/jpeg,image/png,image/webp">
+    <button type="button" id="gl-profile-picture-save">
+      Save Profile Picture
+    </button>
+    <p id="gl-profile-picture-status" role="status">
+      Choose a JPG, PNG, or WebP image up to 5 MB.
+    </p>
+  `;
+
+  nameField.before(section);
+
+  const preview = section.querySelector("img");
+  const fileInput = section.querySelector("input");
+  const saveButton = section.querySelector("button");
+  const status = section.querySelector('[role="status"]');
+
+  if (!window.supabase?.createClient) {
+    saveButton.disabled = true;
+    status.textContent = "Refresh GigLink to load profile pictures.";
+    return;
+  }
+
+  const client = window.supabase.createClient(
+    "https://mhpqclzullhvxasllbdh.supabase.co",
+    "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA"
+  );
+
+  const pictures = client.storage.from("giglink-profile-pictures");
+  const filename = "profile-picture";
+  const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+  let previewUrl = "";
+  let requestId = 0;
+  let saving = false;
+
+  function showPicture(blob) {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = blob ? URL.createObjectURL(blob) : "";
+
+    if (previewUrl) {
+      preview.src = previewUrl;
+    } else {
+      preview.removeAttribute("src");
+    }
+
+    preview.hidden = !previewUrl;
+  }
+
+  async function currentUser() {
+    const { data, error } = await client.auth.getUser();
+    if (error || !data?.user) {
+      throw new Error("Sign in to manage your profile picture.");
+    }
+    return data.user;
+  }
+
+  async function loadPicture() {
+    if (saving) return;
+
+    const request = ++requestId;
+    showPicture(null);
+    status.textContent = "Loading profile picture…";
+
+    try {
+      const user = await currentUser();
+      if (request !== requestId) return;
+
+      const listing = await pictures.list(user.id, {
+        search: filename
+      });
+
+      if (request !== requestId) return;
+      if (listing.error) throw listing.error;
+
+      if (!listing.data.some(file => file.name === filename)) {
+        status.textContent = "Choose a JPG, PNG, or WebP image up to 5 MB.";
+        return;
+      }
+
+      const { data, error } = await pictures.download(
+        user.id + "/" + filename
+      );
+
+      if (request !== requestId) return;
+      if (error) throw error;
+
+      showPicture(data);
+      status.textContent = "Choose a new picture to replace this one.";
+    } catch (error) {
+      if (request === requestId) {
+        status.textContent = error.message || "Could not load your picture.";
+      }
+    }
+  }
+
+  saveButton.addEventListener("click", async () => {
+    if (saving) return;
+
+    const file = fileInput.files[0];
+
+    if (!file || !allowedTypes.has(file.type)) {
+      status.textContent = "Choose a JPG, PNG, or WebP image first.";
+      return;
+    }
+
+    if (!file.size || file.size > 5 * 1024 * 1024) {
+      status.textContent = "Choose an image up to 5 MB.";
+      return;
+    }
+
+    const request = ++requestId;
+    saving = true;
+    saveButton.disabled = true;
+    fileInput.disabled = true;
+    status.textContent = "Saving profile picture…";
+
+    try {
+      const user = await currentUser();
+      if (request !== requestId) return;
+
+      const { error } = await pictures.upload(
+        user.id + "/" + filename,
+        file,
+        { upsert: true, contentType: file.type, cacheControl: "0" }
+      );
+
+      if (request !== requestId) return;
+      if (error) throw error;
+
+      showPicture(file);
+      fileInput.value = "";
+      status.textContent = "Profile picture saved.";
+    } catch (error) {
+      if (request === requestId) {
+        status.textContent = error.message || "Could not save your picture.";
+      }
+    } finally {
+      saving = false;
+      saveButton.disabled = false;
+      fileInput.disabled = false;
+    }
+  });
+
+  document.getElementById("gl5i-load")
+    ?.addEventListener("click", loadPicture);
+
+  let wasOpen = profile.classList.contains("glh-show");
+
+  new MutationObserver(() => {
+    const isOpen = profile.classList.contains("glh-show");
+    if (isOpen && !wasOpen) loadPicture();
+    wasOpen = isOpen;
+  }).observe(profile, {
+    attributes: true,
+    attributeFilter: ["class"]
+  });
+
+  client.auth.onAuthStateChange(event => {
+    if (event === "SIGNED_OUT") {
+      requestId += 1;
+      showPicture(null);
+      fileInput.value = "";
+      status.textContent = "Sign in to manage your profile picture.";
+    }
+  });
+
+  if (wasOpen) loadPicture();
+})();
+</script>
+<!-- END GIGLINK PROFILE PICTURES -->
+ 
  </body></html>
