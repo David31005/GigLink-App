@@ -11734,5 +11734,157 @@ setTimeout(updateVisibility,1500);
 })();
 </script>
 <!-- END GIGLINK COLLAPSIBLE WORK CONTROLS AND PHOTOS -->
+<!-- GIGLINK HELP ASSISTANT UPDATE -->
+<style>
+  #gl-help-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+  }
 
+  #gl-help-topics button {
+    min-height: 44px;
+    margin: 0;
+    padding: 8px 12px;
+  }
+
+  #assistant #chat {
+    overflow-wrap: anywhere;
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  const chat = document.querySelector("#assistant #chat");
+  const question = document.querySelector("#assistant #question");
+
+  if (!chat || !question || document.getElementById("gl-help-topics")) return;
+  if (typeof window.ask !== "function") return;
+
+  const topics = [
+    {
+      label: "Saved cards",
+      question: "How do I add or find my saved card?",
+      match: /\b(card|cards|payment methods?)\b/,
+      answer: "Sign in as a customer and open Wallet → Manage Saved Cards. Tap Add Payment Method to open Stripe. To check a card you already saved, look for its last four digits or tap Refresh Cards."
+    },
+    {
+      label: "Completed gigs",
+      question: "How do I show or hide completed gigs?",
+      match: /\b(completed|finished)\s+(gigs|jobs|work)\b.*\b(hide|show|collapse|expand|find|view)\b|\b(hide|show|collapse|expand|find|view)\b.*\b(completed|finished)\b/,
+      answer: "On Home, tap Completed Jobs or Completed Work to expand your history. Tap the same heading again to collapse it."
+    },
+    {
+      label: "Approve a gig",
+      question: "How do I approve a gig?",
+      match: /\b(approve|approving|approval|signature|sign off)\b/,
+      answer: "As a customer, open My Gigs → Job Work Controls. If needed, tap Load My Active Gigs. When a gig is awaiting approval, review the photos and time records, enter your name as your signature, then tap Approve & Complete Gig."
+    },
+    {
+      label: "Clock in or out",
+      question: "How do I clock in or out?",
+      match: /\b(clock|clocking|clocked|time record)\b/,
+      answer: "As a worker, open My Gigs → Job Work Controls. Upload the before-work photo before tapping Clock In. When the work is finished, upload the after-work photo before tapping Clock Out. Follow any prompts shown for that gig."
+    },
+    {
+      label: "Job photos",
+      question: "Where do I upload or view job photos?",
+      match: /\b(photo|photos|picture|pictures|upload)\b/,
+      answer: "Open My Gigs → Job Work Controls. Workers can upload photos from the controls for their claimed gig. To see uploaded photos, open Before & After Photos on the job card. Tap the heading again to collapse them."
+    },
+    {
+      label: "Claim a gig",
+      question: "How do I claim a gig?",
+      match: /\b(claim|claiming|find gigs|explore|available gigs)\b/,
+      answer: "Sign in as an approved worker, open Explore, and find an available gig. Review the details and tap Claim This Gig. After it is claimed, open My Gigs to manage the work."
+    },
+    {
+      label: "Post a gig",
+      question: "How do I post a gig?",
+      match: /\b(post|posting|create|list)\b.*\b(gig|job)\b/,
+      answer: "Sign in as a customer and open More → Post a Gig. Fill in the gig details, schedule, and budget, then submit the form. Open My Gigs to check your posting."
+    },
+    {
+      label: "Become a worker",
+      question: "How do I become a worker or check my application?",
+      match: /\b(become a worker|worker application|apply|worker approval|pending worker|approved worker)\b/,
+      answer: "Open More → Become a Worker to submit your application or check its status. If approval is pending, wait for the owner to review it before trying to claim a gig."
+    },
+    {
+      label: "Cancel a gig",
+      question: "How do I cancel a gig?",
+      match: /\b(cancel|cancellation|cancelled|canceled)\b/,
+      answer: "As a customer, open More → Customer Gig Management and load your gigs. If your gig is still available and unclaimed, use Cancel This Gig when the option appears."
+    },
+    {
+      label: "Earnings & receipts",
+      question: "Where can I see earnings and receipts?",
+      match: /\b(earnings?|receipts?|invoices?|fees?|15\s*%)\b/,
+      answer: "Open More → Earnings & Receipts to review completed jobs. GigLink's fee is 15%. On a $100 gig, the estimated worker share is $85. Check Payment Tracking separately for the payment or payout status."
+    },
+    {
+      label: "Payment status",
+      question: "Where do I check payment or payout status?",
+      match: /\b(payment|payments|payout|payouts|paid|charge|charged|pay)\b/,
+      answer: "Open More → Payment Tracking for the available status. Saving a card in Wallet sets up a payment method. It does not charge the customer or confirm a worker payout."
+    },
+    {
+      label: "Sign-in help",
+      question: "What should I do if I can't sign in?",
+      match: /\b(sign in|log in|login|password|sign-in|account access)\b/,
+      answer: "Use the email address you used to create your GigLink account. If you see a confirmation prompt, check your inbox and spam folder. If an error appears, keep the exact error message so support can help."
+    }
+  ];
+
+  const previousAnswer = window.helpAnswer;
+
+  window.helpAnswer = function (input) {
+    const text = String(input).toLowerCase();
+
+    const exact = topics.find(topic =>
+      topic.question.toLowerCase() === text
+    );
+
+    const match = exact || topics.find(topic => topic.match.test(text));
+    if (match) return match.answer;
+
+    if (typeof previousAnswer === "function" &&
+        /\b(messages?|chat|reviews?|ratings?|calendar|schedule|profile)\b/.test(text)) {
+      return previousAnswer(input);
+    }
+
+    return "Try a topic above, or ask a shorter question like “How do I clock out?” or “Where are my saved cards?”";
+  };
+
+  const intro = chat.querySelector(".message");
+  if (intro) {
+    intro.textContent = "Tap a topic below or type a question about GigLink.";
+  }
+
+  const quickTopics = document.createElement("div");
+  quickTopics.id = "gl-help-topics";
+  quickTopics.setAttribute("role", "group");
+  quickTopics.setAttribute("aria-label", "Quick help topics");
+
+  topics.forEach(topic => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = topic.label;
+    button.addEventListener("click", () => {
+      question.value = topic.question;
+      window.ask();
+    });
+    quickTopics.appendChild(button);
+  });
+
+  chat.after(quickTopics);
+  chat.setAttribute("role", "log");
+  chat.setAttribute("aria-live", "polite");
+})();
+</script>
+<!-- END GIGLINK HELP ASSISTANT UPDATE -->
+ 
  </body></html>
