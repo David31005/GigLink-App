@@ -10584,4 +10584,452 @@ window.addEventListener("load",()=>{
 </script>
 <!-- END GIGLINK CUSTOMER HOME DASHBOARD -->
 
+<!-- GIGLINK NOTIFICATION CENTER V1 -->
+<style>
+#gn-bell{
+  position:fixed;
+  top:12px;
+  right:12px;
+  z-index:1500;
+  background:#13baf1;
+  color:#07182b;
+  border:2px solid #fff;
+  border-radius:50%;
+  width:53px;
+  height:53px;
+  padding:0;
+  font-size:23px;
+  box-shadow:0 4px 15px #0006;
+}
+#gn-count{
+  position:absolute;
+  top:-6px;
+  right:-5px;
+  background:#e63348;
+  color:white;
+  font-size:12px;
+  border-radius:20px;
+  min-width:22px;
+  padding:4px;
+}
+#gn-panel{
+  position:fixed;
+  inset:0;
+  z-index:1600;
+  background:#061124d9;
+  padding:15px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+}
+#gn-panel[hidden],
+#gn-bell[hidden],
+#gn-count[hidden]{
+  display:none!important;
+}
+#gn-box{
+  background:#0d1932;
+  color:white;
+  border:1px solid #355278;
+  border-radius:18px;
+  padding:18px;
+  width:100%;
+  max-width:520px;
+  max-height:88dvh;
+  overflow:auto;
+  margin-top:45px;
+}
+#gn-box h2{color:white!important}
+#gn-box button{
+  background:#13baf1;
+  color:#07182b;
+  border:0;
+  border-radius:9px;
+  padding:11px;
+  margin:4px;
+  font-weight:bold;
+}
+.gn-item{
+  background:#192d4d;
+  border:1px solid #355278;
+  padding:13px;
+  border-radius:12px;
+  margin:10px 0;
+}
+.gn-item.unread{
+  border-left:5px solid #13baf1;
+}
+.gn-item p{margin:7px 0}
+.gn-item small{color:#b9cbe3}
+</style>
+
+<button id="gn-bell" type="button"
+ aria-label="Open notifications" hidden>
+  🔔
+  <span id="gn-count" hidden>0</span>
+</button>
+
+<div id="gn-panel" hidden>
+  <div id="gn-box" role="dialog"
+       aria-modal="true"
+       aria-label="GigLink notifications">
+
+    <h2>🔔 Notifications</h2>
+    <p id="gn-status">Checking updates...</p>
+
+    <button id="gn-refresh" type="button">
+      ↻ Refresh
+    </button>
+    <button id="gn-read" type="button">
+      ✓ Mark All Read
+    </button>
+    <button id="gn-close" type="button">
+      ✕ Close
+    </button>
+
+    <div id="gn-list"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+if(window.GigLinkNotificationsReady)return;
+window.GigLinkNotificationsReady=true;
+
+const URL=
+"https://mhpqclzullhvxasllbdh.supabase.co";
+
+const KEY=
+"sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+const $=id=>document.getElementById(id);
+
+const bell=$("gn-bell");
+const panel=$("gn-panel");
+const count=$("gn-count");
+const list=$("gn-list");
+const status=$("gn-status");
+
+let client=null;
+let currentUser=null;
+let checking=false;
+
+function storeKey(type,userId){
+  return "giglink_notifications_v1_"+
+    type+"_"+userId;
+}
+
+function readStore(key,fallback){
+  try{
+    return JSON.parse(localStorage.getItem(key)) ??
+      fallback;
+  }catch{
+    return fallback;
+  }
+}
+
+function writeStore(key,value){
+  localStorage.setItem(key,JSON.stringify(value));
+}
+
+function notifications(){
+  if(!currentUser)return [];
+  return readStore(
+    storeKey("items",currentUser.id),[]
+  );
+}
+
+function saveNotifications(items){
+  if(!currentUser)return;
+  writeStore(
+    storeKey("items",currentUser.id),
+    items.slice(0,100)
+  );
+}
+
+function addNotification(items,title,body,jobId){
+  const id=Date.now().toString(36)+
+    Math.random().toString(36).slice(2);
+
+  items.unshift({
+    id,
+    title,
+    body,
+    jobId,
+    createdAt:new Date().toISOString(),
+    read:false
+  });
+}
+
+function render(){
+  const items=notifications();
+  const unread=items.filter(n=>!n.read).length;
+
+  count.textContent=unread>99?"99+":unread;
+  count.hidden=unread===0;
+  list.replaceChildren();
+
+  if(!items.length){
+    const empty=document.createElement("p");
+    empty.textContent=
+      "No notifications yet. Job updates will appear here.";
+    list.appendChild(empty);
+    return;
+  }
+
+  items.forEach(n=>{
+    const card=document.createElement("div");
+    card.className="gn-item"+(n.read?"":" unread");
+
+    const title=document.createElement("strong");
+    title.textContent=n.title;
+
+    const body=document.createElement("p");
+    body.textContent=n.body;
+
+    const date=document.createElement("small");
+    date.textContent=new Date(
+      n.createdAt
+    ).toLocaleString();
+
+    const button=document.createElement("button");
+    button.type="button";
+    button.textContent=n.read?
+      "✓ Read":"Mark Read";
+
+    button.onclick=()=>{
+      const updated=notifications();
+      const item=updated.find(x=>x.id===n.id);
+      if(item)item.read=true;
+      saveNotifications(updated);
+      render();
+    };
+
+    card.append(title,body,date,button);
+    list.appendChild(card);
+  });
+}
+
+function normalizeJob(j){
+  return {
+    id:String(j.id),
+    title:String(j.title||"Untitled Gig"),
+    status:String(j.status||""),
+    worker_id:j.worker_id?
+      String(j.worker_id):null
+  };
+}
+
+async function check(){
+  if(checking)return;
+  if(!window.supabase?.createClient)return;
+
+  checking=true;
+
+  try{
+    client=client||
+      window.supabase.createClient(URL,KEY);
+
+    const auth=await client.auth.getUser();
+    if(auth.error)throw auth.error;
+
+    const user=auth.data.user;
+
+    if(!user){
+      currentUser=null;
+      bell.hidden=true;
+      panel.hidden=true;
+      return;
+    }
+
+    currentUser=user;
+    bell.hidden=false;
+
+    const profile=await client
+      .from("giglink_profiles")
+      .select("role")
+      .eq("id",user.id)
+      .maybeSingle();
+
+    if(profile.error)throw profile.error;
+
+    const role=profile.data?.role;
+
+    if(role!=="customer"&&role!=="worker"){
+      status.textContent=
+        "No customer or worker profile found.";
+      return;
+    }
+
+    const query=client
+      .from("giglink_jobs")
+      .select("id,title,status,worker_id");
+
+    const result=role==="customer"?
+      await query.eq("customer_id",user.id)
+        .limit(500):
+      await query.eq("worker_id",user.id)
+        .limit(500);
+
+    if(result.error)throw result.error;
+
+    const jobs=(result.data||[]).map(normalizeJob);
+
+    const snapshotKey=storeKey(
+      "snapshot",user.id
+    );
+
+    const old=readStore(snapshotKey,null);
+
+    const next={};
+    jobs.forEach(j=>{next[j.id]=j;});
+
+    // First check establishes a baseline.
+    // Existing jobs do not create false alerts.
+    if(old===null){
+      writeStore(snapshotKey,next);
+      status.textContent=
+        "Notifications ready. Future job updates will appear here.";
+      render();
+      return;
+    }
+
+    const items=notifications();
+    let changes=0;
+
+    jobs.forEach(j=>{
+      const previous=old[j.id];
+
+      if(!previous){
+        if(role==="worker"){
+          addNotification(
+            items,
+            "🧰 Gig Assigned",
+            j.title+" is now in your My Gigs.",
+            j.id
+          );
+          changes++;
+        }
+        return;
+      }
+
+      if(previous.status===j.status &&
+         previous.worker_id===j.worker_id){
+        return;
+      }
+
+      if(role==="customer"){
+        if(!previous.worker_id&&j.worker_id){
+          addNotification(
+            items,
+            "👷 Worker Claimed Your Gig",
+            "A worker claimed "+j.title+".",
+            j.id
+          );
+          changes++;
+        }
+
+        if(["submitted","awaiting_approval"]
+          .includes(j.status)&&
+          previous.status!==j.status){
+          addNotification(
+            items,
+            "✍️ Approval Needed",
+            j.title+" is ready for your review.",
+            j.id
+          );
+          changes++;
+        }
+
+        if(j.status==="completed"&&
+           previous.status!==j.status){
+          addNotification(
+            items,
+            "✅ Gig Completed",
+            j.title+" is completed.",
+            j.id
+          );
+          changes++;
+        }
+      }
+
+      if(role==="worker"){
+        if(j.status==="completed"&&
+           previous.status!=="completed"){
+          addNotification(
+            items,
+            "💰 Work Approved",
+            j.title+" has been completed and approved.",
+            j.id
+          );
+          changes++;
+        }
+      }
+    });
+
+    // Preserve previous job records that are
+    // temporarily absent from the current result.
+    writeStore(snapshotKey,{...old,...next});
+
+    if(changes){
+      saveNotifications(items);
+    }
+
+    status.textContent=changes?
+      changes+" new notification(s).":
+      "Notifications are up to date.";
+
+    render();
+
+  }catch(error){
+    status.textContent=
+      "Notification check failed: "+
+      (error.message||String(error));
+  }finally{
+    checking=false;
+  }
+}
+
+bell.onclick=()=>{
+  panel.hidden=false;
+  render();
+  check();
+};
+
+$("gn-close").onclick=()=>{
+  panel.hidden=true;
+};
+
+$("gn-refresh").onclick=check;
+
+$("gn-read").onclick=()=>{
+  const items=notifications();
+  items.forEach(n=>n.read=true);
+  saveNotifications(items);
+  render();
+};
+
+panel.addEventListener("click",event=>{
+  if(event.target===panel){
+    panel.hidden=true;
+  }
+});
+
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden)check();
+});
+
+// Poll while GigLink is open.
+setInterval(()=>{
+  if(!document.hidden)check();
+},30000);
+
+setTimeout(check,1500);
+
+})();
+</script>
+<!-- END GIGLINK NOTIFICATION CENTER -->
+
 </body></html>
