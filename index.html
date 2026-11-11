@@ -11379,5 +11379,241 @@ setTimeout(updateVisibility,1500);
 })();
 </script>
 <!-- END GIGLINK PAYMENTS STEP 1A -->
+<!-- GIGLINK MOBILE ORGANIZATION UPDATE -->
+<style>
+  #glh-header {
+    padding-inline: max(14px, env(safe-area-inset-left));
+  }
+
+  #gl5kg-home,
+  #gl5kg-more,
+  #gl5kg-wallet {
+    padding-inline: clamp(14px, 4vw, 28px) !important;
+  }
+
+  #gl5kg-more .gl-tool-group {
+    margin: 0 0 24px;
+  }
+
+  #gl5kg-more .gl-tool-group h2 {
+    margin: 0 0 9px;
+    font-size: 1rem;
+  }
+
+  #gl5kg-more .gl-tool-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  #gl5kg-more .gl-tool-grid button {
+    min-height: 52px;
+    margin: 0;
+    padding: 10px 12px !important;
+    overflow-wrap: anywhere;
+  }
+
+  #gl5kg-home .gl-completed {
+    margin-top: 12px;
+  }
+
+  .gl-completed summary {
+    padding: 8px 0;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  #gl5kg-wallet #glpay-open {
+    position: static;
+    width: 100%;
+    min-height: 48px;
+    box-shadow: none;
+  }
+
+  #glpay-screen {
+    z-index: 2147483001;
+    padding-inline: max(16px, calc((100% - 720px) / 2));
+  }
+
+  #gl5kg-nav button:focus-visible,
+  #gl5kg-more button:focus-visible,
+  .gl-completed summary:focus-visible {
+    outline: 2px solid #58c8ff;
+    outline-offset: -3px;
+  }
+
+  @media (min-width: 720px) {
+    #gl5kg-more .gl-tool-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  if (window.GigLinkOrganizationApplied) return;
+  window.GigLinkOrganizationApplied = true;
+
+  const get = id => document.getElementById(id);
+
+  function organizeMore() {
+    const more = get("gl5kg-more");
+    const tools = get("glh-tools");
+    if (!more || !tools) return;
+
+    const routes = new Map();
+
+    more.querySelectorAll(
+      "button[data-glh-open], button[data-gl5kg-go]"
+    ).forEach(button => {
+      const route = button.dataset.glhOpen || button.dataset.gl5kgGo;
+      const aliases = {
+        verify: "verification",
+        business: "approvals",
+        demo: "platform"
+      };
+      const key = aliases[route] || route;
+
+      if (!routes.has(key) || button.dataset.glhOpen) {
+        routes.set(key, button);
+      }
+    });
+
+    const groups = [
+      ["Jobs & Communication", [
+        ["post", "Post a Gig"],
+        ["customergigs", "Customer Gig Management"],
+        ["progress", "Job Progress"],
+        ["schedule", "Schedule"],
+        ["messages", "Messages"],
+        ["workers", "Worker Directory"],
+        ["external", "Outside Gigs"],
+        ["requests", "Service Requests"],
+        ["marketplace", "Gig Marketplace"]
+      ]],
+      ["Account & Support", [
+        ["realprofile", "Profile Settings"],
+        ["apply", "Become a Worker"],
+        ["workerdashboard", "Worker Access"],
+        ["assistant", "Help"],
+        ["login", "Account Sign In"]
+      ]],
+      ["Payments & Earnings", [
+        ["receipts", "Earnings & Receipts"],
+        ["payments", "Payment Tracking"],
+        ["securepay", "Secure Pay"]
+      ]],
+      ["Owner Tools", [
+        ["approvals", "Worker Approvals"]
+      ]],
+      ["Demo Tools", [
+        ["dashboard", "Demo Dashboard"],
+        ["verification", "Demo ID Preference"],
+        ["earnings", "Demo Earnings"],
+        ["profile", "Demo Profile"],
+        ["platform", "Platform Demo"]
+      ]]
+    ];
+
+    const sections = document.createDocumentFragment();
+
+    function addGroup(title, items) {
+      const section = document.createElement("section");
+      const heading = document.createElement("h2");
+      const grid = document.createElement("div");
+
+      section.className = "gl-tool-group";
+      heading.textContent = title;
+      grid.className = "gl-tool-grid";
+
+      items.forEach(([route, label]) => {
+        const button = routes.get(route);
+        if (!button) return;
+
+        if (label) button.textContent = label;
+        grid.appendChild(button);
+        routes.delete(route);
+      });
+
+      if (!grid.childElementCount) return;
+      section.append(heading, grid);
+      sections.appendChild(section);
+    }
+
+    groups.forEach(([title, items]) => addGroup(title, items));
+    addGroup("Other Tools", Array.from(routes.keys(), route => [route]));
+
+    if (!sections.childElementCount) return;
+
+    tools.replaceChildren(sections);
+    const oldGrid = more.querySelector(":scope > .moregrid");
+    const oldHeading = more.querySelector(":scope > h2");
+    if (oldGrid) oldGrid.remove();
+    if (oldHeading) oldHeading.remove();
+  }
+
+  function collapseCompleted(listId, label) {
+    const list = get(listId);
+    const panel = list && list.parentElement;
+    if (!panel || panel.tagName === "DETAILS") return;
+
+    const details = document.createElement("details");
+    const summary = document.createElement("summary");
+
+    details.className = panel.className + " gl-completed";
+    summary.textContent = label;
+    details.append(summary, list);
+    panel.replaceWith(details);
+
+    // Keep the worker's Explore button available when history is closed.
+    while (panel.firstElementChild) {
+      const child = panel.firstElementChild;
+      if (child.tagName === "H3") {
+        child.remove();
+      } else {
+        details.parentElement.insertBefore(child, details.nextSibling);
+      }
+    }
+  }
+
+  function organizeWallet() {
+    const wallet = get("gl5kg-wallet");
+    const paymentButton = get("glpay-open");
+    const heading = wallet && wallet.querySelector("h2");
+    if (!heading || !paymentButton) return;
+
+    heading.textContent = "Wallet";
+    paymentButton.textContent = "Manage Saved Cards";
+    heading.after(paymentButton);
+  }
+
+  function applyLayout() {
+    organizeMore();
+    collapseCompleted("gc-completed-list", "Completed Jobs");
+    collapseCompleted("glq-completed-list", "Completed Work");
+    organizeWallet();
+
+    const homeHint = document.querySelector("#gl5kg-home > .hint");
+    if (homeHint) {
+      const heading = homeHint.previousElementSibling;
+      if (heading && heading.textContent.trim() === "Secure & Simple") {
+        heading.remove();
+      }
+      homeHint.remove();
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyLayout, { once: true });
+  } else {
+    applyLayout();
+  }
+})();
+</script>
+  
+<!-- END GIGLINK MOBILE ORGANIZATION UPDATE -- 
+
 
 </body></html>
