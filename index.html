@@ -12318,7 +12318,57 @@ setTimeout(updateVisibility,1500);
       fileInput.disabled = false;
     }
   });
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.textContent = "Delete Profile Picture";
+  deleteButton.disabled = true;
+  saveButton.after(deleteButton);
 
+  function updateDeleteButton() {
+    deleteButton.disabled = preview.hidden || saving;
+  }
+
+  new MutationObserver(updateDeleteButton).observe(preview, {
+    attributes: true,
+    attributeFilter: ["hidden"]
+  });
+
+  deleteButton.addEventListener("click", async () => {
+    if (saving || preview.hidden) return;
+    if (!window.confirm("Delete your profile picture?")) return;
+
+    const request = ++requestId;
+    saving = true;
+    saveButton.disabled = true;
+    fileInput.disabled = true;
+    updateDeleteButton();
+    status.textContent = "Deleting profile picture…";
+
+    try {
+      const user = await currentUser();
+      if (request !== requestId) return;
+
+      const { error } = await pictures.remove([
+        user.id + "/" + filename
+      ]);
+
+      if (request !== requestId) return;
+      if (error) throw error;
+
+      showPicture(null);
+      fileInput.value = "";
+      status.textContent = "Profile picture deleted.";
+    } catch (error) {
+      if (request === requestId) {
+        status.textContent = error.message || "Could not delete your picture.";
+      }
+    } finally {
+      saving = false;
+      saveButton.disabled = false;
+      fileInput.disabled = false;
+      updateDeleteButton();
+    }
+  });
   document.getElementById("gl5i-load")
     ?.addEventListener("click", loadPicture);
 
