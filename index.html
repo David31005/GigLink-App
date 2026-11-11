@@ -10058,4 +10058,124 @@ setTimeout(()=>load(),900);
 </script>
 <!-- END GIGLINK HOME & DASHBOARD BUTTON LINK FIX -->
 
+<!-- GIGLINK HOME DASHBOARD DISPLAY FIX -->
+<style>
+#gl5kg-home #glq-dashboard {
+  display:block;
+  margin:18px 0;
+}
+#gl5kg-home #glq-dashboard[hidden] {
+  display:none!important;
+}
+#gl5kg-home .gl-home-panel {
+  background:#192d4d;
+  border:1px solid #355278;
+  border-radius:14px;
+  padding:18px;
+  color:white;
+  margin:18px 0;
+}
+#gl5kg-home .gl-home-panel h2 {
+  color:white;
+}
+#gl5kg-home .gl-home-panel button {
+  background:#28b8f2;
+  color:#07182b;
+  padding:14px;
+  border-radius:10px;
+  font-weight:bold;
+}
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  const home = document.getElementById("gl5kg-home");
+  if (!home) return;
+
+  let panel = document.getElementById("gl-home-fallback");
+
+  if (!panel) {
+    panel = document.createElement("section");
+    panel.id = "gl-home-fallback";
+    panel.className = "gl-home-panel";
+
+    panel.innerHTML = `
+      <h2>🏠 My GigLink Dashboard</h2>
+      <p id="gl-home-message">
+        Loading your dashboard...
+      </p>
+      <button type="button" id="gl-home-myjobs">
+        📋 Open My Gigs
+      </button>
+      <button type="button" id="gl-home-retry">
+        ↻ Refresh Dashboard
+      </button>
+    `;
+
+    home.prepend(panel);
+  }
+
+  function refreshHome() {
+    const dashboard =
+      document.getElementById("glq-dashboard");
+
+    const refresh =
+      document.getElementById("glq-refresh");
+
+    const message =
+      document.getElementById("gl-home-message");
+
+    if (dashboard) {
+      if (dashboard.parentElement !== home) {
+        home.appendChild(dashboard);
+      }
+
+      dashboard.hidden = false;
+
+      if (refresh && !refresh.disabled) {
+        refresh.click();
+      }
+
+      message.textContent =
+        "Loading your GigLink job summary. " +
+        "If your account is a customer, use " +
+        "My Gigs to manage posted jobs.";
+    } else {
+      message.textContent =
+        "Your dashboard is not available yet. " +
+        "Your jobs are still accessible in My Gigs.";
+    }
+  }
+
+  document.getElementById("gl-home-myjobs")
+    .addEventListener("click", function () {
+      if (typeof window.GigLinkMobileGo === "function") {
+        window.GigLinkMobileGo("mine");
+      }
+    });
+
+  document.getElementById("gl-home-retry")
+    .addEventListener("click", refreshHome);
+
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest(
+      '[data-gl5kg-go="home"],' +
+      '#gl5kg-more [data-gl5kg-go="dashboard"]'
+    );
+
+    if (!button) return;
+
+    setTimeout(refreshHome, 350);
+  });
+
+  window.addEventListener("load", function () {
+    setTimeout(refreshHome, 1500);
+  });
+
+})();
+</script>
+<!-- END GIGLINK HOME DASHBOARD DISPLAY FIX -->
+
 </body></html>
