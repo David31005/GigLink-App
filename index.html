@@ -11886,5 +11886,236 @@ setTimeout(updateVisibility,1500);
 })();
 </script>
 <!-- END GIGLINK HELP ASSISTANT UPDATE -->
- 
+ <!-- GIGLINK COMPACT MORE MENU AND WALLET -->
+<style>
+  #gl5kg-more.gl-compact-menu #glh-tools {
+    margin: 0 auto;
+  }
+
+  #gl5kg-more .gl-menu-rows,
+  #gl5kg-wallet .gl-menu-rows {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  #gl5kg-more .gl-menu-rows > button,
+  #gl5kg-wallet .gl-menu-rows > button,
+  #gl5kg-more.gl-compact-menu #glk-real-signout {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 46px !important;
+    margin: 0 !important;
+    padding: 10px 14px !important;
+    border-radius: 10px !important;
+    text-align: left;
+    font-size: 15px !important;
+    overflow-wrap: anywhere;
+  }
+
+  #gl5kg-wallet .gl-menu-rows > button {
+    background: #192d50 !important;
+    color: #fff !important;
+    border: 1px solid #355278 !important;
+  }
+
+  #gl5kg-wallet .gl-menu-rows > #glpay-open {
+    position: static;
+    box-shadow: none;
+  }
+
+  #gl5kg-more .gl-menu-fold > summary {
+    box-sizing: border-box;
+    min-height: 46px;
+    padding: 11px 14px;
+    border: 1px solid #355278;
+    border-radius: 10px;
+    background: #192d50;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  #gl5kg-more .gl-menu-rows > [hidden],
+  #gl5kg-wallet.gl-compact-wallet > .walletcard {
+    display: none !important;
+  }
+
+  #gl5kg-more.gl-compact-menu #glk-real-signout {
+    margin-top: 12px !important;
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  function setup() {
+    const more = document.getElementById("gl5kg-more");
+    const tools = document.getElementById("glh-tools");
+    const wallet = document.getElementById("gl5kg-wallet");
+    const savedCards = document.getElementById("glpay-open");
+
+    if (!more || !tools || !wallet || !savedCards ||
+        more.classList.contains("gl-compact-menu")) return;
+
+    const buttons = new Map();
+    tools.querySelectorAll("button[data-glh-open], button[data-gl5kg-go]")
+      .forEach(button => {
+        buttons.set(button.dataset.glhOpen || button.dataset.gl5kgGo, button);
+      });
+
+    const walletRoutes = [
+      ["payments", "Payment Tracking"],
+      ["securepay", "Secure Pay"],
+      ["receipts", "Earnings & Receipts"]
+    ];
+
+    if (!walletRoutes.every(([route]) => buttons.has(route))) return;
+
+    function rowList() {
+      const list = document.createElement("div");
+      list.className = "gl-menu-rows";
+      return list;
+    }
+
+    function moveRow(route, destination, label) {
+      const button = buttons.get(route);
+      if (!button) return null;
+
+      if (label) button.textContent = label;
+      destination.appendChild(button);
+      buttons.delete(route);
+      return button;
+    }
+
+    function addFolder(parent, label, items) {
+      if (!items.childElementCount) return;
+
+      const folder = document.createElement("details");
+      const title = document.createElement("summary");
+      folder.className = "gl-menu-fold";
+      title.textContent = label;
+      folder.append(title, items);
+      parent.appendChild(folder);
+    }
+
+    const walletRows = rowList();
+    walletRows.appendChild(savedCards);
+    walletRoutes.forEach(([route, label]) => {
+      moveRow(route, walletRows, label);
+    });
+    wallet.appendChild(walletRows);
+    wallet.classList.add("gl-compact-wallet");
+
+    const moreRows = rowList();
+    moveRow("assistant", moreRows, "Help Assistant");
+    moveRow("messages", moreRows);
+    moveRow("realprofile", moreRows);
+
+    const apply = moveRow("apply", moreRows, "Become a Worker");
+    const worker = moveRow("workerdashboard", moreRows, "Worker Access");
+    const owner = moveRow("approvals", moreRows, "Worker Approvals");
+
+    [apply, worker, owner].filter(Boolean).forEach(button => {
+      button.hidden = true;
+    });
+
+    // The sign-in screen already handles signing in.
+    buttons.delete("login");
+
+    const demoRows = rowList();
+    [
+      "dashboard", "verification", "verify",
+      "earnings", "profile", "platform", "demo"
+    ].forEach(route => moveRow(route, demoRows));
+
+    const gigRows = rowList();
+    Array.from(buttons.keys()).forEach(route => moveRow(route, gigRows));
+
+    addFolder(moreRows, "Gig Tools", gigRows);
+    addFolder(moreRows, "Demo Tools", demoRows);
+    tools.replaceChildren(moreRows);
+    more.classList.add("gl-compact-menu");
+
+    if (!window.supabase?.createClient) return;
+
+    const client = window.supabase.createClient(
+      "https://mhpqclzullhvxasllbdh.supabase.co",
+      "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA"
+    );
+
+    let accessCheck = 0;
+
+    function hideAccountTools() {
+      [apply, worker, owner].filter(Boolean).forEach(button => {
+        button.hidden = true;
+      });
+    }
+
+    async function refreshAccountTools() {
+      const request = ++accessCheck;
+      hideAccountTools();
+
+      try {
+        const { data, error } = await client.auth.getUser();
+        if (error || !data?.user || request !== accessCheck) return;
+
+        const userId = data.user.id;
+        const [profile, ownership] = await Promise.all([
+          client.from("giglink_profiles")
+            .select("role").eq("id", userId).maybeSingle(),
+          client.rpc("giglink_is_owner")
+        ]);
+
+        if (request !== accessCheck) return;
+        if (owner) owner.hidden = ownership.error || ownership.data !== true;
+        if (profile.error || !profile.data) return;
+
+        if (profile.data.role === "customer") {
+          if (apply) apply.hidden = false;
+          return;
+        }
+
+        if (profile.data.role === "worker") {
+          const application = await client.from("giglink_worker_applications")
+            .select("status").eq("user_id", userId).maybeSingle();
+
+          if (request !== accessCheck || application.error) return;
+
+          const approved = application.data?.status === "approved";
+          if (worker) worker.hidden = !approved;
+          if (apply) apply.hidden = approved;
+        }
+      } catch (error) {
+        console.warn("GigLink menu access check:", error);
+      }
+    }
+
+    document.addEventListener("click", event => {
+      if (event.target.closest('#gl5kg-nav [data-gl5kg-go="more"]')) {
+        refreshAccountTools();
+      }
+    }, true);
+
+    client.auth.onAuthStateChange(event => {
+      if (event === "SIGNED_OUT") {
+        accessCheck += 1;
+        hideAccountTools();
+      }
+    });
+
+    refreshAccountTools();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setup, { once: true });
+  } else {
+    setup();
+  }
+})();
+</script>
+<!-- END GIGLINK COMPACT MORE MENU AND WALLET -->
+
  </body></html>
