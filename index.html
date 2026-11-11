@@ -4990,40 +4990,64 @@ render();
     );
   }
 
-  async function claimGig(jobId,title) {
-    if (busy) return;
-
-    const confirmed = window.confirm(
-      "Claim this real gig?\n\n" +
-      title + "\n\n" +
-      "This will assign the job to your " +
-      "approved worker account."
-    );
-
-    if (!confirmed) return;
-
-    await run(async () => {
-      await requireWorker();
-
-      show("Claiming gig securely...");
-
-      const {data,error} = await client.rpc(
-        "giglink_claim_job",
-        {p_job_id:jobId}
-      );
-
-      if (error) throw error;
-
-      await browseGigs();
-
-      show(
-        "GIG CLAIMED SUCCESSFULLY!\n" +
-        "Title: " + data.title + "\n" +
-        "Status: " + data.status + "\n" +
-        "Open My Gigs to see your job."
-      );
-    });
+  async function claimGig(jobId, title) {
+  if (busy) {
+    window.alert("GigLink is still loading. Try again in a moment.");
+    return;
   }
+
+  const confirmed = window.confirm(
+    "Claim this real gig?\n\n" + title + "\n\n" +
+    "This will assign the job to your approved worker account."
+  );
+  if (!confirmed) return;
+
+  let assignmentVerified = false;
+
+  await run(async () => {
+    try {
+      show("Checking worker access...");
+      const worker = await requireWorker();
+
+      show("Claiming " + title + "...");
+      const { error: claimError } = await client.rpc(
+        "giglink_claim_job",
+        { p_job_id: jobId }
+      );
+      if (claimError) throw claimError;
+
+      const { data: assignedJob, error: lookupError } = await client
+        .from("giglink_jobs")
+        .select("id")
+        .eq("id", jobId)
+        .eq("worker_id", worker.id)
+        .maybeSingle();
+
+      if (lookupError) throw lookupError;
+      if (!assignedJob) {
+        throw new Error(
+          "Supabase did not return this gig under your worker account."
+        );
+      }
+
+      assignmentVerified = true;
+      window.GigLinkRequestedMarketplaceTab = "mine";
+      showTab("mine");
+      await myGigs();
+      show(title + " was claimed and added to My Gigs.");
+      window.scrollTo(0, 0);
+    } catch (error) {
+      const detail = error?.message || String(error);
+      const code = error?.code ? " (" + error.code + ")" : "";
+      const message = assignmentVerified
+        ? "Gig claimed, but My Gigs could not refresh. " + detail + code
+        : "Could not confirm the claim for " + title + ". " + detail + code;
+
+      show(message);
+      window.alert(message);
+    }
+  });
+}
 
   async function run(action) {
     if (busy) return;
