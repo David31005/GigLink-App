@@ -14225,4 +14225,154 @@ connectBell();
 </script>
 <!-- END GIGLINK NOTIFICATION SOUND SETTINGS -->
 
+<!-- GIGLINK SOUND SETTINGS IN MORE MENU -->
+<style>
+#gl-menu-sound-button {
+  display:block;
+  width:100%;
+  background:#173b68;
+  color:#ffffff;
+  border:1px solid #3d83bd;
+  border-radius:12px;
+  padding:15px;
+  margin:10px 0;
+  font-size:16px;
+  font-weight:700;
+  text-align:left;
+  cursor:pointer;
+}
+
+#gl-menu-sound-button:active {
+  background:#24588d;
+}
+</style>
+
+<script>
+(function(){
+  "use strict";
+
+  const BUTTON_ID="gl-menu-sound-button";
+
+  function openSoundSettings(){
+    if(
+      window.GigLinkNotificationSound &&
+      typeof window.GigLinkNotificationSound.openSettings
+        ==="function"
+    ){
+      window.GigLinkNotificationSound.openSettings();
+      return;
+    }
+
+    const panel=document.getElementById(
+      "gl-sound-panel"
+    );
+
+    if(panel){
+      panel.classList.add("open");
+      return;
+    }
+
+    alert(
+      "Sound settings were not found. " +
+      "Keep the previous notification sound code " +
+      "in index.html."
+    );
+  }
+
+  function installMenuButton(){
+    if(document.getElementById(BUTTON_ID)){
+      return;
+    }
+
+    // Find the existing GigLink More menu.
+    const candidates=[
+      "gl5kg-more",
+      "gl5kg-more-panel",
+      "gl5kg-more-screen",
+      "gl5kg-menu",
+      "gl5kg-settings"
+    ];
+
+    let menu=null;
+
+    for(const id of candidates){
+      const found=document.getElementById(id);
+
+      if(found){
+        menu=found;
+        break;
+      }
+    }
+
+    if(!menu){
+      const headings=[
+        ...document.querySelectorAll(
+          "h2,h3,h4"
+        )
+      ];
+
+      const heading=headings.find(h=>
+        /^(more|settings|account settings)$/i.test(
+          h.textContent.trim()
+        )
+      );
+
+      if(heading){
+        menu=heading.parentElement;
+      }
+    }
+
+    if(!menu){
+      return;
+    }
+
+    const button=document.createElement("button");
+
+    button.id=BUTTON_ID;
+    button.type="button";
+    button.textContent="🔊 Notification Sound Settings";
+
+    button.addEventListener(
+      "click",openSoundSettings
+    );
+
+    menu.appendChild(button);
+  }
+
+  function start(){
+    installMenuButton();
+
+    // Retry when the More menu is opened.
+    document.addEventListener("click",function(e){
+      const button=e.target.closest(
+        '[data-gl5kg-go="more"]'
+      );
+
+      if(button){
+        setTimeout(installMenuButton,150);
+      }
+    });
+
+    // Handle menus created dynamically.
+    const observer=new MutationObserver(()=>{
+      installMenuButton();
+    });
+
+    observer.observe(document.body,{
+      childList:true,
+      subtree:true
+    });
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener(
+      "DOMContentLoaded",start
+    );
+  }else{
+    start();
+  }
+})();
+</script>
+<!-- END GIGLINK SOUND SETTINGS IN MORE MENU -->
+
  </body></html>
