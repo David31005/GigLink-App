@@ -15111,4 +15111,65 @@ if(document.readyState==="loading"){
 </script>
 <!-- END GIGLINK STEP 4F -->
 
+<!-- GIGLINK OWNER DASHBOARD DISPLAY FIX -->
+<style>
+  body > #gl-owner-screen:not([hidden]) {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    z-index: 2147483647 !important;
+    background: #07172d !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  #gl-owner-screen[hidden] {
+    display: none !important;
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  function moveDashboard() {
+    const screen = document.getElementById(
+      "gl-owner-screen"
+    );
+
+    if (screen && screen.parentElement !== document.body) {
+      document.body.appendChild(screen);
+    }
+  }
+
+  function start() {
+    moveDashboard();
+
+    // Keep the dashboard outside Wallet,
+    // More, and other app screens.
+    const observer = new MutationObserver(
+      moveDashboard
+    );
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      start
+    );
+  } else {
+    start();
+  }
+})();
+</script>
+<!-- END OWNER DASHBOARD DISPLAY FIX -->
+
  </body></html>
