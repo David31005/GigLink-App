@@ -13009,4 +13009,504 @@ setTimeout(updateVisibility,1500);
 </style>
 <!-- END REMOVE DEMO MESSAGE WARNING -->
 
+<!-- GIGLINK REAL MESSAGING STEP 2 -->
+<style>
+#messages > #messageList {
+  display:none!important;
+}
+#gl-live-chat {
+  color:#eaf3ff;
+  padding:8px 0 100px;
+}
+#gl-live-chat .gl-chat-card {
+  background:#192f51;
+  border:1px solid #315d91;
+  border-radius:18px;
+  padding:16px;
+  margin:14px 0;
+}
+#gl-live-chat h3 {
+  color:white;
+  margin:0 0 12px;
+}
+#gl-live-chat .gl-chat-status {
+  color:#a9c9ef;
+  font-size:14px;
+  line-height:1.5;
+}
+#gl-live-chat .gl-chat-thread {
+  min-height:120px;
+  max-height:380px;
+  overflow-y:auto;
+  padding:12px;
+  border-radius:12px;
+  background:#0c1d37;
+  margin:12px 0;
+}
+#gl-live-chat .gl-bubble {
+  max-width:90%;
+  padding:11px 13px;
+  margin:10px 0;
+  border-radius:14px;
+  background:#304c73;
+  overflow-wrap:anywhere;
+}
+#gl-live-chat .gl-bubble.mine {
+  margin-left:auto;
+  background:#12649b;
+}
+#gl-live-chat .gl-bubble small {
+  display:block;
+  opacity:.8;
+  margin-bottom:5px;
+}
+#gl-live-chat textarea {
+  width:100%;
+  min-height:85px;
+  background:#102542;
+  color:white;
+  border:1px solid #4676aa;
+  border-radius:12px;
+  padding:12px;
+  font-size:16px;
+}
+#gl-live-chat button {
+  background:#49baf2;
+  color:#081a31;
+  border:0;
+  border-radius:12px;
+  padding:13px 17px;
+  font-weight:800;
+  min-height:46px;
+}
+#gl-live-chat button:disabled {
+  opacity:.5;
+}
+#gl-live-chat .gl-chat-actions {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+</style>
+
+<script>
+(function(){
+"use strict";
+
+const SUPABASE_URL =
+  "https://mhpqclzullhvxasllbdh.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+let db = null;
+let currentUser = null;
+let activeJob = null;
+let jobs = [];
+let loading = false;
+let lastLoad = 0;
+
+const $ = id => document.getElementById(id);
+
+function getDB(){
+  if(!window.supabase?.createClient){
+    throw Error("Supabase library is not loaded.");
+  }
+  if(!db){
+    db = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+  }
+  return db;
+}
+
+function esc(value){
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    c => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[c])
+  );
+}
+
+function status(text){
+  const el = $("gl-chat-status");
+  if(el) el.textContent = text;
+}
+
+function visible(){
+  const page = $("messages");
+  if(!page) return false;
+
+  const style = getComputedStyle(page);
+
+  return !page.classList.contains("hidden")
+    && !page.hidden
+    && style.display !== "none"
+    && !!page.getClientRects().length;
+}
+
+function setup(){
+  const page = $("messages");
+  if(!page) return;
+
+  // Hide the old browser-only conversation list.
+  const oldList = $("messageList");
+  if(oldList) oldList.style.display = "none";
+
+  if($("gl-live-chat")) return;
+
+  const root = document.createElement("div");
+  root.id = "gl-live-chat";
+
+  root.innerHTML = `
+    <div class="gl-chat-card">
+      <h3>💬 GigLink Messages</h3>
+      <p class="gl-chat-status" id="gl-chat-status">
+        Open this page to load your conversations.
+      </p>
+      <div class="gl-chat-actions">
+        <button type="button" id="gl-chat-refresh">
+          ↻ Refresh Conversations
+        </button>
+      </div>
+    </div>
+
+    <div id="gl-chat-jobs"></div>
+    <div id="gl-chat-conversation"></div>
+  `;
+
+  page.appendChild(root);
+
+  $("gl-chat-refresh").addEventListener(
+    "click", () => loadJobs()
+  );
+
+  $("gl-chat-jobs").addEventListener(
+    "click",
+    e => {
+      const btn = e.target.closest(
+        "button[data-chat-job]"
+      );
+      if(!btn) return;
+
+      openConversation(btn.dataset.chatJob);
+    }
+  );
+
+  $("gl-chat-conversation").addEventListener(
+    "submit",
+    async e => {
+      if(e.target.id !== "gl-chat-form") return;
+      e.preventDefault();
+      await sendMessage();
+    }
+  );
+}
+
+async function getUser(){
+  const result = await getDB().auth.getUser();
+
+  if(result.error) throw result.error;
+
+  if(!result.data.user){
+    throw Error(
+      "Sign in with your real GigLink account."
+    );
+  }
+
+  return result.data.user;
+}
+
+async function loadJobs(){
+  if(loading) return;
+
+  loading = true;
+  setup();
+
+  status("Loading your assigned gigs...");
+
+  try{
+    currentUser = await getUser();
+
+    const result = await getDB()
+      .from("giglink_jobs")
+      .select(
+        "id,title,status,customer_id,worker_id"
+      )
+      .or(
+        "customer_id.eq." + currentUser.id +
+        ",worker_id.eq." + currentUser.id
+      )
+      .not("worker_id","is",null)
+      .order("created_at",{
+        ascending:false
+      });
+
+    if(result.error) throw result.error;
+
+    jobs = result.data || [];
+
+    const list = $("gl-chat-jobs");
+
+    if(!jobs.length){
+      list.innerHTML = `
+        <div class="gl-chat-card">
+          No assigned gigs yet.
+          Conversations become available
+          after a worker claims a job.
+        </div>
+      `;
+
+      $("gl-chat-conversation").innerHTML = "";
+
+      status("No assigned job conversations.");
+      return;
+    }
+
+    list.innerHTML = jobs.map(job => `
+      <div class="gl-chat-card">
+        <h3>${esc(job.title)}</h3>
+        <p class="gl-chat-status">
+          Job status: ${esc(job.status)}
+        </p>
+        <button
+          type="button"
+          data-chat-job="${esc(job.id)}">
+          💬 Open Conversation
+        </button>
+      </div>
+    `).join("");
+
+    status(
+      jobs.length +
+      " job conversation(s) available."
+    );
+
+    if(activeJob && jobs.some(
+      j => j.id === activeJob
+    )){
+      await openConversation(activeJob);
+    }else{
+      activeJob = null;
+      $("gl-chat-conversation").innerHTML = "";
+    }
+
+  }catch(error){
+    status(
+      "Messaging error: " +
+      (error.message || String(error))
+    );
+  }finally{
+    loading = false;
+    lastLoad = Date.now();
+  }
+}
+
+async function openConversation(jobId){
+  const job = jobs.find(j => j.id === jobId);
+  if(!job || !currentUser) return;
+
+  activeJob = jobId;
+
+  const area = $("gl-chat-conversation");
+
+  area.innerHTML = `
+    <div class="gl-chat-card">
+      <h3>${esc(job.title)}</h3>
+
+      <div class="gl-chat-thread"
+           id="gl-chat-thread">
+        Loading messages...
+      </div>
+
+      <form id="gl-chat-form">
+        <textarea
+          id="gl-chat-input"
+          maxlength="2000"
+          placeholder="Type your message..."
+          required></textarea>
+
+        <button type="submit"
+                id="gl-chat-send">
+          Send Message
+        </button>
+      </form>
+
+      <p class="gl-chat-status"
+         id="gl-chat-feedback"></p>
+
+      <button type="button"
+              id="gl-chat-reload">
+        ↻ Refresh Messages
+      </button>
+    </div>
+  `;
+
+  $("gl-chat-reload").addEventListener(
+    "click", loadMessages
+  );
+
+  await loadMessages();
+}
+
+async function loadMessages(){
+  if(!activeJob || !currentUser) return;
+
+  const thread = $("gl-chat-thread");
+  if(!thread) return;
+
+  try{
+    const result = await getDB()
+      .from("giglink_messages")
+      .select(
+        "id,job_id,sender_id,message,created_at"
+      )
+      .eq("job_id",activeJob)
+      .order("created_at",{
+        ascending:true
+      })
+      .limit(200);
+
+    if(result.error) throw result.error;
+
+    const rows = result.data || [];
+
+    thread.innerHTML = rows.length
+      ? rows.map(m => {
+          const mine =
+            m.sender_id === currentUser.id;
+
+          const time = new Date(
+            m.created_at
+          ).toLocaleString();
+
+          return `
+            <div class="gl-bubble ${mine?'mine':''}">
+              <small>
+                ${mine?'You':'Other participant'}
+                · ${esc(time)}
+              </small>
+              ${esc(m.message)}
+            </div>
+          `;
+        }).join("")
+      : '<p class="gl-chat-status">' +
+        'No messages yet. Say hello!' +
+        '</p>';
+
+    thread.scrollTop = thread.scrollHeight;
+
+  }catch(error){
+    thread.textContent =
+      "Could not load messages: " +
+      (error.message || String(error));
+  }
+}
+
+async function sendMessage(){
+  if(!activeJob || !currentUser) return;
+
+  const input = $("gl-chat-input");
+  const button = $("gl-chat-send");
+  const feedback = $("gl-chat-feedback");
+
+  const message = input?.value.trim();
+
+  if(!message) return;
+
+  button.disabled = true;
+  feedback.textContent = "Sending...";
+
+  try{
+    const result = await getDB()
+      .from("giglink_messages")
+      .insert({
+        job_id:activeJob,
+        sender_id:currentUser.id,
+        message:message
+      });
+
+    if(result.error) throw result.error;
+
+    input.value = "";
+    feedback.textContent = "Message sent.";
+
+    await loadMessages();
+
+  }catch(error){
+    feedback.textContent =
+      "Send failed: " +
+      (error.message || String(error));
+  }finally{
+    button.disabled = false;
+  }
+}
+
+// Load when Messages becomes visible.
+function checkPage(){
+  if(visible() &&
+     Date.now() - lastLoad > 3000){
+    loadJobs();
+  }
+}
+
+function start(){
+  setup();
+
+  document.addEventListener(
+    "click",
+    e => {
+      const btn = e.target.closest(
+        'button[data-gl5kg-go="messages"],' +
+        'button[data-glh-open="messages"],' +
+        'button[onclick*="show(\'messages\')"]'
+      );
+
+      if(btn){
+        setTimeout(checkPage,250);
+      }
+    }
+  );
+
+  const page = $("messages");
+
+  if(page){
+    new MutationObserver(checkPage).observe(
+      page,{
+        attributes:true,
+        attributeFilter:[
+          "class","style","hidden"
+        ]
+      }
+    );
+  }
+
+  // Refresh while viewing Messages.
+  setInterval(() => {
+    if(visible() && activeJob){
+      loadMessages();
+    }
+  },10000);
+
+  checkPage();
+}
+
+if(document.readyState === "loading"){
+  document.addEventListener(
+    "DOMContentLoaded",start,{once:true}
+  );
+}else{
+  start();
+}
+
+})();
+</script>
+<!-- END GIGLINK REAL MESSAGING STEP 2 -->
+
  </body></html>
