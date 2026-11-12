@@ -14456,4 +14456,112 @@ connectBell();
 </script>
 <!-- END GIGLINK SOUND MENU NAVIGATION FIX -->
 
+<!-- GIGLINK SOUND SETTINGS VISIBILITY FIX -->
+<style>
+#gl-sound-panel.open {
+  display:block!important;
+  position:fixed!important;
+  top:50%!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translate(-50%,-50%)!important;
+  width:min(360px,calc(100vw - 24px))!important;
+  max-height:80dvh!important;
+  overflow-y:auto!important;
+  z-index:2147483647!important;
+  box-shadow:
+    0 0 0 100vmax rgba(0,0,0,.72),
+    0 15px 45px rgba(0,0,0,.6)!important;
+}
+</style>
+
+<script>
+(function(){
+  "use strict";
+
+  const PANEL_ID="gl-sound-panel";
+  const BUTTON_ID="gl-menu-sound-button";
+
+  function getPanel(){
+    const panel=document.getElementById(PANEL_ID);
+
+    if(panel && panel.parentElement!==document.body){
+      // Move the original panel outside hidden screens.
+      // This preserves its existing controls and listeners.
+      document.body.appendChild(panel);
+    }
+
+    return panel;
+  }
+
+  function openPanel(){
+    const panel=getPanel();
+
+    if(!panel){
+      alert("Notification sound panel not found.");
+      return;
+    }
+
+    panel.classList.add("open");
+    panel.style.display="block";
+  }
+
+  function closePanel(){
+    const panel=getPanel();
+    if(!panel)return;
+
+    panel.classList.remove("open");
+    panel.style.removeProperty("display");
+  }
+
+  function start(){
+    getPanel();
+
+    // Capture menu clicks before other navigation code.
+    document.addEventListener("click",function(e){
+      const soundButton=e.target.closest(
+        "#"+BUTTON_ID
+      );
+
+      if(soundButton){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        openPanel();
+        return;
+      }
+
+      const closeButton=e.target.closest(
+        "#gl-close-sound"
+      );
+
+      if(closeButton){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        closePanel();
+        return;
+      }
+
+      // Close when switching bottom navigation tabs.
+      if(e.target.closest(
+        '#gl5kg-nav [data-gl5kg-go]'
+      )){
+        closePanel();
+      }
+    },true);
+
+    // Expose the corrected open function.
+    window.GigLinkOpenSoundSettings=openPanel;
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener(
+      "DOMContentLoaded",start,{once:true}
+    );
+  }else{
+    start();
+  }
+})();
+</script>
+<!-- END GIGLINK SOUND SETTINGS VISIBILITY FIX -->
+
  </body></html>
