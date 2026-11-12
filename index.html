@@ -14564,4 +14564,291 @@ connectBell();
 </script>
 <!-- END GIGLINK SOUND SETTINGS VISIBILITY FIX -->
 
+<!-- GIGLINK STEP 3: AUTOMATIC SOUND ALERTS -->
+<script>
+(function(){
+"use strict";
+
+if(window.GigLinkAutoSoundsReady)return;
+window.GigLinkAutoSoundsReady=true;
+
+const URL =
+  "https://mhpqclzullhvxasllbdh.supabase.co";
+
+const KEY =
+  "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+const SETTINGS_KEY =
+  "giglink_notification_sound_v1";
+
+const $ = id => document.getElementById(id);
+
+let db=null;
+let activeUser=null;
+let lastMessageId=null;
+let messageReady=false;
+let checking=false;
+let bellReady=false;
+let knownNotifications=new Set();
+
+function getSettings(){
+  try{
+    return {
+      enabled:false,
+      volume:60,
+      ...JSON.parse(
+        localStorage.getItem(SETTINGS_KEY)||"{}"
+      )
+    };
+  }catch(e){
+    return {enabled:false,volume:60};
+  }
+}
+
+async function playAlert(){
+  const settings=getSettings();
+
+  if(!settings.enabled ||
+     Number(settings.volume)<=0){
+    return;
+  }
+
+  const sound=window.GigLinkNotificationSound;
+
+  if(!sound ||
+     typeof sound.play!=="function"){
+    return;
+  }
+
+  try{
+    await sound.play();
+  }catch(e){
+    console.warn(
+      "GigLink sound unavailable:",
+      e.message
+    );
+  }
+}
+
+function getDB(){
+  if(!window.supabase?.createClient){
+    return null;
+  }
+
+  if(!db){
+    db=window.supabase.createClient(URL,KEY);
+  }
+
+  return db;
+}
+
+async function getUser(){
+  const client=getDB();
+  if(!client)return null;
+
+  const result=await client.auth.getUser();
+
+  if(result.error)throw result.error;
+
+  return result.data.user||null;
+}
+
+function resetUser(userId){
+  if(activeUser===userId)return;
+
+  activeUser=userId;
+  lastMessageId=null;
+  messageReady=false;
+}
+
+async function checkMessages(){
+  if(checking || document.hidden)return;
+
+  checking=true;
+
+  try{
+    const client=getDB();
+    if(!client)return;
+
+    const user=await getUser();
+
+    if(!user){
+      resetUser(null);
+      return;
+    }
+
+    resetUser(user.id);
+
+    // Only messages from other people.
+    // Supabase RLS restricts accessible messages.
+    const result=await client
+      .from("giglink_messages")
+      .select(
+        "id,sender_id,created_at"
+      )
+      .neq("sender_id",user.id)
+      .order("created_at",{
+        ascending:false
+      })
+      .limit(1);
+
+    if(result.error){
+      console.warn(
+        "GigLink message check:",
+        result.error.message
+      );
+      return;
+    }
+
+    const latest=result.data?.[0];
+
+    if(!messageReady){
+      // Establish baseline: don't alert
+      // for messages already received.
+      lastMessageId=latest?.id||null;
+      messageReady=true;
+      return;
+    }
+
+    if(latest && latest.id!==lastMessageId){
+      lastMessageId=latest.id;
+      await playAlert();
+    }
+
+  }catch(e){
+    console.warn(
+      "GigLink notification check:",
+      e.message
+    );
+  }finally{
+    checking=false;
+  }
+}
+
+function getNotificationCards(){
+  const list=$("gn-list");
+
+  if(!list)return [];
+
+  return Array.from(
+    list.querySelectorAll(".gn-item")
+  );
+}
+
+function notificationSignature(card){
+  // The existing notification center renders
+  // a title, description and date.
+  const title=
+    card.querySelector("strong")?.textContent||"";
+
+  const body=
+    card.querySelector("p")?.textContent||"";
+
+  const date=
+    card.querySelector("small")?.textContent||"";
+
+  return JSON.stringify([title,body,date]);
+}
+
+function checkBell(){
+  const cards=getNotificationCards();
+
+  const signatures=new Set(
+    cards.map(notificationSignature)
+  );
+
+  if(!bellReady){
+    knownNotifications=signatures;
+    bellReady=true;
+    return;
+  }
+
+  let hasNew=false;
+
+  cards.forEach(card=>{
+    const signature=notificationSignature(card);
+
+    if(
+      !knownNotifications.has(signature) &&
+      card.classList.contains("unread")
+    ){
+      hasNew=true;
+    }
+  });
+
+  knownNotifications=signatures;
+
+  if(hasNew){
+    playAlert();
+  }
+}
+
+function startBellMonitoring(){
+  const list=$("gn-list");
+  if(!list)return;
+
+  // Wait until the notification center
+  // has had time to load its first snapshot.
+  setTimeout(()=>{
+    checkBell();
+
+    const observer=new MutationObserver(()=>{
+      checkBell();
+    });
+
+    observer.observe(list,{
+      childList:true,
+      subtree:true
+    });
+  },3500);
+}
+
+function start(){
+  startBellMonitoring();
+
+  // Check incoming messages every 15 seconds
+  // while GigLink is open.
+  setTimeout(checkMessages,4000);
+
+  setInterval(()=>{
+    if(!document.hidden){
+      checkMessages();
+    }
+  },15000);
+
+  document.addEventListener(
+    "visibilitychange",()=>{
+      if(!document.hidden){
+        checkMessages();
+      }
+    }
+  );
+
+  // Establish a fresh message baseline
+  // when the signed-in account changes.
+  try{
+    getDB()?.auth.onAuthStateChange(
+      (event,session)=>{
+        const id=session?.user?.id||null;
+
+        if(id!==activeUser){
+          resetUser(id);
+        }
+      }
+    );
+  }catch(e){}
+}
+
+if(document.readyState==="loading"){
+  document.addEventListener(
+    "DOMContentLoaded",start,{once:true}
+  );
+}else{
+  start();
+}
+
+})();
+</script>
+<!-- END GIGLINK STEP 3 -->
+
  </body></html>
