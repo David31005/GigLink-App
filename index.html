@@ -4509,6 +4509,49 @@ render();
     </label>
     <input id="gl5kb-time" type="time">
 
+<!-- GIGLINK STEP 4P-Y: PAYMENT AGREEMENT -->
+<div id="gl5kb-consent-panel"
+     style="background:#eaf3ff;border:1px solid #9abce8;
+     border-radius:12px;padding:14px;margin:14px 0;
+     color:#132f50">
+
+  <h3>Payment Authorization Agreement</h3>
+
+  <p id="gl5kb-consent-amount">
+    Enter the job budget above to see the authorization amount.
+  </p>
+
+  <label style="display:flex;align-items:flex-start;gap:10px;
+                font-weight:normal;line-height:1.5">
+
+    <input
+      type="checkbox"
+      id="gl5kb-payment-consent"
+      style="width:22px;min-width:22px;height:22px;
+             margin:2px 0">
+
+    <span>
+      I authorize GigLink to request a temporary payment
+      hold of up to the displayed job price on my selected
+      saved payment card when a worker claims this gig.
+
+      I understand this may temporarily reduce my available
+      balance and is not a completed charge. The hold may
+      expire, and additional authentication may be required.
+
+      I will review and approve completed work before
+      payment is captured, subject to the agreed terms.
+    </span>
+  </label>
+
+  <p style="font-size:12px;color:#425b76">
+    Test mode only. Checking this box does not charge
+    or hold funds. Secure server-side consent verification
+    must be added before automatic payment holds begin.
+  </p>
+
+</div>
+
     <button type="button" id="gl5kb-submit">
       Publish Real Gig
     </button>
