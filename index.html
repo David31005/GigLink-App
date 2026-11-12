@@ -13509,4 +13509,314 @@ if(document.readyState === "loading"){
 </script>
 <!-- END GIGLINK REAL MESSAGING STEP 2 -->
 
+<!-- GIGLINK HOME 2.0 -->
+<style>
+#gl5kg-home{
+ max-width:980px;
+ margin:0 auto;
+ padding:14px 14px 105px!important;
+ color:#eaf4ff!important;
+ background:#09182e!important;
+ min-height:75vh;
+}
+#gl5kg-home>.hero,
+#gl5kg-home>.tiles,
+#gl5kg-home>.hint,
+#gl5kg-home>h3{
+ display:none!important;
+}
+#gl-dashboard-sync-actions,
+#gl-dashboard-sync-note{
+ display:none!important;
+}
+#gl5kg-home #gl-home20{
+ display:block!important;
+ margin:0 0 18px;
+}
+#gl-home20 .gh-head{
+ background:linear-gradient(130deg,#10284a,#145c9d);
+ border:1px solid #2c76af;
+ border-radius:20px;
+ padding:20px;
+ margin:0 0 14px;
+ box-shadow:0 8px 26px #0004;
+}
+#gl-home20 .gh-brand{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ font-size:14px;
+ color:#7fdbff;
+ font-weight:800;
+ letter-spacing:.8px;
+}
+#gl-home20 h2{
+ color:#fff!important;
+ font-size:27px;
+ line-height:1.2;
+ margin:15px 0 7px;
+}
+#gl-home20 p{
+ color:#c7def5!important;
+ margin:5px 0;
+}
+#gl-home20 .gh-actions{
+ display:grid;
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:8px;
+ margin:15px 0;
+}
+#gl-home20 .gh-action{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ gap:8px;
+ background:#17365d!important;
+ color:#e8f5ff!important;
+ border:1px solid #2e5987!important;
+ border-radius:14px!important;
+ min-height:83px;
+ padding:10px 4px!important;
+ margin:0!important;
+ font-size:12px!important;
+ font-weight:700;
+ text-align:center;
+}
+#gl-home20 .gh-action span{
+ font-size:23px;
+}
+#gl-home20 .gh-section{
+ font-size:17px;
+ font-weight:800;
+ color:#fff;
+ margin:20px 0 9px;
+}
+#gl-home20 .gh-note{
+ font-size:12px;
+ color:#9bb7d8!important;
+}
+#gl5kg-home #glq-dashboard,
+#gl5kg-home #gl-customer-home{
+ background:#102747!important;
+ border:1px solid #315b91!important;
+ border-radius:18px!important;
+ box-shadow:none!important;
+ padding:14px!important;
+ margin:8px 0!important;
+ color:#eaf4ff!important;
+}
+#gl5kg-home #glq-dashboard[hidden],
+#gl5kg-home #gl-customer-home[hidden]{
+ display:none!important;
+}
+#gl5kg-home .glq-stat,
+#gl5kg-home .gc-stat{
+ background:#18365a!important;
+ color:#fff!important;
+ border:1px solid #305783!important;
+ border-radius:14px!important;
+}
+#gl5kg-home button{
+ touch-action:manipulation;
+}
+@media(max-width:360px){
+ #gl-home20 .gh-action{
+  font-size:11px!important;
+  min-height:77px;
+ }
+ #gl-home20 h2{
+  font-size:24px;
+ }
+}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+const $=id=>document.getElementById(id);
+const home=$('gl5kg-home');
+
+if(!home)return;
+if($('gl-home20'))return;
+
+const shell=document.createElement('section');
+shell.id='gl-home20';
+
+shell.innerHTML=`
+<div class="gh-head">
+ <div class="gh-brand">
+  <span>🔗 GIGLINK</span>
+  <span id="gh-role">YOUR DASHBOARD</span>
+ </div>
+ <h2 id="gh-greeting">Welcome back 👋</h2>
+ <p id="gh-subtitle">
+  Your work, messages and payments in one place.
+ </p>
+</div>
+
+<div class="gh-section">Quick Actions</div>
+
+<div class="gh-actions">
+ <button class="gh-action"
+  type="button" data-gh-go="mine">
+  <span>📋</span>My Gigs
+ </button>
+
+ <button class="gh-action"
+  type="button" data-gh-go="browse">
+  <span>🔎</span>Explore
+ </button>
+
+ <button class="gh-action"
+  type="button" data-gh-go="messages">
+  <span>💬</span>Messages
+ </button>
+
+ <button class="gh-action"
+  type="button" data-gh-go="wallet">
+  <span>💳</span>Wallet
+ </button>
+</div>
+
+<div class="gh-section">Your Activity</div>
+
+<p class="gh-note">
+ Job totals and earnings below are loaded
+ from your existing Supabase dashboard.
+ Estimates are not confirmed payouts.
+</p>
+
+<div id="gh-dashboard-slot"></div>
+
+<div class="gh-actions"
+ style="grid-template-columns:repeat(2,minmax(0,1fr))">
+
+ <button class="gh-action"
+  type="button" data-gh-go="post">
+  <span>➕</span>Post a Gig
+ </button>
+
+ <button class="gh-action"
+  type="button" id="gh-refresh">
+  <span>↻</span>Refresh Dashboard
+ </button>
+</div>
+`;
+
+home.prepend(shell);
+
+function go(page){
+ const nav=$('gl5kg-nav');
+ const tab=nav?.querySelector(
+  '[data-gl5kg-go="'+page+'"]'
+ );
+
+ if(tab){
+  tab.click();
+  return;
+ }
+
+ if(typeof window.GigLinkMobileGo==='function'){
+  window.GigLinkMobileGo(page);
+  return;
+ }
+
+ if(typeof window.GigLinkOpenScreen==='function'){
+  window.GigLinkOpenScreen(page);
+ }
+}
+
+shell.addEventListener('click',e=>{
+ const btn=e.target.closest('[data-gh-go]');
+ if(btn)go(btn.dataset.ghGo);
+});
+
+$('gh-refresh').addEventListener('click',()=>{
+ $('glq-refresh')?.click();
+ $('gc-refresh')?.click();
+});
+
+async function sync(){
+ try{
+  if(!window.supabase?.createClient)return;
+
+  const db=window.supabase.createClient(
+   'https://mhpqclzullhvxasllbdh.supabase.co',
+   'sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA'
+  );
+
+  const {data:{user},error}=
+   await db.auth.getUser();
+
+  if(error||!user)return;
+
+  const {data:profile}=await db
+   .from('giglink_profiles')
+   .select('role')
+   .eq('id',user.id)
+   .maybeSingle();
+
+  const role=profile?.role;
+
+  $('gh-role').textContent=
+   role==='worker'?'WORKER DASHBOARD':
+   role==='customer'?'CUSTOMER DASHBOARD':
+   'YOUR DASHBOARD';
+
+  $('gh-greeting').textContent='Welcome back 👋';
+
+  $('gh-subtitle').textContent=
+   role==='worker'
+    ?'Track your gigs, upcoming work and estimated earnings.'
+    :'Manage posted gigs, worker updates and approvals.';
+
+  shell.querySelector(
+   '[data-gh-go="post"]'
+  ).hidden=role==='worker';
+
+ }catch(e){
+  console.warn('Home 2.0 profile:',e.message);
+ }
+}
+
+function arrange(){
+ const slot=$('gh-dashboard-slot');
+ if(!slot)return;
+
+ // Keep existing dashboards and their buttons.
+ for(const id of [
+  'glq-dashboard',
+  'gl-customer-home'
+ ]){
+  const node=$(id);
+  if(node&&node.parentElement!==slot){
+   slot.appendChild(node);
+  }
+ }
+}
+
+arrange();
+sync();
+
+const observer=new MutationObserver(()=>{
+ if(!home.hidden)arrange();
+});
+
+observer.observe(home,{childList:true});
+
+document.addEventListener('click',e=>{
+ if(e.target.closest('[data-gl5kg-go="home"]')){
+  setTimeout(()=>{
+   arrange();
+   sync();
+  },300);
+ }
+});
+
+})();
+</script>
+<!-- END GIGLINK HOME 2.0 -->
+
  </body></html>
