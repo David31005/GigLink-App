@@ -4930,6 +4930,10 @@ render();
     });
 
     el("gl5kb-category").value = "";
+  
+    // STEP 4P-Y: Reset payment agreement
+    document.getElementById("gl5kb-payment-consent").checked = false;
+    updateGl5kbConsentAmount();
   }
 
   function renderJob(job, target, canClaim) {
