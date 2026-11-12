@@ -13909,4 +13909,320 @@ document.addEventListener('click',e=>{
 </script>
 <!-- END GIGLINK HOME 2.0 QUICK FIX -->
 
+<!-- GIGLINK NOTIFICATION SOUND SETTINGS -->
+<style>
+#gl-sound-panel {
+  display:none;
+  position:fixed;
+  z-index:99999;
+  top:75px;
+  right:12px;
+  width:min(360px,calc(100vw - 24px));
+  max-height:80dvh;
+  overflow:auto;
+  padding:18px;
+  border-radius:18px;
+  background:#102849;
+  color:#f2f8ff;
+  border:1px solid #4389cc;
+  box-shadow:0 12px 40px #0009;
+}
+#gl-sound-panel.open {
+  display:block;
+}
+#gl-sound-panel h3 {
+  margin:0 0 14px;
+  color:white;
+}
+#gl-sound-panel label {
+  display:block;
+  margin:14px 0 6px;
+  color:#c7e4ff;
+}
+#gl-sound-panel select,
+#gl-sound-panel input[type=range] {
+  width:100%;
+}
+#gl-sound-panel select {
+  padding:12px;
+  border-radius:10px;
+  background:#1c426d;
+  color:white;
+  border:1px solid #5c9cd6;
+}
+#gl-sound-panel button {
+  padding:12px;
+  border-radius:10px;
+  background:#39b9f2;
+  color:#081b32;
+  border:0;
+  font-weight:bold;
+  margin:6px 4px 4px 0;
+}
+#gl-sound-panel .gl-sound-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+#gl-sound-panel input[type=checkbox] {
+  width:22px;
+  height:22px;
+  margin:0;
+}
+#gl-sound-panel .gl-volume-value {
+  color:#63d5ff;
+  font-weight:bold;
+}
+</style>
+
+<div id="gl-sound-panel">
+  <h3>🔔 Notification Sound Settings</h3>
+
+  <div class="gl-sound-row">
+    <input type="checkbox" id="gl-sound-enabled">
+    <span>Enable notification sounds</span>
+  </div>
+
+  <label for="gl-sound-choice">
+    Choose your sound
+  </label>
+
+  <select id="gl-sound-choice">
+    <option value="chime">Soft Chime</option>
+    <option value="bell">Classic Bell</option>
+    <option value="digital">Digital Alert</option>
+    <option value="ping">Gentle Ping</option>
+    <option value="double">Double Beep</option>
+  </select>
+
+  <label for="gl-sound-volume">
+    Volume:
+    <span id="gl-volume-display"
+          class="gl-volume-value">60%</span>
+  </label>
+
+  <input type="range"
+         id="gl-sound-volume"
+         min="0"
+         max="100"
+         step="5"
+         value="60">
+
+  <div>
+    <button type="button" id="gl-test-sound">
+      ▶ Test Sound
+    </button>
+    <button type="button" id="gl-save-sound">
+      Save Settings
+    </button>
+    <button type="button" id="gl-close-sound">
+      Close
+    </button>
+  </div>
+
+  <p id="gl-sound-feedback"
+     style="font-size:13px;color:#b8d7f5">
+    Choose a sound and tap Test Sound.
+  </p>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+const $ = id => document.getElementById(id);
+const KEY = "giglink_notification_sound_v1";
+
+const defaults = {
+  enabled:false,
+  sound:"chime",
+  volume:60
+};
+
+let settings = {...defaults};
+let audio = null;
+
+try {
+  settings = {
+    ...defaults,
+    ...JSON.parse(localStorage.getItem(KEY)||"{}")
+  };
+} catch(e) {}
+
+function save(){
+  settings.enabled = $("gl-sound-enabled").checked;
+  settings.sound = $("gl-sound-choice").value;
+  settings.volume = Number($("gl-sound-volume").value);
+
+  try {
+    localStorage.setItem(KEY,JSON.stringify(settings));
+    $("gl-sound-feedback").textContent =
+      "Settings saved on this device.";
+  } catch(e) {
+    $("gl-sound-feedback").textContent =
+      "Could not save settings.";
+  }
+}
+
+function updateUI(){
+  $("gl-sound-enabled").checked = settings.enabled;
+  $("gl-sound-choice").value = settings.sound;
+  $("gl-sound-volume").value = settings.volume;
+  $("gl-volume-display").textContent =
+    settings.volume + "%";
+}
+
+function getAudio(){
+  const AudioContextClass =
+    window.AudioContext || window.webkitAudioContext;
+
+  if(!AudioContextClass){
+    throw Error("Audio is not supported.");
+  }
+
+  if(!audio) audio = new AudioContextClass();
+  return audio;
+}
+
+function tone(ctx,frequency,start,duration,volume,type){
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  oscillator.type = type || "sine";
+  oscillator.frequency.setValueAtTime(
+    frequency,start
+  );
+
+  gain.gain.setValueAtTime(0,start);
+  gain.gain.linearRampToValueAtTime(
+    volume,start+0.015
+  );
+  gain.gain.exponentialRampToValueAtTime(
+    0.001,start+duration
+  );
+
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+
+  oscillator.start(start);
+  oscillator.stop(start+duration+0.02);
+}
+
+async function play(test=false){
+  if(!test && !settings.enabled)return;
+
+  const volume = Number(
+    $("gl-sound-volume").value
+  ) / 100;
+
+  if(volume<=0)return;
+
+  const sound = $("gl-sound-choice").value;
+  const ctx = getAudio();
+
+  if(ctx.state==="suspended"){
+    await ctx.resume();
+  }
+
+  const start = ctx.currentTime+0.02;
+  const level = Math.min(0.25,volume*0.25);
+
+  if(sound==="chime"){
+    tone(ctx,660,start,0.25,level,"sine");
+    tone(ctx,880,start+0.12,0.38,level*.7,"sine");
+  }
+  else if(sound==="bell"){
+    tone(ctx,784,start,0.55,level,"sine");
+    tone(ctx,1176,start,0.4,level*.3,"sine");
+  }
+  else if(sound==="digital"){
+    tone(ctx,950,start,0.12,level,"square");
+    tone(ctx,1250,start+0.16,0.14,level,"square");
+  }
+  else if(sound==="ping"){
+    tone(ctx,1046,start,0.22,level,"sine");
+  }
+  else if(sound==="double"){
+    tone(ctx,740,start,0.15,level,"triangle");
+    tone(ctx,740,start+0.23,0.15,level,"triangle");
+  }
+}
+
+function openPanel(){
+  $("gl-sound-panel").classList.add("open");
+  updateUI();
+}
+
+$("gl-sound-volume").addEventListener(
+  "input",function(){
+    $("gl-volume-display").textContent =
+      this.value+"%";
+  }
+);
+
+$("gl-test-sound").addEventListener(
+  "click",async()=>{
+    try {
+      await play(true);
+      $("gl-sound-feedback").textContent =
+        "Playing selected sound.";
+    } catch(e) {
+      $("gl-sound-feedback").textContent =
+        e.message;
+    }
+  }
+);
+
+$("gl-save-sound").addEventListener("click",save);
+
+$("gl-close-sound").addEventListener(
+  "click",()=>{
+    $("gl-sound-panel").classList.remove("open");
+  }
+);
+
+// Add sound settings access to the existing bell.
+function connectBell(){
+  const bell = document.querySelector(
+    "#gl-notification-bell," +
+    "#gl5kg-bell," +
+    "[data-gl-bell]," +
+    ".gl-notification-bell"
+  );
+
+  if(bell && !bell.dataset.soundConnected){
+    bell.dataset.soundConnected = "1";
+
+    bell.addEventListener("click",()=>{
+      // Sound settings button remains accessible.
+      if(!$("gl-open-sound-settings")){
+        const button=document.createElement("button");
+        button.id="gl-open-sound-settings";
+        button.type="button";
+        button.textContent="🔊 Sound Settings";
+        button.style.cssText =
+          "position:fixed;right:14px;top:145px;" +
+          "z-index:99998;background:#39b9f2;" +
+          "color:#081b32;padding:12px;border-radius:12px;";
+
+        button.onclick=openPanel;
+        document.body.appendChild(button);
+      }
+    });
+  }
+}
+
+// Expose for future real notification integration.
+window.GigLinkNotificationSound = {
+  play:()=>play(false),
+  openSettings:openPanel
+};
+
+updateUI();
+connectBell();
+
+})();
+</script>
+<!-- END GIGLINK NOTIFICATION SOUND SETTINGS -->
+
  </body></html>
