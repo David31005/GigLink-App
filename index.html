@@ -12721,4 +12721,55 @@ setTimeout(updateVisibility,1500);
 </script>
 <!-- END GIGLINK WORKER PAYOUT -->
 
+<!-- GIGLINK OPEN MY GIGS BUTTON FIX -->
+<script>
+(function () {
+  function openMyGigs() {
+    // Use the existing working bottom navigation.
+    const nav = document.getElementById("gl5kg-nav");
+
+    if (!nav) {
+      alert("GigLink navigation is not ready.");
+      return;
+    }
+
+    const buttons = Array.from(
+      nav.querySelectorAll("button")
+    );
+
+    const myGigsButton = buttons.find(btn =>
+      /my\s*gigs/i.test(btn.textContent || "")
+    );
+
+    if (!myGigsButton) {
+      alert("My Gigs navigation button not found.");
+      return;
+    }
+
+    myGigsButton.click();
+  }
+
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest("button");
+
+    if (!button) return;
+
+    const nav = document.getElementById("gl5kg-nav");
+
+    // Do not interfere with bottom navigation.
+    if (nav && nav.contains(button)) return;
+
+    if (
+      /open\s*my\s*gigs/i.test(
+        button.textContent || ""
+      )
+    ) {
+      event.preventDefault();
+      openMyGigs();
+    }
+  });
+})();
+</script>
+<!-- END GIGLINK BUTTON FIX -->
+
  </body></html>
