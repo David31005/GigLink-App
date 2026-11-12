@@ -12721,55 +12721,276 @@ setTimeout(updateVisibility,1500);
 </script>
 <!-- END GIGLINK WORKER PAYOUT -->
 
-<!-- GIGLINK OPEN MY GIGS BUTTON FIX -->
+
+<!-- GIGLINK DASHBOARD SYNC FIX V2 -->
+<style id="gl-dashboard-sync-style">
+#gl5kg-home #gl-home-fallback{
+  display:none!important;
+}
+
+#gl5kg-home #glq-dashboard,
+#gl5kg-home #gl-customer-home{
+  border:1px solid #315b91;
+  border-radius:22px;
+  background:linear-gradient(
+    145deg,#0c1c39,#123b72
+  );
+  box-shadow:0 14px 35px rgba(0,0,0,.2);
+  margin:16px 0;
+}
+
+#gl5kg-home #glq-dashboard[hidden],
+#gl5kg-home #gl-customer-home[hidden]{
+  display:none!important;
+}
+
+#gl5kg-home .glq-stat,
+#gl5kg-home .gc-stat{
+  border-radius:16px;
+}
+
+#gl-dashboard-sync-note{
+  padding:12px 15px;
+  border-radius:13px;
+  margin:12px 0;
+  background:#15375f;
+  border:1px solid #31618e;
+  color:#dcecff;
+  font-size:14px;
+  line-height:1.5;
+}
+
+#gl-dashboard-sync-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin:12px 0;
+}
+
+#gl-dashboard-sync-actions button{
+  flex:1 1 140px;
+  min-height:48px;
+  border-radius:13px;
+  background:#15b8f5;
+  color:#071c35;
+  font-weight:800;
+  margin:0;
+}
+</style>
+
 <script>
-(function () {
-  function openMyGigs() {
-    // Use the existing working bottom navigation.
-    const nav = document.getElementById("gl5kg-nav");
+(function(){
+  "use strict";
 
-    if (!nav) {
-      alert("GigLink navigation is not ready.");
-      return;
+  const HOME_ID="gl5kg-home";
+  const URL=
+    "https://mhpqclzullhvxasllbdh.supabase.co";
+  const KEY=
+    "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+  let client=null;
+  let busy=false;
+
+  const $=id=>document.getElementById(id);
+
+  function getClient(){
+    if(!window.supabase?.createClient){
+      throw new Error(
+        "Supabase is still loading."
+      );
     }
-
-    const buttons = Array.from(
-      nav.querySelectorAll("button")
-    );
-
-    const myGigsButton = buttons.find(btn =>
-      /my\s*gigs/i.test(btn.textContent || "")
-    );
-
-    if (!myGigsButton) {
-      alert("My Gigs navigation button not found.");
-      return;
+    if(!client){
+      client=window.supabase.createClient(
+        URL,KEY
+      );
     }
-
-    myGigsButton.click();
+    return client;
   }
 
-  document.addEventListener("click", function (event) {
-    const button = event.target.closest("button");
+  function message(text){
+    const note=$("gl-dashboard-sync-note");
+    if(note)note.textContent=text;
+  }
 
-    if (!button) return;
+  function openMyGigs(){
+    const nav=$("gl5kg-nav");
 
-    const nav = document.getElementById("gl5kg-nav");
+    const tab=nav?.querySelector(
+      '[data-gl5kg-go="mine"]'
+    );
 
-    // Do not interfere with bottom navigation.
-    if (nav && nav.contains(button)) return;
-
-    if (
-      /open\s*my\s*gigs/i.test(
-        button.textContent || ""
-      )
-    ) {
-      event.preventDefault();
-      openMyGigs();
+    if(tab){
+      tab.click();
+      return;
     }
-  });
+
+    if(typeof window.GigLinkMobileGo==="function"){
+      window.GigLinkMobileGo("mine");
+      return;
+    }
+
+    if(typeof window.GigLinkOpenScreen==="function"){
+      window.GigLinkOpenScreen("mine");
+      return;
+    }
+
+    message(
+      "My Gigs navigation is unavailable."
+    );
+  }
+
+  function refreshVisibleDashboard(role){
+    const worker=$("glq-dashboard");
+    const customer=$("gl-customer-home");
+
+    if(role==="worker"){
+      if(customer)customer.hidden=true;
+      if(worker){
+        worker.hidden=false;
+        $("glq-refresh")?.click();
+      }
+    }else if(role==="customer"){
+      if(worker)worker.hidden=true;
+      if(customer){
+        customer.hidden=false;
+        $("gc-refresh")?.click();
+      }
+    }
+  }
+
+  async function refreshDashboard(){
+    if(busy)return;
+    busy=true;
+
+    try{
+      message("Updating your GigLink dashboard...");
+
+      const db=getClient();
+
+      const auth=await db.auth.getUser();
+
+      if(auth.error)throw auth.error;
+
+      const user=auth.data.user;
+
+      if(!user){
+        message(
+          "Sign in to see your dashboard."
+        );
+        return;
+      }
+
+      const profile=await db
+        .from("giglink_profiles")
+        .select("role")
+        .eq("id",user.id)
+        .maybeSingle();
+
+      if(profile.error)throw profile.error;
+
+      const role=profile.data?.role;
+
+      if(role!=="worker"&&role!=="customer"){
+        message(
+          "Your account role could not be verified."
+        );
+        return;
+      }
+
+      refreshVisibleDashboard(role);
+
+      message(
+        role==="worker"
+          ? "Worker dashboard connected. Job counts and estimated earnings load from Supabase."
+          : "Customer dashboard connected. Your posted jobs and their statuses load from Supabase."
+      );
+
+    }catch(error){
+      message(
+        "Dashboard error: "+
+        (error.message||String(error))
+      );
+    }finally{
+      busy=false;
+    }
+  }
+
+  function setup(){
+    const home=$(HOME_ID);
+    if(!home)return;
+
+    const old=$("gl-home-fallback");
+    if(old)old.hidden=true;
+
+    if(!$("gl-dashboard-sync-note")){
+      const note=document.createElement("div");
+      note.id="gl-dashboard-sync-note";
+      note.setAttribute("role","status");
+      note.textContent=
+        "Connecting your dashboard...";
+      home.prepend(note);
+    }
+
+    if(!$("gl-dashboard-sync-actions")){
+      const actions=document.createElement("div");
+      actions.id="gl-dashboard-sync-actions";
+
+      const jobs=document.createElement("button");
+      jobs.type="button";
+      jobs.textContent="📋 Open My Gigs";
+      jobs.addEventListener(
+        "click",openMyGigs
+      );
+
+      const refresh=document.createElement("button");
+      refresh.type="button";
+      refresh.textContent="↻ Refresh Dashboard";
+      refresh.addEventListener(
+        "click",refreshDashboard
+      );
+
+      actions.append(jobs,refresh);
+      $("gl-dashboard-sync-note").after(actions);
+    }
+
+    refreshDashboard();
+  }
+
+  document.addEventListener(
+    "click",
+    function(event){
+      const button=event.target.closest(
+        "#gl5kg-nav [data-gl5kg-go='home'],"+
+        "[data-gl5kg-go='dashboard']"
+      );
+
+      if(button){
+        setTimeout(refreshDashboard,350);
+      }
+    }
+  );
+
+  document.addEventListener(
+    "visibilitychange",
+    function(){
+      if(!document.hidden){
+        const home=$(HOME_ID);
+        if(home&&!home.hidden){
+          refreshDashboard();
+        }
+      }
+    }
+  );
+
+  if(document.readyState==="loading"){
+    document.addEventListener(
+      "DOMContentLoaded",setup,{once:true}
+    );
+  }else{
+    setup();
+  }
 })();
 </script>
-<!-- END GIGLINK BUTTON FIX -->
+<!-- END GIGLINK DASHBOARD SYNC FIX V2 -->
 
  </body></html>
