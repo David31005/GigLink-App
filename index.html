@@ -13819,4 +13819,94 @@ document.addEventListener('click',e=>{
 </script>
 <!-- END GIGLINK HOME 2.0 -->
 
+<!-- GIGLINK HOME 2.0 QUICK FIX -->
+<style>
+/* Remove bottom Home 2.0 action buttons */
+#gl-home20 .gh-actions:has(#gh-refresh) {
+  display: none !important;
+}
+
+/* Keep the top four Quick Actions visible */
+#gl-home20 .gh-actions:not(:has(#gh-refresh)) {
+  display: grid !important;
+}
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  function fixHome() {
+    const home = document.getElementById("gl-home20");
+    if (!home) return;
+
+    // Remove the bottom action row.
+    const refresh = document.getElementById("gh-refresh");
+    if (refresh) {
+      const bottomRow = refresh.closest(".gh-actions");
+      if (bottomRow) bottomRow.remove();
+    }
+
+    // Locate the Messages Quick Action.
+    const messagesButton = home.querySelector(
+      '[data-gh-go="messages"]'
+    );
+
+    if (!messagesButton) return;
+
+    // Replace it with a clean button so the old
+    // Home 2.0 click handler cannot intercept it.
+    const fixedButton = messagesButton.cloneNode(true);
+    messagesButton.replaceWith(fixedButton);
+
+    fixedButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      // Use the existing GigLink navigation first.
+      const navButton = document.querySelector(
+        '#gl5kg-nav [data-gl5kg-go="messages"]'
+      );
+
+      if (navButton) {
+        navButton.click();
+        return;
+      }
+
+      // Open the existing Messages page directly.
+      const messagesPage = document.getElementById("messages");
+
+      if (messagesPage) {
+        const oldApp = document.getElementById("app");
+
+        if (oldApp && oldApp.classList.contains("hidden")) {
+          const moreButton = document.querySelector(
+            '#gl5kg-nav [data-gl5kg-go="more"]'
+          );
+
+          if (moreButton) moreButton.click();
+        }
+
+        if (typeof window.show === "function") {
+          window.show("messages");
+          return;
+        }
+      }
+
+      alert(
+        "Messages navigation could not be found. " +
+        "Please open More and select Messages."
+      );
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", fixHome);
+  } else {
+    fixHome();
+  }
+})();
+</script>
+<!-- END GIGLINK HOME 2.0 QUICK FIX -->
+
  </body></html>
