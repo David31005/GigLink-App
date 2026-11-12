@@ -4903,11 +4903,30 @@ render();
       status:"available"
     };
 
-    const {data,error} = await client
-      .from("giglink_jobs")
-      .insert(job)
-      .select("id,title,status")
-      .single();
+    
+const { data: result, error } = await client.rpc(
+  "giglink_post_job_with_consent",
+  {
+    p_title: job.title,
+    p_category: job.category,
+    p_location: job.location,
+    p_description: job.description,
+    p_budget: job.budget,
+    p_scheduled_date: job.scheduled_date,
+    p_scheduled_time: job.scheduled_time,
+    p_agreement_accepted: consent.checked,
+    p_agreement_version: "giglink-payment-v1"
+  }
+);
+
+const data = result && result.success
+  ? result
+  : null;
+
+if (!error && !data) {
+  throw new Error("Secure job posting did not succeed.");
+}
+
 
     if (error) throw error;
 
