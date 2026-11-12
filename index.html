@@ -14375,4 +14375,85 @@ connectBell();
 </script>
 <!-- END GIGLINK SOUND SETTINGS IN MORE MENU -->
 
+<!-- GIGLINK SOUND MENU NAVIGATION FIX -->
+<script>
+(function(){
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+
+  function closeSound(){
+    const panel = $("gl-sound-panel");
+    if(!panel) return;
+
+    panel.classList.remove("open");
+    panel.style.removeProperty("display");
+  }
+
+  function openSound(){
+    const panel = $("gl-sound-panel");
+
+    if(!panel){
+      alert("Sound settings are not installed.");
+      return;
+    }
+
+    panel.classList.add("open");
+    panel.style.display = "block";
+  }
+
+  // Handle the actual Sound Settings menu button.
+  document.addEventListener("click",function(e){
+    const soundButton = e.target.closest(
+      "#gl-menu-sound-button"
+    );
+
+    if(soundButton){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      openSound();
+      return;
+    }
+
+    // Close sound settings when changing bottom tabs.
+    const navButton = e.target.closest(
+      "#gl5kg-nav [data-gl5kg-go]"
+    );
+
+    if(navButton){
+      closeSound();
+    }
+  },true);
+
+  // Close if the user changes tabs through
+  // another GigLink navigation control.
+  const nav = $("gl5kg-nav");
+
+  if(nav){
+    nav.addEventListener("click",function(e){
+      if(e.target.closest("[data-gl5kg-go]")){
+        closeSound();
+      }
+    });
+  }
+
+  // Keep the existing close button working.
+  document.addEventListener("click",function(e){
+    if(e.target.closest("#gl-close-sound")){
+      closeSound();
+    }
+  });
+
+  // Close any leftover open panel on page reload.
+  if(document.readyState === "loading"){
+    document.addEventListener(
+      "DOMContentLoaded",closeSound
+    );
+  }else{
+    closeSound();
+  }
+})();
+</script>
+<!-- END GIGLINK SOUND MENU NAVIGATION FIX -->
+
  </body></html>
