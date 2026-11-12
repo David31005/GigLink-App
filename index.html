@@ -12444,5 +12444,281 @@ setTimeout(updateVisibility,1500);
     color: #dcecff !important;
   }
 </style>
+
+<!-- GIGLINK WORKER PAYOUT: Stripe Connect onboarding -->
+<style>
+#gl-worker-payout{
+  background:#1c2e50;
+  color:#fff;
+  border:1px solid #45638c;
+  border-radius:16px;
+  padding:18px;
+  margin:16px 0;
+}
+#gl-worker-payout h3{
+  margin:0 0 10px;
+  color:#fff;
+}
+#gl-worker-payout p{line-height:1.5}
+#gl-worker-payout button{
+  background:#51b5ec;
+  color:#061a31;
+  font-weight:700;
+  min-height:48px;
+}
+#gl-worker-payout-status{
+  overflow-wrap:anywhere;
+  color:#d6e9ff;
+}
+</style>
+
+<script>
+(function(){
+  'use strict';
+
+  const URL_BASE =
+    'https://mhpqclzullhvxasllbdh.supabase.co';
+
+  const PUBLIC_KEY =
+    'sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA';
+
+  let db = null;
+  let checking = false;
+
+  function getDB(){
+    if(!window.supabase?.createClient){
+      throw Error('Supabase is not loaded. Refresh GigLink.');
+    }
+    return db || (db = window.supabase.createClient(
+      URL_BASE,
+      PUBLIC_KEY
+    ));
+  }
+
+  function panel(){
+    let box = document.getElementById('gl-worker-payout');
+    if(box) return box;
+
+    const wallet = document.getElementById('gl5kg-wallet');
+    if(!wallet) return null;
+
+    box = document.createElement('section');
+    box.id = 'gl-worker-payout';
+    box.hidden = true;
+
+    box.innerHTML = `
+      <h3>💸 Worker Payout</h3>
+
+      <p>
+        Connect your bank account securely through Stripe
+        to receive earnings from completed, paid GigLink jobs.
+      </p>
+
+      <button type="button" id="gl-worker-payout-start">
+        Set Up Worker Payout
+      </button>
+
+      <button type="button" id="gl-worker-payout-refresh">
+        Refresh Payout Setup
+      </button>
+
+      <p id="gl-worker-payout-status" role="status">
+        Payout setup is not complete.
+      </p>
+
+      <small>
+        Stripe sandbox: no real money moves.
+        Saving a card is for customer payments,
+        not worker payouts.
+        Automatic payouts require a verified connected
+        account and server-side payment processing.
+      </small>
+    `;
+
+    wallet.appendChild(box);
+
+    box.querySelector('#gl-worker-payout-start')
+      .addEventListener('click', start);
+
+    box.querySelector('#gl-worker-payout-refresh')
+      .addEventListener('click', refresh);
+
+    return box;
+  }
+
+  function status(message){
+    const e = document.getElementById(
+      'gl-worker-payout-status'
+    );
+    if(e) e.textContent = message;
+  }
+
+  async function worker(){
+    const client = getDB();
+
+    const {data,error} = await client.auth.getUser();
+
+    if(error) throw error;
+
+    if(!data?.user){
+      throw Error('Sign in to your worker account first.');
+    }
+
+    const result = await client
+      .from('giglink_profiles')
+      .select('role')
+      .eq('id',data.user.id)
+      .maybeSingle();
+
+    if(result.error) throw result.error;
+
+    if(result.data?.role !== 'worker'){
+      throw Error(
+        'Worker Payout is available only for worker accounts.'
+      );
+    }
+
+    return data.user;
+  }
+
+  async function refresh(){
+    if(checking) return;
+    checking = true;
+
+    try{
+      const box = panel();
+      if(!box) return;
+
+      const client = getDB();
+      const {data} = await client.auth.getUser();
+
+      if(!data?.user){
+        box.hidden = true;
+        return;
+      }
+
+      const result = await client
+        .from('giglink_profiles')
+        .select('role')
+        .eq('id',data.user.id)
+        .maybeSingle();
+
+      box.hidden =
+        !!result.error ||
+        result.data?.role !== 'worker';
+
+      if(!box.hidden){
+        status(
+          'Ready to connect your payout account. ' +
+          'If you already completed Stripe onboarding, ' +
+          'your payout status must be verified by the backend.'
+        );
+      }
+
+    }catch(e){
+      status(e.message || String(e));
+    }finally{
+      checking = false;
+    }
+  }
+
+  async function start(){
+    const btn = document.getElementById(
+      'gl-worker-payout-start'
+    );
+
+    if(btn) btn.disabled = true;
+
+    status('Opening secure Stripe worker onboarding…');
+
+    try{
+      await worker();
+
+      const {data,error} = await getDB()
+        .functions.invoke('giglink-worker-onboarding',{
+          body:{}
+        });
+
+      if(error){
+        let detail = error.message;
+
+        try{
+          const response = error.context;
+
+          if(response?.json){
+            const j = await response.json();
+            detail = j.error || j.message || detail;
+          }
+        }catch{}
+
+        throw Error(detail);
+      }
+
+      const link =
+        data?.url ||
+        data?.onboarding_url ||
+        data?.onboardingUrl ||
+        data?.account_link_url;
+
+      if(
+        typeof link !== 'string' ||
+        !/^https:\/\/(connect|dashboard)\.stripe\.com\//.test(link)
+      ){
+        throw Error(
+          data?.error ||
+          'The onboarding function did not return a valid ' +
+          'Stripe URL. Check its response and logs.'
+        );
+      }
+
+      status(
+        'Redirecting to Stripe. Return to GigLink ' +
+        'after completing onboarding.'
+      );
+
+      window.location.assign(link);
+
+    }catch(e){
+      status(
+        'Worker Payout setup unavailable: ' +
+        (e.message || String(e))
+      );
+    }finally{
+      if(btn) btn.disabled = false;
+    }
+  }
+
+  function init(){
+    panel();
+    refresh();
+
+    document.addEventListener('click',e=>{
+      if(e.target.closest(
+        '#gl5kg-nav [data-gl5kg-go="wallet"], ' +
+        '#gl5kg-nav [data-gl5kg-go="more"]'
+      )){
+        setTimeout(refresh,120);
+      }
+    },true);
+
+    try{
+      getDB().auth.onAuthStateChange(
+        ()=>setTimeout(refresh,200)
+      );
+    }catch{}
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      init,
+      {once:true}
+    );
+  }else{
+    init();
+  }
+})();
+</script>
+<!-- END GIGLINK WORKER PAYOUT -->
  
  </body></html>
