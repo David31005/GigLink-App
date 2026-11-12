@@ -15358,4 +15358,125 @@ if(document.readyState==="loading"){
 })();
 </script>
 
+<!-- GIGLINK STEP 30Z: TEST-ONLY PAYMENT RESERVATION (NO STRIPE CALL) -->
+<script>
+(function(){
+  'use strict';
+  const PROJECT_URL='https://mhpqclzullhvxasllbdh.supabase.co';
+  const PUBLIC_KEY='sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA';
+
+  function init(){
+    const target=document.getElementById('gl5kb-available');
+    if(!target || document.getElementById('gl30z-test-panel')) return;
+
+    const panel=document.createElement('div');
+    panel.id='gl30z-test-panel';
+    panel.style.cssText='padding:16px;margin:14px 0;border:2px dashed #2866a2;border-radius:14px;background:#eef5ff;color:#142b4d';
+
+    const heading=document.createElement('h3');
+    heading.textContent='Step 30Z — Payment Reservation Test';
+
+    const info=document.createElement('p');
+    info.textContent='Tests Secure Test 27 only. No Stripe payment or card charge. Does not use the normal Claim This Gig button.';
+
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.textContent='TEST PAYMENT RESERVATION';
+    btn.style.cssText='background:#174e9a;color:white;padding:14px;border:0;border-radius:10px;font-weight:bold;max-width:100%';
+
+    const result=document.createElement('pre');
+    result.id='gl30z-result';
+    result.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px';
+
+    panel.append(heading,info,btn,result);
+    target.parentElement.insertBefore(panel,target);
+
+    btn.addEventListener('click',async()=>{
+      btn.disabled=true;
+      result.textContent='Checking signed-in worker and test gig…';
+
+      try{
+        if(!window.supabase?.createClient)
+          throw Error('Supabase library not loaded');
+
+        const client=window.supabase.createClient(PROJECT_URL,PUBLIC_KEY);
+
+        const {data:authData,error:authError}=await client.auth.getUser();
+
+        if(authError || !authData?.user)
+          throw Error('Sign in with your real Supabase worker account first.');
+
+        const {data:profile,error:profileError}=await client
+          .from('giglink_profiles')
+          .select('role')
+          .eq('id',authData.user.id)
+          .single();
+
+        if(profileError)throw profileError;
+
+        const {data:application,error:applicationError}=await client
+          .from('giglink_worker_applications')
+          .select('status')
+          .eq('user_id',authData.user.id)
+          .maybeSingle();
+
+        if(applicationError)throw applicationError;
+
+        if(profile?.role!=='worker'||application?.status!=='approved')
+          throw Error('Only an approved worker can run this test.');
+
+        const {data:matches,error:lookupError}=await client
+          .from('giglink_jobs')
+          .select('id,title,status,worker_id')
+          .eq('title','Secure Test 27')
+          .eq('status','available')
+          .is('worker_id',null)
+          .order('created_at',{ascending:false})
+          .limit(2);
+
+        if(lookupError)throw lookupError;
+
+        if(!matches?.length)
+          throw Error('No available Secure Test 27 gig found. It may already be reserved or claimed.');
+
+        if(matches.length!==1)
+          throw Error('Multiple available gigs have this title. Test stopped to avoid reserving the wrong gig.');
+
+        const job=matches[0];
+
+        if(!window.confirm(
+          'Reserve Secure Test 27 for a payment test? This changes database reservation state but DOES NOT charge or hold a card.'
+        )){
+          result.textContent='Test canceled.';
+          return;
+        }
+
+        result.textContent='Calling gl_reserve_job_for_payment…';
+
+        const {data,error}=await client.rpc(
+          'gl_reserve_job_for_payment',
+          {p_job_id:job.id}
+        );
+
+        if(error)throw error;
+
+        result.textContent=
+          'Database response:\n'+
+          JSON.stringify(data,null,2)+
+          '\n\nNo Stripe call was made by this page.';
+
+      }catch(err){
+        result.textContent='TEST ERROR: '+(err?.message||String(err));
+      }finally{
+        btn.disabled=false;
+      }
+    });
+  }
+
+  if(document.readyState==='loading')
+    document.addEventListener('DOMContentLoaded',init);
+  else init();
+})();
+</script>
+
  </body></html>
