@@ -15111,37 +15111,4 @@ if(document.readyState==="loading"){
 </script>
 <!-- END GIGLINK STEP 4F -->
 
-<!-- GIGLINK: REMOVE QUICK ACTIONS -->
-<script>
-(function () {
-  function removeQuickActions() {
-    document.querySelectorAll(
-      "h2,h3,h4,strong"
-    ).forEach(function(heading) {
-      if (
-        heading.textContent.trim()
-          .replace(/\s+/g, " ")
-          .includes("Quick Actions")
-      ) {
-        const card = heading.closest(
-          ".card, .gl-card, .gh-card"
-        );
-
-        if (card) {
-          card.style.display = "none";
-        }
-      }
-    });
-  }
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    removeQuickActions
-  );
-
-  removeQuickActions();
-})();
-</script>
-<!-- END REMOVE QUICK ACTIONS -->
-
  </body></html>
