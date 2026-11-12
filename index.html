@@ -14851,4 +14851,273 @@ if(document.readyState==="loading"){
 </script>
 <!-- END GIGLINK STEP 3 -->
 
+<!-- GIGLINK STEP 4F: PRIVATE OWNER DASHBOARD -->
+<style>
+#gl-owner-entry {
+  display:block;
+  width:100%;
+  margin:12px 0;
+  padding:16px;
+  border-radius:12px;
+  background:#126be4;
+  color:white;
+  font-weight:700;
+  border:1px solid #4a9aff;
+}
+#gl-owner-screen {
+  position:fixed;
+  inset:0;
+  z-index:100000;
+  overflow:auto;
+  background:#07172d;
+  color:white;
+  padding:22px 16px 90px;
+}
+#gl-owner-screen[hidden],
+#gl-owner-entry[hidden] {
+  display:none!important;
+}
+.gl-owner-wrap {
+  max-width:650px;
+  margin:auto;
+}
+.gl-owner-card {
+  background:#102b4d;
+  border:1px solid #27558a;
+  padding:20px;
+  border-radius:16px;
+  margin:14px 0;
+}
+.gl-owner-card h3 {
+  color:#6ab4ff;
+  margin-top:0;
+}
+#gl-owner-screen button {
+  padding:14px;
+  border-radius:10px;
+}
+</style>
+
+<div id="gl-owner-screen" hidden>
+  <div class="gl-owner-wrap">
+    <button id="gl-owner-close" type="button">
+      ← Back to GigLink
+    </button>
+
+    <h1>Diamond Shine Service LLC</h1>
+    <h2>🔒 Private Owner Dashboard</h2>
+
+    <div class="gl-owner-card">
+      <h3>Owner Access</h3>
+      <p id="gl-owner-status">
+        Verifying account...
+      </p>
+    </div>
+
+    <div class="gl-owner-card">
+      <h3>💰 Company Earnings</h3>
+      <p>GigLink platform fee: 15%</p>
+      <p>Financial reporting: Coming next</p>
+      <p>
+        Company payout follows confirmed
+        worker payout.
+      </p>
+    </div>
+
+    <div class="gl-owner-card">
+      <h3>🏦 Company Bank Account</h3>
+      <p>Not connected yet.</p>
+      <p>
+        Connect Diamond Shine's business
+        checking account through Stripe
+        when available.
+      </p>
+    </div>
+
+    <div class="gl-owner-card">
+      <h3>👥 Administrator Management</h3>
+      <p>
+        Future administrators can be
+        invited by the primary owner.
+      </p>
+      <p>
+        Administrator invitations and
+        permissions are not enabled yet.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const URL =
+    "https://mhpqclzullhvxasllbdh.supabase.co";
+
+  const KEY =
+    "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+  const $ = id => document.getElementById(id);
+
+  let client = null;
+  let requestNumber = 0;
+
+  function getClient(){
+    if(!window.supabase?.createClient){
+      throw Error("Supabase is not loaded");
+    }
+
+    if(!client){
+      client = window.supabase.createClient(
+        URL,KEY
+      );
+    }
+
+    return client;
+  }
+
+  function hideOwner(){
+    $("gl-owner-screen").hidden = true;
+    $("gl-owner-entry")?.remove();
+  }
+
+  async function verifyOwner(){
+    const db = getClient();
+
+    const result = await db.auth.getUser();
+
+    if(result.error)throw result.error;
+    if(!result.data.user)return false;
+
+    const role = await db.rpc(
+      "giglink_my_admin_role"
+    );
+
+    if(role.error)throw role.error;
+
+    // Owner only. Admin access will be
+    // permission-based in a later step.
+    return role.data === "owner";
+  }
+
+  async function refreshOwnerAccess(){
+    const request = ++requestNumber;
+
+    hideOwner();
+
+    const menu = $("gl5kg-more");
+
+    if(!menu)return;
+
+    try{
+      const allowed = await verifyOwner();
+
+      if(request !== requestNumber)return;
+      if(!allowed)return;
+
+      const button = document.createElement(
+        "button"
+      );
+
+      button.id = "gl-owner-entry";
+      button.type = "button";
+      button.textContent =
+        "🔒 Diamond Shine Owner Dashboard";
+
+      button.addEventListener("click",
+        async function(event){
+          event.preventDefault();
+          event.stopPropagation();
+
+          const screen =
+            $("gl-owner-screen");
+
+          const status =
+            $("gl-owner-status");
+
+          screen.hidden = false;
+          status.textContent =
+            "Verifying owner access...";
+
+          try{
+            const verified =
+              await verifyOwner();
+
+            if(!verified){
+              hideOwner();
+              alert("Owner access denied.");
+              return;
+            }
+
+            status.textContent =
+              "Verified Primary Owner";
+
+          }catch(error){
+            hideOwner();
+            alert(
+              "Unable to verify owner: " +
+              error.message
+            );
+          }
+        }
+      );
+
+      menu.appendChild(button);
+
+    }catch(error){
+      console.warn(
+        "GigLink owner check:",
+        error.message
+      );
+    }
+  }
+
+  $("gl-owner-close").addEventListener(
+    "click",function(){
+      $("gl-owner-screen").hidden = true;
+    }
+  );
+
+  // Refresh when the user opens More.
+  document.addEventListener("click",
+    function(event){
+      if(event.target.closest(
+        '[data-gl5kg-go="more"]'
+      )){
+        refreshOwnerAccess();
+      }
+    }
+  );
+
+  // Refresh after authentication changes.
+  function start(){
+    refreshOwnerAccess();
+
+    try{
+      getClient().auth.onAuthStateChange(
+        function(){
+          hideOwner();
+          setTimeout(
+            refreshOwnerAccess,300
+          );
+        }
+      );
+    }catch(error){
+      console.warn(error.message);
+    }
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener(
+      "DOMContentLoaded",start
+    );
+  }else{
+    start();
+  }
+
+})();
+</script>
+<!-- END GIGLINK STEP 4F -->
+
  </body></html>
