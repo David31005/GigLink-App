@@ -15302,4 +15302,41 @@ if(document.readyState==="loading"){
 </script>
 <!-- END OWNER DASHBOARD DISPLAY FIX -->
 
+<!-- GIGLINK STEP 4P-Y: PAYMENT CONSENT AMOUNT -->
+<script>
+(function () {
+  const budget = document.getElementById("gl5kb-budget");
+  const amount = document.getElementById("gl5kb-consent-amount");
+  const consent = document.getElementById("gl5kb-payment-consent");
+
+  window.updateGl5kbConsentAmount = function () {
+    if (!budget || !amount) return;
+
+    const raw = budget.value.trim();
+    const value = Number(raw);
+
+    if (raw !== "" && Number.isFinite(value) && value > 0) {
+      amount.textContent =
+        "Maximum proposed authorization: " +
+        new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD"
+        }).format(value);
+    } else {
+      amount.textContent =
+        "Enter the job budget above to see the authorization amount.";
+    }
+  };
+
+  if (budget) {
+    budget.addEventListener("input", function () {
+      if (consent) consent.checked = false;
+      window.updateGl5kbConsentAmount();
+    });
+  }
+
+  window.updateGl5kbConsentAmount();
+})();
+</script>
+
  </body></html>
