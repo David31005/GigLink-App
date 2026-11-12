@@ -4823,7 +4823,25 @@ render();
   }
 
   async function postGig() {
-    const user = await requireCustomer();
+    
+    // STEP 4P-Y: Payment agreement validation
+    const consent = document.getElementById("gl5kb-payment-consent");
+
+    const budgetForConsent = Number(
+      document.getElementById("gl5kb-budget").value
+    );
+
+    if (!consent || !consent.checked) {
+      alert("Please accept the payment authorization agreement before posting.");
+      return;
+    }
+
+    if (!Number.isFinite(budgetForConsent) || budgetForConsent <= 0) {
+      alert("Please enter a valid job price.");
+      return;
+    }
+
+   const user = await requireCustomer();
 
     const title = field("gl5kb-title");
     const category = field("gl5kb-category");
