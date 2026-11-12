@@ -12572,47 +12572,6 @@ setTimeout(updateVisibility,1500);
     return data.user;
   }
 
-  async function refresh(){
-    if(checking) return;
-    checking = true;
-
-    try{
-      const box = panel();
-      if(!box) return;
-
-      const client = getDB();
-      const {data} = await client.auth.getUser();
-
-      if(!data?.user){
-        box.hidden = true;
-        return;
-      }
-
-      const result = await client
-        .from('giglink_profiles')
-        .select('role')
-        .eq('id',data.user.id)
-        .maybeSingle();
-
-      box.hidden =
-        !!result.error ||
-        result.data?.role !== 'worker';
-
-      if(!box.hidden){
-        status(
-          'Ready to connect your payout account. ' +
-          'If you already completed Stripe onboarding, ' +
-          'your payout status must be verified by the backend.'
-        );
-      }
-
-    }catch(e){
-      status(e.message || String(e));
-    }finally{
-      checking = false;
-    }
-  }
-
   async function start(){
     const btn = document.getElementById(
       'gl-worker-payout-start'
