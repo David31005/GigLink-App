@@ -15677,19 +15677,35 @@ if(document.readyState==="loading"){
         output.textContent =
           'Checking worker approval...';
 
-        const response = await fetch(
-          PROJECT_URL +
-          '/functions/v1/giglink-authorize-claim',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': PUBLIC_KEY,
-              'Authorization': 'Bearer ' + token
-            },
-            body: '{}'
-          }
-        );
+        
+        output.textContent =
+          'Session found. Testing Edge Function connection...';
+
+        let response;
+
+        try {
+          response = await fetch(
+            PROJECT_URL +
+            '/functions/v1/giglink-authorize-claim',
+            {
+              method: 'POST',
+              mode: 'cors',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': PUBLIC_KEY,
+                'Authorization': 'Bearer ' + token
+              },
+              body: JSON.stringify({})
+            }
+          );
+        } catch (networkError) {
+          throw Error(
+            'Edge Function request failed: ' +
+            (networkError?.message || String(networkError)) +
+            '. Check Supabase Edge Function logs and CORS settings.'
+          );
+        }
+
 
         const raw = await response.text();
 
