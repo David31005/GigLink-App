@@ -15575,4 +15575,159 @@ if(document.readyState==="loading"){
 </script>
 <!-- END GIGLINK STEP 32H -->
 
+<!-- GIGLINK STEP 32N — APPROVED WORKER VERIFICATION -->
+<script>
+(function () {
+  'use strict';
+
+  const PROJECT_URL =
+    'https://mhpqclzullhvxasllbdh.supabase.co';
+
+  const PUBLIC_KEY =
+    'sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA';
+
+  function setup() {
+    const anchor =
+      document.getElementById('gl5kb-available');
+
+    if (!anchor ||
+        document.getElementById('gl32n-panel')) {
+      return;
+    }
+
+    const panel = document.createElement('section');
+    panel.id = 'gl32n-panel';
+    panel.className = 'card';
+
+    panel.style.cssText =
+      'border:2px solid #2874ca;' +
+      'padding:16px;margin:14px 0';
+
+    const title = document.createElement('h3');
+    title.textContent =
+      'Step 32N — Approved Worker Test';
+
+    const description =
+      document.createElement('p');
+
+    description.textContent =
+      'Verify your real Supabase worker account. ' +
+      'No payments or job claims will be created.';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent =
+      'TEST WORKER VERIFICATION';
+
+    const output = document.createElement('pre');
+
+    output.style.cssText =
+      'white-space:pre-wrap;' +
+      'overflow-wrap:anywhere;' +
+      'font-size:13px';
+
+    output.setAttribute('role', 'status');
+
+    panel.append(
+      title,
+      description,
+      button,
+      output
+    );
+
+    anchor.parentNode.insertBefore(panel, anchor);
+
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+
+      output.textContent =
+        'Checking Supabase session...';
+
+      try {
+        if (!window.supabase?.createClient) {
+          throw Error(
+            'Supabase library has not loaded.'
+          );
+        }
+
+        const client = window.supabase.createClient(
+          PROJECT_URL,
+          PUBLIC_KEY
+        );
+
+        const {
+          data: sessionData,
+          error: sessionError
+        } = await client.auth.getSession();
+
+        if (sessionError) {
+          throw sessionError;
+        }
+
+        const token =
+          sessionData?.session?.access_token;
+
+        if (!token) {
+          throw Error(
+            'Sign in using your REAL Supabase ' +
+            'worker account, not a demo account.'
+          );
+        }
+
+        output.textContent =
+          'Checking worker approval...';
+
+        const response = await fetch(
+          PROJECT_URL +
+          '/functions/v1/giglink-authorize-claim',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': PUBLIC_KEY,
+              'Authorization': 'Bearer ' + token
+            },
+            body: '{}'
+          }
+        );
+
+        const raw = await response.text();
+
+        let result;
+
+        try {
+          result = JSON.parse(raw);
+        } catch {
+          result = {
+            message: raw.slice(0, 400)
+          };
+        }
+
+        output.textContent =
+          'HTTP ' + response.status + '\n' +
+          JSON.stringify(result, null, 2);
+
+      } catch (error) {
+        output.textContent =
+          'TEST ERROR: ' +
+          (error?.message || String(error));
+
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener(
+      'DOMContentLoaded',
+      setup
+    );
+  } else {
+    setup();
+  }
+})();
+</script>
+<!-- END GIGLINK STEP 32N -->
+
  </body></html>
