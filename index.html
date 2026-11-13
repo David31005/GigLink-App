@@ -15479,4 +15479,100 @@ if(document.readyState==="loading"){
 })();
 </script>
 
+<!-- GIGLINK STEP 32H: PAYMENT BUTTON FEEDBACK -->
+<style>
+  #glpay-message {
+    display: block !important;
+    margin: 14px 0 !important;
+    padding: 14px !important;
+    border: 1px solid #60b9ef !important;
+    border-radius: 12px !important;
+    background: #122b50 !important;
+    color: #ffffff !important;
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  #glpay-add,
+  #glpay-refresh {
+    touch-action: manipulation;
+    min-height: 54px;
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  function setupPaymentFeedback() {
+    const add = document.getElementById("glpay-add");
+    const refresh = document.getElementById("glpay-refresh");
+    const message = document.getElementById("glpay-message");
+
+    if (!add || !refresh || !message) return;
+
+    if (window.giglink32HReady) return;
+    window.giglink32HReady = true;
+
+    // Move the existing error message next to the buttons.
+    refresh.insertAdjacentElement("afterend", message);
+
+    message.setAttribute("role", "status");
+    message.setAttribute("aria-live", "polite");
+
+    function showStatus(text) {
+      message.textContent = text;
+    }
+
+    // Capture taps without replacing existing handlers.
+    add.addEventListener("click", function () {
+      showStatus(
+        "Add Payment Method tapped. Checking your " +
+        "customer login and contacting Stripe..."
+      );
+    }, true);
+
+    refresh.addEventListener("click", function () {
+      showStatus(
+        "Refresh Cards tapped. Checking your " +
+        "saved payment methods..."
+      );
+    }, true);
+
+    // Display unexpected JavaScript errors.
+    window.addEventListener("error", function (event) {
+      if (!event.message) return;
+      showStatus("JavaScript error: " + event.message);
+    });
+
+    window.addEventListener(
+      "unhandledrejection",
+      function (event) {
+        const reason = event.reason;
+        showStatus(
+          "Request error: " +
+          (reason?.message || String(reason))
+        );
+      }
+    );
+
+    if (!message.textContent.trim()) {
+      showStatus("Payment buttons ready for testing.");
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      setupPaymentFeedback
+    );
+  } else {
+    setupPaymentFeedback();
+  }
+})();
+</script>
+<!-- END GIGLINK STEP 32H -->
+
  </body></html>
