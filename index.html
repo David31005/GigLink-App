@@ -15905,4 +15905,140 @@ if(document.readyState==="loading"){
 </script>
 <!-- END GIGLINK STEP 32X -->
 
+<!-- GIGLINK STEP 32AM — RECOVERY STATUS TEST -->
+<script>
+(function () {
+  "use strict";
+
+  const URL =
+    "https://mhpqclzullhvxasllbdh.supabase.co";
+
+  const KEY =
+    "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+  const JOB_ID =
+    "9c5f666f-140e-4ae9-ad53-5ddd9283d0cf";
+
+  function install() {
+    if (document.getElementById("gl32am-panel")) {
+      return;
+    }
+
+    const previous =
+      document.getElementById(
+        "gl32x-readiness-panel"
+      );
+
+    if (!previous) {
+      console.warn("Payment test panel not found.");
+      return;
+    }
+
+    const panel = document.createElement("section");
+    panel.id = "gl32am-panel";
+    panel.className = "card";
+    panel.style.cssText =
+      "padding:16px;margin:14px 0;" +
+      "border:2px solid #147af3;";
+
+    const title = document.createElement("h3");
+    title.textContent =
+      "Step 32AM — Recovery Status";
+
+    const info = document.createElement("p");
+    info.textContent =
+      "Read-only check for Secure Test 27. " +
+      "No payment, reset, or claim.";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "TEST RECOVERY STATUS";
+
+    const output = document.createElement("pre");
+    output.setAttribute("role", "status");
+    output.style.cssText =
+      "white-space:pre-wrap;" +
+      "overflow-wrap:anywhere;" +
+      "font-size:13px;";
+
+    panel.append(title, info, button, output);
+    previous.insertAdjacentElement("afterend", panel);
+
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      output.textContent = "Checking recovery status...";
+
+      try {
+        if (!window.supabase?.createClient) {
+          throw new Error(
+            "Supabase library is not loaded."
+          );
+        }
+
+        const client =
+          window.supabase.createClient(URL, KEY);
+
+        const { data, error } =
+          await client.auth.getSession();
+
+        if (error) throw error;
+
+        const token = data?.session?.access_token;
+
+        if (!token) {
+          throw new Error(
+            "Sign in using Real Supabase Authentication."
+          );
+        }
+
+        const response = await fetch(
+          URL + "/functions/v1/giglink-authorize-claim",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": KEY,
+              "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({
+              action: "check_recovery_status",
+              job_id: JOB_ID
+            })
+          }
+        );
+
+        const raw = await response.text();
+        let result;
+
+        try {
+          result = JSON.parse(raw);
+        } catch {
+          result = { message: raw.slice(0, 500) };
+        }
+
+        output.textContent =
+          "HTTP " + response.status + "\n" +
+          JSON.stringify(result, null, 2);
+
+      } catch (error) {
+        output.textContent =
+          "TEST ERROR: " +
+          (error?.message || String(error));
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded", install
+    );
+  } else {
+    install();
+  }
+})();
+</script>
+<!-- END GIGLINK STEP 32AM -->
+
  </body></html>
