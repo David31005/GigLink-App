@@ -16041,4 +16041,134 @@ if(document.readyState==="loading"){
 </script>
 <!-- END GIGLINK STEP 32AM -->
 
+<!-- GIGLINK STEP 32CB — SIGNED-IN $10 HOLD PREFLIGHT -->
+<script>
+(function () {
+  'use strict';
+
+  const PROJECT_URL =
+    'https://mhpqclzullhvxasllbdh.supabase.co';
+
+  const PUBLIC_KEY =
+    'sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA';
+
+  const TEST_JOB_ID =
+    'dc27a233-8987-48ee-960e-62b33d56af8e';
+
+  function install() {
+    if (document.getElementById('gl32cb-panel')) return;
+
+    const anchor =
+      document.getElementById('gl32am-panel') ||
+      document.getElementById('gl32x-readiness-panel') ||
+      document.getElementById('gl32n-panel');
+
+    if (!anchor) {
+      console.warn('GigLink test panel not found');
+      return;
+    }
+
+    const panel = document.createElement('section');
+    panel.id = 'gl32cb-panel';
+    panel.className = 'card';
+    panel.style.cssText =
+      'padding:16px;margin:14px 0;border:2px solid #32a4e9;';
+
+    const title = document.createElement('h3');
+    title.textContent = 'Step 32CB — $10 Hold Preflight';
+
+    const info = document.createElement('p');
+    info.textContent =
+      'Read-only check for Secure Payment Test 28. ' +
+      'No Stripe authorization, charge, gig claim, or payout.';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = 'TEST $10 HOLD PREFLIGHT';
+
+    const output = document.createElement('pre');
+    output.setAttribute('role', 'status');
+    output.style.cssText =
+      'white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;';
+
+    panel.append(title, info, button, output);
+    anchor.insertAdjacentElement('afterend', panel);
+
+    button.addEventListener('click', async function () {
+      button.disabled = true;
+      output.textContent =
+        'Checking your signed-in worker account...';
+
+      try {
+        if (!window.supabase?.createClient) {
+          throw Error('Supabase library has not loaded.');
+        }
+
+        const client = window.supabase.createClient(
+          PROJECT_URL,
+          PUBLIC_KEY
+        );
+
+        const { data, error } =
+          await client.auth.getSession();
+
+        if (error) throw error;
+
+        const token = data?.session?.access_token;
+
+        if (!token) {
+          throw Error(
+            'Sign in with your real Supabase worker account first.'
+          );
+        }
+
+        const response = await fetch(
+          PROJECT_URL +
+          '/functions/v1/giglink-authorize-claim',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': PUBLIC_KEY,
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+              action: 'test_hold_preflight',
+              job_id: TEST_JOB_ID
+            })
+          }
+        );
+
+        const raw = await response.text();
+        let result;
+
+        try {
+          result = JSON.parse(raw);
+        } catch {
+          result = { message: raw.slice(0, 500) };
+        }
+
+        output.textContent =
+          'HTTP ' + response.status + '\n' +
+          JSON.stringify(result, null, 2);
+
+      } catch (err) {
+        output.textContent =
+          'TEST ERROR: ' +
+          (err?.message || String(err));
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', install);
+  } else {
+    install();
+  }
+})();
+</script>
+<!-- END GIGLINK STEP 32CB -->
+
  </body></html>
