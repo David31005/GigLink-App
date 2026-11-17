@@ -16171,4 +16171,165 @@ if(document.readyState==="loading"){
 </script>
 <!-- END GIGLINK STEP 32CB -->
 
+<!-- GIGLINK STEP 32CK — SECURE RESERVATION TEST -->
+<script>
+(function () {
+  "use strict";
+
+  const PROJECT_URL =
+    "https://mhpqclzullhvxasllbdh.supabase.co";
+
+  const PUBLIC_KEY =
+    "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
+
+  const TEST_JOB_ID =
+    "dc27a233-8987-48ee-960e-62b33d56af8e";
+
+  function install() {
+    if (document.getElementById("gl32ck-panel")) {
+      return;
+    }
+
+    const anchor =
+      document.getElementById("gl32cb-panel") ||
+      document.getElementById("gl32am-panel") ||
+      document.getElementById("gl32x-readiness-panel");
+
+    if (!anchor) {
+      console.warn(
+        "GigLink: Existing payment test panel not found."
+      );
+      return;
+    }
+
+    const panel = document.createElement("section");
+    panel.id = "gl32ck-panel";
+    panel.className = "card";
+    panel.style.cssText =
+      "padding:16px;margin:14px 0;" +
+      "border:2px solid #32a4e9;";
+
+    const title = document.createElement("h3");
+    title.textContent =
+      "Step 32CK — Secure $10 Reservation";
+
+    const info = document.createElement("p");
+    info.textContent =
+      "Creates one test reservation and authorization " +
+      "attempt. No Stripe payment is created.";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "PREPARE $10 TEST RESERVATION";
+
+    const output = document.createElement("pre");
+    output.setAttribute("role", "status");
+    output.style.cssText =
+      "white-space:pre-wrap;" +
+      "overflow-wrap:anywhere;font-size:13px;";
+
+    panel.append(title, info, button, output);
+    anchor.insertAdjacentElement("afterend", panel);
+
+    button.addEventListener("click", async function () {
+      button.disabled = true;
+      output.textContent =
+        "Checking worker login and preparing reservation...";
+
+      try {
+        if (!window.supabase?.createClient) {
+          throw new Error(
+            "Supabase library has not loaded."
+          );
+        }
+
+        const client = window.supabase.createClient(
+          PROJECT_URL,
+          PUBLIC_KEY
+        );
+
+        const { data, error } =
+          await client.auth.getSession();
+
+        if (error) throw error;
+
+        if (!data?.session?.access_token) {
+          throw new Error(
+            "Sign in with your approved worker account."
+          );
+        }
+
+        const response = await fetch(
+          PROJECT_URL +
+          "/rest/v1/rpc/gl_prepare_test28_authorization",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": PUBLIC_KEY,
+              "Authorization":
+                "Bearer " +
+                data.session.access_token
+            },
+            body: JSON.stringify({
+              p_job_id: TEST_JOB_ID
+            })
+          }
+        );
+
+        const raw = await response.text();
+
+        let result;
+        try {
+          result = JSON.parse(raw);
+        } catch {
+          result = { message: raw.slice(0, 500) };
+        }
+
+        if (!response.ok) {
+          output.textContent =
+            "HTTP " + response.status + "\n" +
+            JSON.stringify(result, null, 2);
+          return;
+        }
+
+        // Do not display the reservation token or
+        // idempotency key in the public interface.
+        output.textContent =
+          "HTTP " + response.status + "\n" +
+          JSON.stringify({
+            success: result.success,
+            step: result.step,
+            status: result.status,
+            amount_cents: result.amount_cents,
+            platform_fee_cents:
+              result.platform_fee_cents,
+            worker_cents: result.worker_cents,
+            payment_created: result.payment_created
+          }, null, 2);
+
+      } catch (err) {
+        output.textContent =
+          "TEST ERROR: " +
+          (err?.message || String(err));
+      } finally {
+        // Deliberately leave the button disabled
+        // after an attempt to avoid accidental retries.
+        button.disabled = true;
+        button.textContent = "TEST ATTEMPT FINISHED";
+      }
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded", install
+    );
+  } else {
+    install();
+  }
+})();
+</script>
+<!-- END GIGLINK STEP 32CK -->
+
  </body></html>
