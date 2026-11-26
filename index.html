@@ -16182,8 +16182,8 @@ if(document.readyState==="loading"){
   const PUBLIC_KEY =
     "sb_publishable_9WclrDDEtkkGySGHNKKbRg_CCjwDraA";
 
-  const TEST_JOB_ID =
-    "dc27a233-8987-48ee-960e-62b33d56af8e";
+   const TEST_JOB_ID =
+    "e72779e0-b884-4f8b-b40b-057b10604635";
 
   function install() {
     if (document.getElementById("gl32ck-panel")) {
@@ -16210,17 +16210,15 @@ if(document.readyState==="loading"){
       "border:2px solid #32a4e9;";
 
     const title = document.createElement("h3");
-    title.textContent =
-      "Step 32CK — Secure $10 Reservation";
+        title.textContent = "Test 29 — Stripe Sandbox $10 Hold";
 
     const info = document.createElement("p");
     info.textContent =
-      "Creates one test reservation and authorization " +
-      "attempt. No Stripe payment is created.";
+      "Requests a $10 Stripe Sandbox hold with manual capture.";
 
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = "PREPARE $10 TEST RESERVATION";
+    button.textContent = "AUTHORIZE $10 SANDBOX HOLD";
 
     const output = document.createElement("pre");
     output.setAttribute("role", "status");
@@ -16259,20 +16257,18 @@ if(document.readyState==="loading"){
           );
         }
 
-        const response = await fetch(
-          PROJECT_URL +
-          "/rest/v1/rpc/gl_prepare_test28_authorization",
+                const response = await fetch(
+          PROJECT_URL + "/functions/v1/giglink-authorize-claim",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               "apikey": PUBLIC_KEY,
-              "Authorization":
-                "Bearer " +
-                data.session.access_token
+              "Authorization": "Bearer " + data.session.access_token
             },
             body: JSON.stringify({
-              p_job_id: TEST_JOB_ID
+              action: "authorize_test29_hold",
+              job_id: TEST_JOB_ID
             })
           }
         );
